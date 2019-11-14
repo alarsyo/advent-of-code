@@ -1,0 +1,4 @@
+[workspace]
+members = [
+    "2018/aoc01",
+]
