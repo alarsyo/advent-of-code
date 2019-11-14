@@ -14,12 +14,12 @@ fn main() -> Result<()> {
             .expect("Please provide the path to the input file"),
     )?;
 
-    part1(&input)?;
+    println!("part 1: {}", part1(&input)?);
 
     Ok(())
 }
 
-fn part1(input: &str) -> Result<()> {
+fn part1(input: &str) -> Result<u32> {
     let mut twice = 0;
     let mut thrice = 0;
 
@@ -38,7 +38,5 @@ fn part1(input: &str) -> Result<()> {
         }
     }
 
-    println!("{}", twice * thrice);
-
-    Ok(())
+    Ok(twice * thrice)
 }
