@@ -40,3 +40,29 @@ fn part1(input: &str) -> Result<u32> {
 
     Ok(twice * thrice)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn part1_provided() {
+        let input = "abcdef
+bababc
+abbcde
+abcccd
+aabcdd
+abcdee
+ababab
+";
+
+        assert_eq!(part1(input).unwrap(), 12);
+    }
+
+    #[test]
+    fn part1_real() {
+        let input = include_str!("../input/input.txt");
+
+        assert_eq!(part1(input).unwrap(), 5750);
+    }
+}
