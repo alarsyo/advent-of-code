@@ -1,20 +1,11 @@
 use std::collections::HashMap;
-use std::env;
-use std::fs;
 
-type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
+use super::Result;
 
-fn main() -> Result<()> {
-    let mut args = env::args();
-    args.next();
+const INPUT: &str = include_str!("../input/day02.txt");
 
-    let input = fs::read_to_string(
-        &args
-            .next()
-            .expect("Please provide the path to the input file"),
-    )?;
-
-    println!("part 1: {}", part1(&input)?);
+pub fn run() -> Result<()> {
+    println!("part 1: {}", part1(INPUT)?);
 
     Ok(())
 }
@@ -61,8 +52,6 @@ ababab
 
     #[test]
     fn part1_real() {
-        let input = include_str!("../input/input.txt");
-
-        assert_eq!(part1(input).unwrap(), 5750);
+        assert_eq!(part1(INPUT).unwrap(), 5750);
     }
 }

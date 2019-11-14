@@ -1,21 +1,12 @@
 use std::collections::HashSet;
-use std::env;
-use std::fs;
 
-type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
+use super::Result;
 
-fn main() -> Result<()> {
-    let mut args = env::args();
-    args.next();
+const INPUT: &str = include_str!("../input/day01.txt");
 
-    let input = fs::read_to_string(
-        &args
-            .next()
-            .expect("Please provide the path to the input file"),
-    )?;
-
-    println!("part 1: {}", part1(&input)?);
-    println!("part 2: {}", part2(&input)?);
+pub fn run() -> Result<()> {
+    println!("part 1: {}", part1(INPUT)?);
+    println!("part 2: {}", part2(INPUT)?);
 
     Ok(())
 }
@@ -34,7 +25,6 @@ fn part2(input: &str) -> Result<i32> {
     loop {
         for line in input.lines() {
             if freqs.contains(&freq) {
-                println!("{}", freq);
                 return Ok(freq);
             } else {
                 freqs.insert(freq);
@@ -91,9 +81,7 @@ mod tests {
 
     #[test]
     fn part1_real() {
-        let input = include_str!("../input/input.txt");
-
-        assert_eq!(part1(input).unwrap(), 427);
+        assert_eq!(part1(INPUT).unwrap(), 427);
     }
 
     #[test]
@@ -154,8 +142,6 @@ mod tests {
 
     #[test]
     fn part2_real() {
-        let input = include_str!("../input/input.txt");
-
-        assert_eq!(part2(input).unwrap(), 341);
+        assert_eq!(part2(INPUT).unwrap(), 341);
     }
 }
