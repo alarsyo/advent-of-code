@@ -44,17 +44,29 @@ struct Claim {
     id: usize,
 }
 
+/// Parses a claim from a line
+///
+/// Fails if the line is badly formatted. The expected format is:
+///
+/// ```text
+/// #ID @ X,Y: WxH
+/// ```
 fn parse(line: &str) -> Option<Claim> {
-    // remove '#XXX @ ' start of line
-    let line = &line[(line.find(" @ ")? + 3)..];
+    // skip '#' in line
+    let line = &line[1..];
 
-    // parse 'x,y: NNxNN
+    // find ' @ ' separator
+    let at = line.find(" @ ")?;
+    let id = line[..at].parse().ok()?;
+    let line = &line[(at + 3)..];
+
+    // parse 'X,Y: WxH
     let comma = line.find(',')?;
     let colon = line.find(':')?;
     let x = line[..comma].parse().ok()?;
     let y = line[(comma + 1)..colon].parse().ok()?;
 
-    // reduce line to 'NNxNN'
+    // reduce line to 'WxH'
     let line = &line[(colon + 2)..];
 
     let sep = line.find('x')?;
@@ -66,7 +78,7 @@ fn parse(line: &str) -> Option<Claim> {
         y,
         width,
         height,
-        id: 0,
+        id,
     })
 }
 
