@@ -36,7 +36,15 @@ impl std::error::Error for ParseError {
     }
 }
 
-fn parse(line: &str) -> Option<(usize, usize, usize, usize)> {
+struct Claim {
+    x: usize,
+    y: usize,
+    width: usize,
+    height: usize,
+    id: usize,
+}
+
+fn parse(line: &str) -> Option<Claim> {
     // remove '#XXX @ ' start of line
     let line = &line[(line.find(" @ ")? + 3)..];
 
@@ -53,7 +61,13 @@ fn parse(line: &str) -> Option<(usize, usize, usize, usize)> {
     let width = line[..sep].parse().ok()?;
     let height = line[(sep + 1)..].parse().ok()?;
 
-    Some((x, y, width, height))
+    Some(Claim {
+        x,
+        y,
+        width,
+        height,
+        id: 0,
+    })
 }
 
 fn part1(input: &str) -> Result<u64> {
@@ -61,12 +75,12 @@ fn part1(input: &str) -> Result<u64> {
     let mut map: HashMap<(usize, usize), u64> = HashMap::default();
 
     for line in input.lines() {
-        let (x, y, width, height) = parse(line).ok_or(ParseError::new(line))?;
+        let claim = parse(line).ok_or(ParseError::new(line))?;
 
-        for i in 0..width {
-            for j in 0..height {
-                let x = x + i;
-                let y = y + j;
+        for i in 0..claim.width {
+            for j in 0..claim.height {
+                let x = claim.x + i;
+                let y = claim.y + j;
 
                 // add tissue patch at coordinates (x, y)
                 let entry = map.entry((x, y)).or_default();
