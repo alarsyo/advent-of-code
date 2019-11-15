@@ -6,6 +6,7 @@ const INPUT: &str = include_str!("../input/day02.txt");
 
 pub fn run() -> Result<()> {
     println!("part 1: {}", part1(INPUT)?);
+    println!("part 2: {}", part2(INPUT)?);
 
     Ok(())
 }
@@ -32,6 +33,36 @@ fn part1(input: &str) -> Result<u32> {
     Ok(twice * thrice)
 }
 
+fn part2(input: &str) -> Result<String> {
+    let lines = input.lines().collect::<Vec<&str>>();
+
+    for i in 0..lines.len() {
+        for j in (i + 1)..lines.len() {
+            let different = lines[i]
+                .chars()
+                .zip(lines[j].chars())
+                .filter(|tuple| tuple.0 != tuple.1)
+                .count();
+
+            if different == 1 {
+                return Ok(common_letters(lines[i], lines[j]));
+            }
+        }
+    }
+
+    Ok("".into())
+}
+
+fn common_letters(a: &str, b: &str) -> String {
+    a.chars()
+        .zip(b.chars())
+        .filter_map(|e| match e {
+            (a, b) if a == b => Some(a),
+            _ => None,
+        })
+        .collect()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -53,5 +84,24 @@ ababab
     #[test]
     fn part1_real() {
         assert_eq!(part1(INPUT).unwrap(), 5750);
+    }
+
+    #[test]
+    fn part2_provided() {
+        let input = "abcde
+fghij
+klmno
+pqrst
+fguij
+axcye
+wvxyz
+";
+
+        assert_eq!(part2(input).unwrap(), "fgij");
+    }
+
+    #[test]
+    fn part2_real() {
+        assert_eq!(part2(INPUT).unwrap(), "tzyvunogzariwkpcbdewmjhxi");
     }
 }
