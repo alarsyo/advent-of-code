@@ -1,7 +1,9 @@
 use std::collections::HashMap;
 use std::collections::HashSet;
+use std::error::Error;
 use std::fmt;
 
+use super::err;
 use super::Result;
 
 const INPUT: &str = include_str!("../input/day03.txt");
@@ -11,31 +13,6 @@ pub fn run() -> Result<()> {
     println!("part 2: {}", part2(INPUT)?);
 
     Ok(())
-}
-
-#[derive(Debug)]
-struct ParseError {
-    line: String,
-}
-
-impl ParseError {
-    fn new(line: &str) -> Self {
-        ParseError {
-            line: line.to_string(),
-        }
-    }
-}
-
-impl fmt::Display for ParseError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", self.line)
-    }
-}
-
-impl std::error::Error for ParseError {
-    fn description(&self) -> &str {
-        &self.line
-    }
 }
 
 struct Claim {
@@ -89,7 +66,7 @@ fn part1(input: &str) -> Result<u64> {
     let mut map: HashMap<(usize, usize), u64> = HashMap::default();
 
     for line in input.lines() {
-        let claim = parse(line).ok_or(ParseError::new(line))?;
+        let claim = parse(line).ok_or(err!("Couldn't parse line: {}", line))?;
 
         for i in 0..claim.width {
             for j in 0..claim.height {
@@ -116,7 +93,7 @@ fn part2(input: &str) -> Result<usize> {
     let mut set = HashSet::new();
 
     for line in input.lines() {
-        let claim = parse(line).ok_or(ParseError::new(line))?;
+        let claim = parse(line).ok_or(err!("Couldn't parse line: {}", line))?;
         set.insert(claim.id);
 
         for i in 0..claim.width {
