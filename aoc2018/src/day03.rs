@@ -1,7 +1,6 @@
 use std::collections::HashMap;
 use std::collections::HashSet;
 use std::error::Error;
-use std::fmt;
 
 use super::err;
 use super::Result;
@@ -63,10 +62,10 @@ fn parse(line: &str) -> Option<Claim> {
 
 fn part1(input: &str) -> Result<u64> {
     let mut res = 0;
-    let mut map: HashMap<(usize, usize), u64> = HashMap::default();
+    let mut map: HashMap<(usize, usize), u64> = HashMap::new();
 
     for line in input.lines() {
-        let claim = parse(line).ok_or(err!("Couldn't parse line: {}", line))?;
+        let claim = parse(line).ok_or_else(|| err!("Couldn't parse line: {}", line))?;
 
         for i in 0..claim.width {
             for j in 0..claim.height {
@@ -89,11 +88,11 @@ fn part1(input: &str) -> Result<u64> {
 }
 
 fn part2(input: &str) -> Result<usize> {
-    let mut map: HashMap<(usize, usize), Vec<usize>> = HashMap::default();
+    let mut map: HashMap<(usize, usize), Vec<usize>> = HashMap::new();
     let mut set = HashSet::new();
 
     for line in input.lines() {
-        let claim = parse(line).ok_or(err!("Couldn't parse line: {}", line))?;
+        let claim = parse(line).ok_or_else(|| err!("Couldn't parse line: {}", line))?;
         set.insert(claim.id);
 
         for i in 0..claim.width {
