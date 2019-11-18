@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use std::collections::HashSet;
 use std::error::Error;
+use std::str::FromStr;
 
 use super::err;
 use super::Result;
@@ -22,42 +23,48 @@ struct Claim {
     id: usize,
 }
 
-/// Parses a claim from a line
-///
-/// Fails if the line is badly formatted. The expected format is:
-///
-/// ```text
-/// #ID @ X,Y: WxH
-/// ```
-fn parse(line: &str) -> Option<Claim> {
-    // skip '#' in line
-    let line = &line[1..];
+impl FromStr for Claim {
+    type Err = Box<dyn Error>;
 
-    // find ' @ ' separator
-    let at = line.find(" @ ")?;
-    let id = line[..at].parse().ok()?;
-    let line = &line[(at + 3)..];
+    /// Parses a claim from a line
+    ///
+    /// Fails if the line is badly formatted. The expected format is:
+    ///
+    /// ```text
+    /// #ID @ X,Y: WxH
+    /// ```
+    fn from_str(s: &str) -> Result<Self> {
+        // skip '#' in line
+        let s = &s[1..];
 
-    // parse 'X,Y: WxH
-    let comma = line.find(',')?;
-    let colon = line.find(':')?;
-    let x = line[..comma].parse().ok()?;
-    let y = line[(comma + 1)..colon].parse().ok()?;
+        // find ' @ ' separator
+        let at = s
+            .find(" @ ")
+            .ok_or_else(|| err!("` @ ` delimiter not found"))?;
+        let id = s[..at].parse()?;
+        let s = &s[(at + 3)..];
 
-    // reduce line to 'WxH'
-    let line = &line[(colon + 2)..];
+        // parse 'X,Y: WxH
+        let comma = s.find(',').ok_or_else(|| err!("`,` delimiter not found"))?;
+        let colon = s.find(':').ok_or_else(|| err!("`:` delimiter not found"))?;
+        let x = s[..comma].parse()?;
+        let y = s[(comma + 1)..colon].parse()?;
 
-    let sep = line.find('x')?;
-    let width = line[..sep].parse().ok()?;
-    let height = line[(sep + 1)..].parse().ok()?;
+        // reduce line to 'WxH'
+        let s = &s[(colon + 2)..];
 
-    Some(Claim {
-        x,
-        y,
-        width,
-        height,
-        id,
-    })
+        let sep = s.find('x').ok_or_else(|| err!("`x` delimiter not found"))?;
+        let width = s[..sep].parse()?;
+        let height = s[(sep + 1)..].parse()?;
+
+        Ok(Claim {
+            x,
+            y,
+            width,
+            height,
+            id,
+        })
+    }
 }
 
 fn part1(input: &str) -> Result<u64> {
@@ -65,7 +72,9 @@ fn part1(input: &str) -> Result<u64> {
     let mut map: HashMap<(usize, usize), u64> = HashMap::new();
 
     for line in input.lines() {
-        let claim = parse(line).ok_or_else(|| err!("Couldn't parse line: {}", line))?;
+        let claim: Claim = line
+            .parse()
+            .or_else(|e| Err(err!("couldn't parse line: `{}`, {}", line, e)))?;
 
         for i in 0..claim.width {
             for j in 0..claim.height {
@@ -92,7 +101,9 @@ fn part2(input: &str) -> Result<usize> {
     let mut set = HashSet::new();
 
     for line in input.lines() {
-        let claim = parse(line).ok_or_else(|| err!("Couldn't parse line: {}", line))?;
+        let claim: Claim = line
+            .parse()
+            .or_else(|e| Err(err!("couldn't parse line: `{}`, {}", line, e)))?;
         set.insert(claim.id);
 
         for i in 0..claim.width {
