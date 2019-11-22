@@ -3,11 +3,12 @@ use std::env;
 use aoc2018::day01;
 use aoc2018::day02;
 use aoc2018::day03;
+use aoc2018::day05;
 
 use aoc2018::Result;
 
 fn main() -> Result<()> {
-    let days: &[fn() -> Result<()>] = &[day01::run, day02::run, day03::run];
+    let days: &[fn() -> Result<()>] = &[day01::run, day02::run, day03::run, day05::run];
 
     let mut args = env::args();
     args.next();
