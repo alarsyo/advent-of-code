@@ -12,7 +12,7 @@ fn same_type(a: char, b: char) -> bool {
     a.to_ascii_lowercase() == b.to_ascii_lowercase()
 }
 
-fn part1(input: &str) -> Result<usize> {
+fn collapse(input: &str) -> String {
     let mut res = String::with_capacity(input.len());
 
     // tracks last character of string
@@ -42,6 +42,11 @@ fn part1(input: &str) -> Result<usize> {
         res.push(c);
     }
 
+    res
+}
+
+fn part1(input: &str) -> Result<usize> {
+    let res = collapse(input);
     Ok(res.len())
 }
 
