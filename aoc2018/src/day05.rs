@@ -3,7 +3,7 @@ use super::Result;
 const INPUT: &str = include_str!("../input/day05.txt");
 
 pub fn run() -> Result<()> {
-    println!("part 1: {}", part1(INPUT)?);
+    println!("part 1: {}", part1(INPUT));
 
     Ok(())
 }
@@ -45,9 +45,9 @@ fn collapse(input: &str) -> String {
     res
 }
 
-fn part1(input: &str) -> Result<usize> {
+fn part1(input: &str) -> usize {
     let res = collapse(input);
-    Ok(res.len())
+    res.len()
 }
 
 #[cfg(test)]
@@ -58,11 +58,11 @@ mod tests {
 
     #[test]
     fn part1_provided() {
-        assert_eq!(part1(PROVIDED).unwrap(), 10);
+        assert_eq!(part1(PROVIDED), 10);
     }
 
     #[test]
     fn part1_real() {
-        assert_eq!(part1(INPUT).unwrap(), 10638);
+        assert_eq!(part1(INPUT), 10638);
     }
 }
