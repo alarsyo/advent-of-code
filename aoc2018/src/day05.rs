@@ -11,12 +11,12 @@ pub fn run() -> Result<()> {
     Ok(())
 }
 
-fn same_type(a: &char, b: &char) -> bool {
+fn same_type(a: char, b: char) -> bool {
     a.to_ascii_lowercase() == b.to_ascii_lowercase()
 }
 
-fn remove_type(input: &str, c: &char) -> String {
-    input.chars().filter(|ch| !same_type(c, ch)).collect()
+fn remove_type(input: &str, c: char) -> String {
+    input.chars().filter(|ch| !same_type(c, *ch)).collect()
 }
 
 fn collapse(input: &str) -> String {
@@ -29,7 +29,7 @@ fn collapse(input: &str) -> String {
         match last {
             Some(elem) => {
                 // if same type but different polarity
-                if same_type(&elem, &next) && elem != next {
+                if same_type(elem, next) && elem != next {
                     // drop both elem and next
                     last = res.pop();
                 } else {
@@ -65,7 +65,7 @@ fn part2(input: &str) -> usize {
     }
 
     set.iter()
-        .map(|c| collapse(&remove_type(input, c)).len())
+        .map(|c| collapse(&remove_type(input, *c)).len())
         .min()
         .unwrap()
 }
