@@ -21,6 +21,7 @@ fn main() -> Result<()> {
         }
         None => {
             for (i, day) in days.iter().enumerate() {
+                let i = i + 1;
                 println!("day{}: ", i);
                 day().unwrap_or_else(|e| panic!("error running day {}: {}", i, e));
                 println!();
