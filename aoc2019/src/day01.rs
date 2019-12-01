@@ -1,4 +1,4 @@
-use super::Result;
+use aoc::Result;
 
 const INPUT: &str = include_str!("../input/day01.txt");
 

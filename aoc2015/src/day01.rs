@@ -1,5 +1,5 @@
-use super::err;
-use super::Result;
+use aoc::err;
+use aoc::Result;
 
 const INPUT: &str = include_str!("../input/day01.txt");
 

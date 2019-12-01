@@ -1,6 +1,6 @@
 use std::collections::HashSet;
 
-use super::Result;
+use aoc::Result;
 
 const INPUT: &str = include_str!("../input/day05.txt");
 

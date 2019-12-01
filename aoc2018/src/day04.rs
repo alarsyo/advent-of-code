@@ -2,8 +2,8 @@ use std::collections::HashMap;
 use std::error::Error;
 use std::str::FromStr;
 
-use super::err;
-use super::Result;
+use aoc::err;
+use aoc::Result;
 
 const INPUT: &str = include_str!("../input/day04.txt");
 
