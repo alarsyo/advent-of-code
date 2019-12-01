@@ -1,5 +1,3 @@
-use std::error::Error;
-
 use super::err;
 use super::Result;
 
