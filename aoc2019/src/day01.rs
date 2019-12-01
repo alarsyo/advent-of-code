@@ -10,10 +10,7 @@ pub fn run() -> Result<()> {
 }
 
 fn fuel_needed(module_weight: u64) -> u64 {
-    match (module_weight / 3).checked_sub(2) {
-        Some(f) => f,
-        None => 0,
-    }
+    (module_weight / 3).saturating_sub(2)
 }
 
 fn part1(input: &str) -> Result<u64> {
