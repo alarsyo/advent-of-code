@@ -2,6 +2,7 @@ use aoc::err;
 use aoc::Result;
 
 const INPUT: &str = include_str!("../input/day02.txt");
+const PART2_EXPECTED: usize = 19_690_720;
 
 fn parse_intcode(input: &str) -> Result<Vec<usize>> {
     input
@@ -14,6 +15,7 @@ fn parse_intcode(input: &str) -> Result<Vec<usize>> {
 pub fn run() -> Result<()> {
     let intcode = parse_intcode(INPUT)?;
     println!("part 1: {}", part1(&mut intcode.clone())?);
+    println!("part 2: {}", part2(&intcode, PART2_EXPECTED)?);
 
     Ok(())
 }
@@ -47,6 +49,25 @@ fn part1(input: &mut Vec<usize>) -> Result<usize> {
     Ok(input[0])
 }
 
+fn part2(input: &[usize], res: usize) -> Result<usize> {
+    for (noun, verb) in (0..=99).flat_map(|noun| (0..=99).map(move |verb| (noun, verb))) {
+        let mut test_input = input.to_vec();
+        test_input[1] = noun;
+        test_input[2] = verb;
+
+        eval(&mut test_input)?;
+
+        if test_input[0] == res {
+            return Ok(noun * 100 + verb);
+        }
+    }
+
+    Err(err!(
+        "couldn't find noun/verb combination that produces {}",
+        res
+    ))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -78,5 +99,11 @@ mod tests {
     fn part1_real() {
         let mut intcode = parse_intcode(INPUT).unwrap();
         assert_eq!(part1(&mut intcode).unwrap(), 6568671);
+    }
+
+    #[test]
+    fn part2_real() {
+        let intcode = parse_intcode(INPUT).unwrap();
+        assert_eq!(part2(&intcode, PART2_EXPECTED).unwrap(), 3951);
     }
 }
