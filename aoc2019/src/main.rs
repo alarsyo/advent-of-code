@@ -1,11 +1,12 @@
 use std::env;
 
 use aoc2019::day01;
+use aoc2019::day02;
 
 use aoc2019::Result;
 
 fn main() -> Result<()> {
-    let days: &[fn() -> Result<()>] = &[day01::run];
+    let days: &[fn() -> Result<()>] = &[day01::run, day02::run];
 
     let mut args = env::args();
     args.next();
