@@ -13,13 +13,13 @@ fn main() -> Result<()> {
     match args.next() {
         Some(arg) => {
             let day: usize = arg.parse().expect("Please provide a day number");
-            days[day - 1]().expect("error running day specified");
+            days[day - 1]().unwrap_or_else(|e| eprintln!("error running day specified: {}", e));
         }
         None => {
             for (i, day) in days.iter().enumerate() {
                 let i = i + 1;
                 println!("day{}: ", i);
-                day().unwrap_or_else(|e| panic!("error running day {}: {}", i, e));
+                day().unwrap_or_else(|e| eprintln!("error running day {}: {}", i, e));
                 println!();
             }
         }
