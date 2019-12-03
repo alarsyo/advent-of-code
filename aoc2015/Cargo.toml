@@ -9,3 +9,4 @@ edition = "2018"
 [dependencies]
 
 aoc = { path = "../aoc" }
+md-5 = "0.8"
