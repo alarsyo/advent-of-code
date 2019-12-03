@@ -9,6 +9,7 @@ const INPUT: &str = include_str!("../input/day03.txt");
 
 pub fn run() -> Result<()> {
     println!("part 1: {}", part1(INPUT)?);
+
     Ok(())
 }
 
@@ -44,10 +45,6 @@ impl FromStr for Move {
     }
 }
 
-fn parse_path(line: &str) -> Result<Vec<Move>> {
-    line.trim_end().split(',').map(|m| m.parse()).collect()
-}
-
 fn path(mut a: (i64, i64), b: (i64, i64)) -> Vec<(i64, i64)> {
     let mut res = Vec::new();
 
@@ -70,6 +67,32 @@ fn path(mut a: (i64, i64), b: (i64, i64)) -> Vec<(i64, i64)> {
     res
 }
 
+fn parse_path(line: &str) -> Result<HashSet<(i64, i64)>> {
+    let moves = line
+        .trim_end()
+        .split(',')
+        .map(|m| m.parse())
+        .collect::<Result<Vec<Move>>>()?;
+
+    let mut pos = (0, 0);
+
+    Ok(moves
+        .iter()
+        .flat_map(|mv| {
+            let new_pos = match mv {
+                Move::Up(dy) => (pos.0, pos.1 - dy),
+                Move::Down(dy) => (pos.0, pos.1 + dy),
+                Move::Left(dx) => (pos.0 - dx, pos.1),
+                Move::Right(dx) => (pos.0 + dx, pos.1),
+            };
+
+            let p = path(pos, new_pos);
+            pos = new_pos;
+            p
+        })
+        .collect())
+}
+
 fn manhattan_distance(a: (i64, i64), b: (i64, i64)) -> i64 {
     (a.0 - b.0).abs() + (a.1 - b.1).abs()
 }
@@ -79,51 +102,9 @@ fn part1(input: &str) -> Result<i64> {
     let first_path = parse_path(lines.next().ok_or_else(|| err!("missing line in input"))?)?;
     let second_path = parse_path(lines.next().ok_or_else(|| err!("missing line in input"))?)?;
 
-    let mut first_x = 0;
-    let mut first_y = 0;
-
-    let mut second_x = 0;
-    let mut second_y = 0;
-
-    let mut first_locations = HashSet::new();
-    let mut cross_locations = HashSet::new();
-
-    for mv in first_path {
-        let new_pos = match mv {
-            Move::Up(dy) => (first_x, first_y - dy),
-            Move::Down(dy) => (first_x, first_y + dy),
-            Move::Left(dx) => (first_x - dx, first_y),
-            Move::Right(dx) => (first_x + dx, first_y),
-        };
-
-        for cell in path((first_x, first_y), new_pos) {
-            first_locations.insert(cell);
-        }
-
-        first_x = new_pos.0;
-        first_y = new_pos.1;
-    }
-
-    for mv in second_path {
-        let new_pos = match mv {
-            Move::Up(dy) => (second_x, second_y - dy),
-            Move::Down(dy) => (second_x, second_y + dy),
-            Move::Left(dx) => (second_x - dx, second_y),
-            Move::Right(dx) => (second_x + dx, second_y),
-        };
-
-        for cell in path((second_x, second_y), new_pos) {
-            if first_locations.contains(&cell) {
-                cross_locations.insert(cell);
-            }
-        }
-
-        second_x = new_pos.0;
-        second_y = new_pos.1;
-    }
+    let cross_locations = first_path.intersection(&second_path);
 
     cross_locations
-        .iter()
         .map(|(x, y)| manhattan_distance((*x, *y), (0, 0)))
         .min()
         .ok_or_else(|| err!("the cables never crossed !"))
