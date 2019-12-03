@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::collections::HashSet;
 use std::error::Error;
 use std::str::FromStr;
@@ -9,6 +10,7 @@ const INPUT: &str = include_str!("../input/day03.txt");
 
 pub fn run() -> Result<()> {
     println!("part 1: {}", part1(INPUT)?);
+    println!("part 2: {}", part2(INPUT)?);
 
     Ok(())
 }
@@ -110,6 +112,72 @@ fn part1(input: &str) -> Result<i64> {
         .ok_or_else(|| err!("the cables never crossed !"))
 }
 
+fn path_count(mut a: (i64, i64), b: (i64, i64), mut start_count: i64) -> Vec<((i64, i64), i64)> {
+    let mut res = Vec::new();
+
+    while a != b {
+        if a.0 < b.0 {
+            a.0 += 1;
+        } else if a.0 > b.0 {
+            a.0 -= 1;
+        }
+
+        if a.1 < b.1 {
+            a.1 += 1;
+        } else if a.1 > b.1 {
+            a.1 -= 1;
+        }
+
+        start_count += 1;
+        res.push((a, start_count));
+    }
+
+    res
+}
+
+fn parse_path_with_count(line: &str) -> Result<HashMap<(i64, i64), i64>> {
+    let moves = line
+        .trim_end()
+        .split(',')
+        .map(|m| m.parse())
+        .collect::<Result<Vec<Move>>>()?;
+
+    let mut pos = (0, 0);
+    let mut count = 0;
+
+    Ok(moves
+        .iter()
+        .flat_map(|mv| {
+            let new_pos = match mv {
+                Move::Up(dy) => (pos.0, pos.1 - dy),
+                Move::Down(dy) => (pos.0, pos.1 + dy),
+                Move::Left(dx) => (pos.0 - dx, pos.1),
+                Move::Right(dx) => (pos.0 + dx, pos.1),
+            };
+
+            let p = path_count(pos, new_pos, count);
+            count += manhattan_distance(pos, new_pos);
+            pos = new_pos;
+            p
+        })
+        .collect())
+}
+
+fn part2(input: &str) -> Result<i64> {
+    let mut lines = input.lines();
+    let first_path =
+        parse_path_with_count(lines.next().ok_or_else(|| err!("missing line in input"))?)?;
+    let second_path =
+        parse_path_with_count(lines.next().ok_or_else(|| err!("missing line in input"))?)?;
+
+    first_path
+        .keys()
+        .filter(|pos| second_path.contains_key(&pos))
+        .map(|pos| first_path.get(&pos).unwrap() + second_path.get(&pos).unwrap())
+        .min()
+        .ok_or_else(|| err!("cables never crossed !"))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -136,5 +204,17 @@ U98,R91,D20,R16,D67,R40,U7,R15,U6,R7
     #[test]
     fn part1_real() {
         assert_eq!(part1(INPUT).unwrap(), 273);
+    }
+
+    #[test]
+    fn part2_provided() {
+        assert_eq!(part2(PROVIDED1).unwrap(), 30);
+        assert_eq!(part2(PROVIDED2).unwrap(), 610);
+        assert_eq!(part2(PROVIDED3).unwrap(), 410);
+    }
+
+    #[test]
+    fn part2_real() {
+        assert_eq!(part2(INPUT).unwrap(), 15622);
     }
 }
