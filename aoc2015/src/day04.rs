@@ -13,15 +13,17 @@ pub fn run() -> Result<()> {
 
 fn part1(input: &str) -> Result<u64> {
     let input = input.trim_end();
+    let mut content = String::from(input);
 
     let mut hasher = Md5::new();
 
     for i in 0.. {
-        let content = format!("{}{}", input, i);
+        content.truncate(input.len());
+        content.extend(i.to_string().chars());
 
-        hasher.input(content);
-        let res = format!("{:x}", hasher.result_reset());
-        if &res[..5] == "00000" {
+        hasher.input(&content);
+        let res = hasher.result_reset();
+        if &res[..2] == &[0, 0] && res[2] <= 0x0f {
             return Ok(i);
         }
     }
