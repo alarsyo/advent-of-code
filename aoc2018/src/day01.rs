@@ -38,45 +38,33 @@ fn part2(input: &str) -> Result<i32> {
 mod tests {
     use super::*;
 
-    #[test]
-    fn part1_provided1() {
-        let input = "+1
+    const PROVIDED1: &str = "+1
 -2
 +3
 +1
 ";
 
-        assert_eq!(part1(input).unwrap(), 3);
-    }
-
-    #[test]
-    fn part1_provided2() {
-        let input = "+1
+    const PROVIDED2: &str = "+1
 +1
 +1
 ";
 
-        assert_eq!(part1(input).unwrap(), 3);
-    }
-
-    #[test]
-    fn part1_provided3() {
-        let input = "+1
+    const PROVIDED3: &str = "+1
 +1
 -2
 ";
 
-        assert_eq!(part1(input).unwrap(), 0);
-    }
-
-    #[test]
-    fn part1_provided4() {
-        let input = "-1
+    const PROVIDED4: &str = "-1
 -2
 -3
 ";
 
-        assert_eq!(part1(input).unwrap(), -6);
+    #[test]
+    fn part1_provided() {
+        assert_eq!(part1(PROVIDED1).unwrap(), 3);
+        assert_eq!(part1(PROVIDED2).unwrap(), 3);
+        assert_eq!(part1(PROVIDED3).unwrap(), 0);
+        assert_eq!(part1(PROVIDED4).unwrap(), -6);
     }
 
     #[test]
@@ -84,60 +72,38 @@ mod tests {
         assert_eq!(part1(INPUT).unwrap(), 427);
     }
 
-    #[test]
-    fn part2_provided1() {
-        let input = "+1
--2
-+3
-+1
-";
-
-        assert_eq!(part2(input).unwrap(), 2);
-    }
-
-    #[test]
-    fn part2_provided2() {
-        let input = "+1
+    const PROVIDED5: &str = "+1
 -1
 ";
 
-        assert_eq!(part2(input).unwrap(), 0);
-    }
-
-    #[test]
-    fn part2_provided3() {
-        let input = "+3
+    const PROVIDED6: &str = "+3
 +3
 +4
 -2
 -4
 ";
 
-        assert_eq!(part2(input).unwrap(), 10);
-    }
-
-    #[test]
-    fn part2_provided4() {
-        let input = "-6
+    const PROVIDED7: &str = "-6
 +3
 +8
 +5
 -6
 ";
 
-        assert_eq!(part2(input).unwrap(), 5);
-    }
-
-    #[test]
-    fn part2_provided5() {
-        let input = "+7
+    const PROVIDED8: &str = "+7
 +7
 -2
 -7
 -4
 ";
 
-        assert_eq!(part2(input).unwrap(), 14);
+    #[test]
+    fn part2_provided() {
+        assert_eq!(part2(PROVIDED1).unwrap(), 2);
+        assert_eq!(part2(PROVIDED5).unwrap(), 0);
+        assert_eq!(part2(PROVIDED6).unwrap(), 10);
+        assert_eq!(part2(PROVIDED7).unwrap(), 5);
+        assert_eq!(part2(PROVIDED8).unwrap(), 14);
     }
 
     #[test]
