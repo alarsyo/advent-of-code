@@ -5,6 +5,7 @@ const INPUT: &str = include_str!("../input/day04.txt");
 
 pub fn run() -> Result<()> {
     println!("part 1: {}", part1(INPUT)?);
+    println!("part 2: {}", part2(INPUT)?);
 
     Ok(())
 }
@@ -23,6 +24,26 @@ fn part1(input: &str) -> Result<usize> {
     let res = (begin..=end)
         .map(|n| DigitsIter::new(n).collect::<Vec<_>>())
         .filter(|digits| digits.windows(2).any(|window| window[0] == window[1]))
+        .filter(|digits| digits.windows(2).all(|window| window[0] <= window[1]))
+        .count();
+
+    Ok(res)
+}
+
+fn part2(input: &str) -> Result<usize> {
+    let mut range = input.trim_end().split('-');
+    let begin: usize = range
+        .next()
+        .ok_or_else(|| err!("invalid input: {}", input))?
+        .parse()?;
+    let end: usize = range
+        .next()
+        .ok_or_else(|| err!("invalid input: {}", input))?
+        .parse()?;
+
+    let res = (begin..=end)
+        .map(|n| DigitsIter::new(n).collect::<Vec<_>>())
+        .filter(|digits| GroupIter::new(digits).any(|group| group.len() == 2))
         .filter(|digits| digits.windows(2).all(|window| window[0] <= window[1]))
         .count();
 
@@ -61,6 +82,37 @@ impl Iterator for DigitsIter {
     }
 }
 
+struct GroupIter<'a> {
+    digits: &'a [usize],
+}
+
+impl<'a> GroupIter<'a> {
+    fn new(digits: &'a [usize]) -> Self {
+        GroupIter { digits }
+    }
+}
+
+impl<'a> Iterator for GroupIter<'a> {
+    type Item = &'a [usize];
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.digits.len() == 0 {
+            return None;
+        }
+
+        let digit = self.digits[0];
+        let mut num = 1;
+        while num < self.digits.len() && self.digits[num] == digit {
+            num += 1;
+        }
+
+        let res = &self.digits[..num];
+        self.digits = &self.digits[num..];
+
+        Some(res)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -75,5 +127,17 @@ mod tests {
     #[test]
     fn part1_real() {
         assert_eq!(part1(INPUT).unwrap(), 1729);
+    }
+
+    #[test]
+    fn part2_provided() {
+        assert_eq!(part2("112233-112233").unwrap(), 1);
+        assert_eq!(part2("123444-123444").unwrap(), 0);
+        assert_eq!(part2("111122-111122").unwrap(), 1);
+    }
+
+    #[test]
+    fn part2_real() {
+        assert_eq!(part2(INPUT).unwrap(), 1172);
     }
 }
