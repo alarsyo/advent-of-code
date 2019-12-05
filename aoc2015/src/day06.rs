@@ -28,25 +28,19 @@ fn part1(input: &str) -> Result<usize> {
     for inst in instructions {
         match inst.action {
             Action::TurnOn => {
-                ((inst.horizontal.0)..=(inst.horizontal.1))
-                    .flat_map(|i| ((inst.vertical.0)..=(inst.vertical.1)).map(move |j| (i, j)))
-                    .for_each(|(x, y)| {
-                        grid[x][y] = true;
-                    });
+                for (x, y) in inst {
+                    grid[x][y] = true;
+                }
             }
             Action::TurnOff => {
-                ((inst.horizontal.0)..=(inst.horizontal.1))
-                    .flat_map(|i| ((inst.vertical.0)..=(inst.vertical.1)).map(move |j| (i, j)))
-                    .for_each(|(x, y)| {
-                        grid[x][y] = false;
-                    });
+                for (x, y) in inst {
+                    grid[x][y] = false;
+                }
             }
             Action::Toggle => {
-                ((inst.horizontal.0)..=(inst.horizontal.1))
-                    .flat_map(|i| ((inst.vertical.0)..=(inst.vertical.1)).map(move |j| (i, j)))
-                    .for_each(|(x, y)| {
-                        grid[x][y] = !grid[x][y];
-                    });
+                for (x, y) in inst {
+                    grid[x][y] = !grid[x][y];
+                }
             }
         }
     }
@@ -73,25 +67,19 @@ fn part2(input: &str) -> Result<u64> {
     for inst in instructions {
         match inst.action {
             Action::TurnOn => {
-                ((inst.horizontal.0)..=(inst.horizontal.1))
-                    .flat_map(|i| ((inst.vertical.0)..=(inst.vertical.1)).map(move |j| (i, j)))
-                    .for_each(|(x, y)| {
-                        grid[x][y] = grid[x][y].saturating_add(1);
-                    });
+                for (x, y) in inst {
+                    grid[x][y] = grid[x][y].saturating_add(1);
+                }
             }
             Action::TurnOff => {
-                ((inst.horizontal.0)..=(inst.horizontal.1))
-                    .flat_map(|i| ((inst.vertical.0)..=(inst.vertical.1)).map(move |j| (i, j)))
-                    .for_each(|(x, y)| {
-                        grid[x][y] = grid[x][y].saturating_sub(1);
-                    });
+                for (x, y) in inst {
+                    grid[x][y] = grid[x][y].saturating_sub(1);
+                }
             }
             Action::Toggle => {
-                ((inst.horizontal.0)..=(inst.horizontal.1))
-                    .flat_map(|i| ((inst.vertical.0)..=(inst.vertical.1)).map(move |j| (i, j)))
-                    .for_each(|(x, y)| {
-                        grid[x][y] = grid[x][y].saturating_add(2);
-                    });
+                for (x, y) in inst {
+                    grid[x][y] = grid[x][y].saturating_add(2);
+                }
             }
         }
     }
@@ -109,6 +97,22 @@ struct Instruction {
     action: Action,
     horizontal: (usize, usize),
     vertical: (usize, usize),
+}
+
+impl IntoIterator for Instruction {
+    type Item = (usize, usize);
+    type IntoIter = Box<dyn Iterator<Item = Self::Item>>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        let begin_x = self.horizontal.0;
+        let end_x = self.horizontal.1;
+        let begin_y = self.vertical.0;
+        let end_y = self.vertical.1;
+
+        let iter = (begin_x..=end_x).flat_map(move |i| (begin_y..=end_y).map(move |j| (i, j)));
+
+        Box::new(iter)
+    }
 }
 
 impl FromStr for Instruction {
