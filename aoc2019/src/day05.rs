@@ -5,12 +5,23 @@ const INPUT: &str = include_str!("../input/day05.txt");
 
 pub fn run() -> Result<()> {
     println!("part 1: {}", part1(INPUT)?);
+    println!("part 2: {}", part2(INPUT)?);
+
     Ok(())
 }
 
 fn part1(input: &str) -> Result<i64> {
     let mut intcode = Intcode::new(input)?;
     intcode.add_input(1);
+    intcode.run()?;
+    intcode
+        .get_output()
+        .ok_or_else(|| err!("intcode gave no output"))
+}
+
+fn part2(input: &str) -> Result<i64> {
+    let mut intcode = Intcode::new(input)?;
+    intcode.add_input(5);
     intcode.run()?;
     intcode
         .get_output()
@@ -67,6 +78,10 @@ enum Opcode {
     Multiply(Parameter, Parameter, Parameter),
     Input(Parameter),
     Output(Parameter),
+    JumpTrue(Parameter, Parameter),
+    JumpFalse(Parameter, Parameter),
+    LessThan(Parameter, Parameter, Parameter),
+    Equals(Parameter, Parameter, Parameter),
     Halt,
 }
 
@@ -138,6 +153,40 @@ impl Intcode {
 
                 Ok(Opcode::Output(op))
             }
+            5 => {
+                let test = Parameter::new(instruction / 100, self.memory.get(self.ip + 1))?;
+                let dst = Parameter::new(instruction / 1000, self.memory.get(self.ip + 2))?;
+
+                Ok(Opcode::JumpTrue(test, dst))
+            }
+            6 => {
+                let test = Parameter::new(instruction / 100, self.memory.get(self.ip + 1))?;
+                let dst = Parameter::new(instruction / 1000, self.memory.get(self.ip + 2))?;
+
+                Ok(Opcode::JumpFalse(test, dst))
+            }
+            7 => {
+                let op1 = Parameter::new(instruction / 100, self.memory.get(self.ip + 1))?;
+                let op2 = Parameter::new(instruction / 1000, self.memory.get(self.ip + 2))?;
+                let dst = Parameter::new(instruction / 10000, self.memory.get(self.ip + 3))?;
+
+                if let Parameter::Immediate(_) = dst {
+                    Err(err!("less than: destination parameter can't be immediate"))
+                } else {
+                    Ok(Opcode::LessThan(op1, op2, dst))
+                }
+            }
+            8 => {
+                let op1 = Parameter::new(instruction / 100, self.memory.get(self.ip + 1))?;
+                let op2 = Parameter::new(instruction / 1000, self.memory.get(self.ip + 2))?;
+                let dst = Parameter::new(instruction / 10000, self.memory.get(self.ip + 3))?;
+
+                if let Parameter::Immediate(_) = dst {
+                    Err(err!("equals: destination parameter can't be immediate"))
+                } else {
+                    Ok(Opcode::Equals(op1, op2, dst))
+                }
+            }
             99 => Ok(Opcode::Halt),
             _ => Err(err!("unknown opcode: {}", opcode)),
         }
@@ -193,6 +242,62 @@ impl Intcode {
 
                     self.ip += 2;
                 }
+                Opcode::JumpTrue(test, dst) => {
+                    let val = test
+                        .get(&self.memory)
+                        .ok_or_else(|| err!("jump true: op out of bounds"))?;
+                    let dst = dst
+                        .get(&self.memory)
+                        .filter(|dst| *dst >= 0)
+                        .ok_or_else(|| err!("jump true: op out of bounds"))?;
+
+                    if val != 0 {
+                        self.ip = dst as usize;
+                    } else {
+                        self.ip += 3;
+                    }
+                }
+                Opcode::JumpFalse(test, dst) => {
+                    let val = test
+                        .get(&self.memory)
+                        .ok_or_else(|| err!("jump false: op out of bounds"))?;
+                    let dst = dst
+                        .get(&self.memory)
+                        .filter(|dst| *dst >= 0)
+                        .ok_or_else(|| err!("jump false: op out of bounds"))?;
+
+                    if val == 0 {
+                        self.ip = dst as usize;
+                    } else {
+                        self.ip += 3;
+                    }
+                }
+                Opcode::LessThan(op1, op2, dst) => {
+                    let val1 = op1
+                        .get(&self.memory)
+                        .ok_or_else(|| err!("less than: op1 out of bounds"))?;
+                    let val2 = op2
+                        .get(&self.memory)
+                        .ok_or_else(|| err!("less than: op1 out of bounds"))?;
+
+                    let res = if val1 < val2 { 1 } else { 0 };
+                    dst.set(&mut self.memory, res)?;
+
+                    self.ip += 4;
+                }
+                Opcode::Equals(op1, op2, dst) => {
+                    let val1 = op1
+                        .get(&self.memory)
+                        .ok_or_else(|| err!("equals: op1 out of bounds"))?;
+                    let val2 = op2
+                        .get(&self.memory)
+                        .ok_or_else(|| err!("equals: op1 out of bounds"))?;
+
+                    let res = if val1 == val2 { 1 } else { 0 };
+                    dst.set(&mut self.memory, res)?;
+
+                    self.ip += 4;
+                }
                 Opcode::Halt => break Ok(()),
             }
         }
@@ -218,5 +323,10 @@ mod tests {
     #[test]
     fn part1_real() {
         assert_eq!(part1(INPUT).unwrap(), 16225258);
+    }
+
+    #[test]
+    fn part2_real() {
+        assert_eq!(part2(INPUT).unwrap(), 2808771);
     }
 }
