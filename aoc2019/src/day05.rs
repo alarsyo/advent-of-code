@@ -34,8 +34,8 @@ enum Parameter {
 }
 
 impl Parameter {
-    fn new(mode: i64, val: Option<&i64>) -> Result<Self> {
-        let val = *val.ok_or_else(|| err!("parameter value out of bounds"))?;
+    fn new(mode: i64, val: Option<i64>) -> Result<Self> {
+        let val = val.ok_or_else(|| err!("parameter value out of bounds"))?;
         let mode = mode % 10;
 
         match mode {
@@ -54,7 +54,7 @@ impl Parameter {
 
     fn get(&self, memory: &[i64]) -> Option<i64> {
         match self {
-            Parameter::Position(address) => memory.get(*address).map(|v| *v),
+            Parameter::Position(address) => memory.get(*address).copied(),
             Parameter::Immediate(value) => Some(*value),
         }
     }
@@ -118,9 +118,11 @@ impl Intcode {
         let opcode = instruction % 100;
         match opcode {
             1 => {
-                let op1 = Parameter::new(instruction / 100, self.memory.get(self.ip + 1))?;
-                let op2 = Parameter::new(instruction / 1000, self.memory.get(self.ip + 2))?;
-                let dst = Parameter::new(instruction / 10000, self.memory.get(self.ip + 3))?;
+                let op1 = Parameter::new(instruction / 100, self.memory.get(self.ip + 1).copied())?;
+                let op2 =
+                    Parameter::new(instruction / 1000, self.memory.get(self.ip + 2).copied())?;
+                let dst =
+                    Parameter::new(instruction / 10000, self.memory.get(self.ip + 3).copied())?;
 
                 if let Parameter::Immediate(_) = dst {
                     Err(err!("add: destination parameter can't be immediate"))
@@ -129,9 +131,11 @@ impl Intcode {
                 }
             }
             2 => {
-                let op1 = Parameter::new(instruction / 100, self.memory.get(self.ip + 1))?;
-                let op2 = Parameter::new(instruction / 1000, self.memory.get(self.ip + 2))?;
-                let dst = Parameter::new(instruction / 10000, self.memory.get(self.ip + 3))?;
+                let op1 = Parameter::new(instruction / 100, self.memory.get(self.ip + 1).copied())?;
+                let op2 =
+                    Parameter::new(instruction / 1000, self.memory.get(self.ip + 2).copied())?;
+                let dst =
+                    Parameter::new(instruction / 10000, self.memory.get(self.ip + 3).copied())?;
 
                 if let Parameter::Immediate(_) = dst {
                     Err(err!("multiply: destination parameter can't be immediate"))
@@ -140,7 +144,7 @@ impl Intcode {
                 }
             }
             3 => {
-                let dst = Parameter::new(instruction / 100, self.memory.get(self.ip + 1))?;
+                let dst = Parameter::new(instruction / 100, self.memory.get(self.ip + 1).copied())?;
 
                 if let Parameter::Immediate(_) = dst {
                     Err(err!("input: destination parameter can't be immediate"))
@@ -149,26 +153,32 @@ impl Intcode {
                 }
             }
             4 => {
-                let op = Parameter::new(instruction / 100, self.memory.get(self.ip + 1))?;
+                let op = Parameter::new(instruction / 100, self.memory.get(self.ip + 1).copied())?;
 
                 Ok(Opcode::Output(op))
             }
             5 => {
-                let test = Parameter::new(instruction / 100, self.memory.get(self.ip + 1))?;
-                let dst = Parameter::new(instruction / 1000, self.memory.get(self.ip + 2))?;
+                let test =
+                    Parameter::new(instruction / 100, self.memory.get(self.ip + 1).copied())?;
+                let dst =
+                    Parameter::new(instruction / 1000, self.memory.get(self.ip + 2).copied())?;
 
                 Ok(Opcode::JumpTrue(test, dst))
             }
             6 => {
-                let test = Parameter::new(instruction / 100, self.memory.get(self.ip + 1))?;
-                let dst = Parameter::new(instruction / 1000, self.memory.get(self.ip + 2))?;
+                let test =
+                    Parameter::new(instruction / 100, self.memory.get(self.ip + 1).copied())?;
+                let dst =
+                    Parameter::new(instruction / 1000, self.memory.get(self.ip + 2).copied())?;
 
                 Ok(Opcode::JumpFalse(test, dst))
             }
             7 => {
-                let op1 = Parameter::new(instruction / 100, self.memory.get(self.ip + 1))?;
-                let op2 = Parameter::new(instruction / 1000, self.memory.get(self.ip + 2))?;
-                let dst = Parameter::new(instruction / 10000, self.memory.get(self.ip + 3))?;
+                let op1 = Parameter::new(instruction / 100, self.memory.get(self.ip + 1).copied())?;
+                let op2 =
+                    Parameter::new(instruction / 1000, self.memory.get(self.ip + 2).copied())?;
+                let dst =
+                    Parameter::new(instruction / 10000, self.memory.get(self.ip + 3).copied())?;
 
                 if let Parameter::Immediate(_) = dst {
                     Err(err!("less than: destination parameter can't be immediate"))
@@ -177,9 +187,11 @@ impl Intcode {
                 }
             }
             8 => {
-                let op1 = Parameter::new(instruction / 100, self.memory.get(self.ip + 1))?;
-                let op2 = Parameter::new(instruction / 1000, self.memory.get(self.ip + 2))?;
-                let dst = Parameter::new(instruction / 10000, self.memory.get(self.ip + 3))?;
+                let op1 = Parameter::new(instruction / 100, self.memory.get(self.ip + 1).copied())?;
+                let op2 =
+                    Parameter::new(instruction / 1000, self.memory.get(self.ip + 2).copied())?;
+                let dst =
+                    Parameter::new(instruction / 10000, self.memory.get(self.ip + 3).copied())?;
 
                 if let Parameter::Immediate(_) = dst {
                     Err(err!("equals: destination parameter can't be immediate"))

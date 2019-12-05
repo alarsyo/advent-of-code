@@ -96,7 +96,7 @@ impl<'a> Iterator for GroupIter<'a> {
     type Item = &'a [usize];
 
     fn next(&mut self) -> Option<Self::Item> {
-        if self.digits.len() == 0 {
+        if self.digits.is_empty() {
             return None;
         }
 

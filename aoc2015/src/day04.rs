@@ -20,11 +20,11 @@ fn part1(input: &str) -> Result<u64> {
 
     for i in 0.. {
         content.truncate(input.len());
-        content.extend(i.to_string().chars());
+        content.push_str(&i.to_string());
 
         hasher.input(&content);
         let res = hasher.result_reset();
-        if &res[..2] == &[0, 0] && res[2] <= 0x0f {
+        if res[..2] == [0, 0] && res[2] <= 0x0f {
             return Ok(i);
         }
     }
@@ -40,11 +40,11 @@ fn part2(input: &str) -> Result<u64> {
 
     for i in 0.. {
         content.truncate(input.len());
-        content.extend(i.to_string().chars());
+        content.push_str(&i.to_string());
 
         hasher.input(&content);
         let res = hasher.result_reset();
-        if &res[..3] == &[0, 0, 0] {
+        if res[..3] == [0, 0, 0] {
             return Ok(i);
         }
     }
