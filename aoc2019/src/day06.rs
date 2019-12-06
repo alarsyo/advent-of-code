@@ -66,7 +66,7 @@ fn part2(input: &str) -> Result<usize> {
         })
         .collect::<Result<HashMap<String, String>>>()?;
 
-    let succ = |key: &String| orbits.get(key).map(|val| val.clone());
+    let succ = |key: &String| orbits.get(key).cloned();
 
     let you_path = iter::successors(Some("YOU".to_string()), succ).collect::<HashSet<_>>();
     let santa_path = iter::successors(Some("SAN".to_string()), succ).collect::<HashSet<_>>();
