@@ -25,11 +25,18 @@ fn part1(input: &str) -> Result<usize> {
         .ok_or_else(|| err!("invalid input: {}", input))?
         .parse()?;
 
-    let res = (begin..=end)
-        .map(|n| DigitsIter::new(n).collect::<Vec<_>>())
-        .filter(|digits| digits.windows(2).any(|window| window[0] == window[1]))
-        .filter(|digits| digits.windows(2).all(|window| window[0] <= window[1]))
-        .count();
+    let mut digits = Vec::with_capacity(10);
+    let mut res = 0;
+    for n in begin..=end {
+        digits.clear();
+        digits.extend(DigitsIter::new(n));
+
+        if digits.windows(2).any(|window| window[0] == window[1])
+            && digits.windows(2).all(|window| window[0] <= window[1])
+        {
+            res += 1;
+        }
+    }
 
     Ok(res)
 }
@@ -45,11 +52,38 @@ fn part2(input: &str) -> Result<usize> {
         .ok_or_else(|| err!("invalid input: {}", input))?
         .parse()?;
 
-    let res = (begin..=end)
-        .map(|n| DigitsIter::new(n).collect::<Vec<_>>())
-        .filter(|digits| GroupIter::new(digits).any(|group| group.len() == 2))
-        .filter(|digits| digits.windows(2).all(|window| window[0] <= window[1]))
-        .count();
+    let mut res = 0;
+    let mut digits = Vec::with_capacity(10);
+
+    for n in begin..=end {
+        digits.clear();
+        digits.extend(DigitsIter::new(n));
+
+        let mut ordered = true;
+        let mut pair = false;
+        let mut count = 1;
+        let mut prev = digits[0];
+        for i in 1..digits.len() {
+            if prev > digits[i] {
+                ordered = false;
+                break;
+            } else if prev == digits[i] {
+                count += 1;
+            } else {
+                if count == 2 {
+                    pair = true;
+                }
+                count = 1;
+            }
+
+            prev = digits[i];
+        }
+        pair = pair || count == 2;
+
+        if pair && ordered {
+            res += 1;
+        }
+    }
 
     Ok(res)
 }
@@ -83,37 +117,6 @@ impl Iterator for DigitsIter {
                 Some(res)
             }
         }
-    }
-}
-
-struct GroupIter<'a> {
-    digits: &'a [usize],
-}
-
-impl<'a> GroupIter<'a> {
-    fn new(digits: &'a [usize]) -> Self {
-        GroupIter { digits }
-    }
-}
-
-impl<'a> Iterator for GroupIter<'a> {
-    type Item = &'a [usize];
-
-    fn next(&mut self) -> Option<Self::Item> {
-        if self.digits.is_empty() {
-            return None;
-        }
-
-        let digit = self.digits[0];
-        let mut num = 1;
-        while num < self.digits.len() && self.digits[num] == digit {
-            num += 1;
-        }
-
-        let res = &self.digits[..num];
-        self.digits = &self.digits[num..];
-
-        Some(res)
     }
 }
 
