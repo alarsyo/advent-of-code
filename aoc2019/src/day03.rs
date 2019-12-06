@@ -12,8 +12,10 @@ const INPUT: &str = include_str!("../input/day03.txt");
 pub fn run() -> Result<String> {
     let mut res = String::with_capacity(128);
 
-    writeln!(res, "part 1: {}", part1(INPUT)?)?;
-    writeln!(res, "part 2: {}", part2(INPUT)?)?;
+    let (first, second) = parse_paths(INPUT)?;
+
+    writeln!(res, "part 1: {}", part1(&first, &second)?)?;
+    writeln!(res, "part 2: {}", part2(&first, &second)?)?;
 
     Ok(res)
 }
@@ -50,72 +52,7 @@ impl FromStr for Move {
     }
 }
 
-fn path(mut a: (i64, i64), b: (i64, i64)) -> Vec<(i64, i64)> {
-    let mut res = Vec::new();
-
-    while a != b {
-        if a.0 < b.0 {
-            a.0 += 1;
-        } else if a.0 > b.0 {
-            a.0 -= 1;
-        }
-
-        if a.1 < b.1 {
-            a.1 += 1;
-        } else if a.1 > b.1 {
-            a.1 -= 1;
-        }
-
-        res.push(a);
-    }
-
-    res
-}
-
-fn parse_path(line: &str) -> Result<HashSet<(i64, i64)>> {
-    let moves = line
-        .trim_end()
-        .split(',')
-        .map(|m| m.parse())
-        .collect::<Result<Vec<Move>>>()?;
-
-    let mut pos = (0, 0);
-
-    Ok(moves
-        .iter()
-        .flat_map(|mv| {
-            let new_pos = match mv {
-                Move::Up(dy) => (pos.0, pos.1 - dy),
-                Move::Down(dy) => (pos.0, pos.1 + dy),
-                Move::Left(dx) => (pos.0 - dx, pos.1),
-                Move::Right(dx) => (pos.0 + dx, pos.1),
-            };
-
-            let p = path(pos, new_pos);
-            pos = new_pos;
-            p
-        })
-        .collect())
-}
-
-fn manhattan_distance(a: (i64, i64), b: (i64, i64)) -> i64 {
-    (a.0 - b.0).abs() + (a.1 - b.1).abs()
-}
-
-fn part1(input: &str) -> Result<i64> {
-    let mut lines = input.lines();
-    let first_path = parse_path(lines.next().ok_or_else(|| err!("missing line in input"))?)?;
-    let second_path = parse_path(lines.next().ok_or_else(|| err!("missing line in input"))?)?;
-
-    let cross_locations = first_path.intersection(&second_path);
-
-    cross_locations
-        .map(|(x, y)| manhattan_distance((*x, *y), (0, 0)))
-        .min()
-        .ok_or_else(|| err!("the cables never crossed !"))
-}
-
-fn path_count(mut a: (i64, i64), b: (i64, i64), mut start_count: i64) -> Vec<((i64, i64), i64)> {
+fn path_count(mut a: (i64, i64), b: (i64, i64), mut start_count: u64) -> Vec<((i64, i64), u64)> {
     let mut res = Vec::new();
 
     while a != b {
@@ -138,7 +75,7 @@ fn path_count(mut a: (i64, i64), b: (i64, i64), mut start_count: i64) -> Vec<((i
     res
 }
 
-fn parse_path_with_count(line: &str) -> Result<HashMap<(i64, i64), i64>> {
+fn parse_path_with_count(line: &str) -> Result<HashMap<(i64, i64), u64>> {
     let moves = line
         .trim_end()
         .split(',')
@@ -166,13 +103,38 @@ fn parse_path_with_count(line: &str) -> Result<HashMap<(i64, i64), i64>> {
         .collect())
 }
 
-fn part2(input: &str) -> Result<i64> {
+fn parse_paths(input: &str) -> Result<(HashMap<(i64, i64), u64>, HashMap<(i64, i64), u64>)> {
     let mut lines = input.lines();
     let first_path =
         parse_path_with_count(lines.next().ok_or_else(|| err!("missing line in input"))?)?;
     let second_path =
         parse_path_with_count(lines.next().ok_or_else(|| err!("missing line in input"))?)?;
 
+    Ok((first_path, second_path))
+}
+
+fn manhattan_distance(a: (i64, i64), b: (i64, i64)) -> u64 {
+    (a.0 - b.0).abs() as u64 + (a.1 - b.1).abs() as u64
+}
+
+fn part1(
+    first_path: &HashMap<(i64, i64), u64>,
+    second_path: &HashMap<(i64, i64), u64>,
+) -> Result<u64> {
+    let first_path = first_path.keys().collect::<HashSet<_>>();
+    let second_path = second_path.keys().collect::<HashSet<_>>();
+    let cross_locations = first_path.intersection(&second_path);
+
+    cross_locations
+        .map(|(x, y)| manhattan_distance((*x, *y), (0, 0)))
+        .min()
+        .ok_or_else(|| err!("the cables never crossed !"))
+}
+
+fn part2(
+    first_path: &HashMap<(i64, i64), u64>,
+    second_path: &HashMap<(i64, i64), u64>,
+) -> Result<u64> {
     first_path
         .keys()
         .filter(|pos| second_path.contains_key(&pos))
@@ -199,25 +161,33 @@ U98,R91,D20,R16,D67,R40,U7,R15,U6,R7
 
     #[test]
     fn part1_provided() {
-        assert_eq!(part1(PROVIDED1).unwrap(), 6);
-        assert_eq!(part1(PROVIDED2).unwrap(), 159);
-        assert_eq!(part1(PROVIDED3).unwrap(), 135);
+        let (first, second) = parse_paths(PROVIDED1).unwrap();
+        assert_eq!(part1(&first, &second).unwrap(), 6);
+        let (first, second) = parse_paths(PROVIDED2).unwrap();
+        assert_eq!(part1(&first, &second).unwrap(), 159);
+        let (first, second) = parse_paths(PROVIDED3).unwrap();
+        assert_eq!(part1(&first, &second).unwrap(), 135);
     }
 
     #[test]
     fn part1_real() {
-        assert_eq!(part1(INPUT).unwrap(), 273);
+        let (first, second) = parse_paths(INPUT).unwrap();
+        assert_eq!(part1(&first, &second).unwrap(), 273);
     }
 
     #[test]
     fn part2_provided() {
-        assert_eq!(part2(PROVIDED1).unwrap(), 30);
-        assert_eq!(part2(PROVIDED2).unwrap(), 610);
-        assert_eq!(part2(PROVIDED3).unwrap(), 410);
+        let (first, second) = parse_paths(PROVIDED1).unwrap();
+        assert_eq!(part2(&first, &second).unwrap(), 30);
+        let (first, second) = parse_paths(PROVIDED2).unwrap();
+        assert_eq!(part2(&first, &second).unwrap(), 610);
+        let (first, second) = parse_paths(PROVIDED3).unwrap();
+        assert_eq!(part2(&first, &second).unwrap(), 410);
     }
 
     #[test]
     fn part2_real() {
-        assert_eq!(part2(INPUT).unwrap(), 15622);
+        let (first, second) = parse_paths(INPUT).unwrap();
+        assert_eq!(part2(&first, &second).unwrap(), 15622);
     }
 }
