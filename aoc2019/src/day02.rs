@@ -1,3 +1,5 @@
+use std::fmt::Write;
+
 use aoc::err;
 use aoc::Result;
 
@@ -12,12 +14,15 @@ fn parse_intcode(input: &str) -> Result<Vec<usize>> {
         .collect()
 }
 
-pub fn run() -> Result<()> {
-    let intcode = parse_intcode(INPUT)?;
-    println!("part 1: {}", part1(&mut intcode.clone())?);
-    println!("part 2: {}", part2(&intcode, PART2_EXPECTED)?);
+pub fn run() -> Result<String> {
+    let mut res = String::with_capacity(128);
 
-    Ok(())
+    let intcode = parse_intcode(INPUT)?;
+
+    writeln!(res, "part 1: {}", part1(&mut intcode.clone())?)?;
+    writeln!(res, "part 2: {}", part2(&intcode, PART2_EXPECTED)?)?;
+
+    Ok(res)
 }
 
 fn eval(intcode: &mut [usize]) -> Result<()> {

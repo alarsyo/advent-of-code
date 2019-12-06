@@ -1,4 +1,5 @@
 use std::error::Error;
+use std::fmt::Write;
 use std::str::FromStr;
 
 use aoc::err;
@@ -6,16 +7,18 @@ use aoc::Result;
 
 const INPUT: &str = include_str!("../input/day02.txt");
 
-pub fn run() -> Result<()> {
+pub fn run() -> Result<String> {
+    let mut res = String::with_capacity(128);
+
     let presents: Vec<Present> = INPUT
         .lines()
         .map(|line| line.parse())
         .collect::<Result<_>>()?;
 
-    println!("part 1: {}", part1(&presents));
-    println!("part 2: {}", part2(&presents));
+    writeln!(res, "part 1: {}", part1(&presents))?;
+    writeln!(res, "part 2: {}", part2(&presents))?;
 
-    Ok(())
+    Ok(res)
 }
 
 fn wrapping_paper(present: &Present) -> u64 {

@@ -1,14 +1,17 @@
 use std::collections::HashSet;
+use std::fmt::Write;
 
 use aoc::Result;
 
 const INPUT: &str = include_str!("../input/day05.txt");
 
-pub fn run() -> Result<()> {
-    println!("part 1: {}", part1(INPUT));
-    println!("part 2: {}", part2(INPUT));
+pub fn run() -> Result<String> {
+    let mut res = String::with_capacity(128);
 
-    Ok(())
+    writeln!(res, "part 1: {}", part1(INPUT))?;
+    writeln!(res, "part 2: {}", part2(INPUT))?;
+
+    Ok(res)
 }
 
 fn same_type(a: char, b: char) -> bool {

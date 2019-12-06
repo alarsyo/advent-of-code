@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use std::error::Error;
+use std::fmt::Write;
 use std::str::FromStr;
 
 use aoc::err;
@@ -13,10 +14,12 @@ fn sorted_lines(input: &str) -> String {
     lines.join("\n")
 }
 
-pub fn run() -> Result<()> {
-    println!("part 1: {}", part1(&sorted_lines(INPUT))?);
+pub fn run() -> Result<String> {
+    let mut res = String::with_capacity(128);
 
-    Ok(())
+    writeln!(res, "part 1: {}", part1(&sorted_lines(INPUT))?)?;
+
+    Ok(res)
 }
 
 #[derive(Debug)]
