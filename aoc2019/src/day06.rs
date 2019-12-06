@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::iter;
 
 use aoc::err;
 use aoc::Result;
@@ -7,6 +8,7 @@ const INPUT: &str = include_str!("../input/day06.txt");
 
 pub fn run() -> Result<()> {
     println!("part 1: {}", part1(INPUT)?);
+    println!("part 2: {}", part2(INPUT)?);
 
     Ok(())
 }
@@ -48,6 +50,33 @@ fn part1(input: &str) -> Result<u64> {
         .sum())
 }
 
+fn part2(input: &str) -> Result<usize> {
+    let orbits = input
+        .lines()
+        .map(|line| line.trim_end())
+        .map(|line| {
+            let paren = line
+                .find(')')
+                .ok_or_else(|| err!("couldn't find `)` in line: {}", line))?;
+            Ok((line[paren + 1..].to_string(), line[..paren].to_string()))
+        })
+        .collect::<Result<HashMap<String, String>>>()?;
+
+    let succ = |key: &String| orbits.get(key).map(|val| val.clone());
+
+    let you_path = iter::successors(Some("YOU".to_string()), succ).collect::<Vec<_>>();
+    let santa_path = iter::successors(Some("SAN".to_string()), succ).collect::<Vec<_>>();
+
+    let common = you_path
+        .iter()
+        .rev()
+        .zip(santa_path.iter().rev())
+        .filter(|(x, y)| x == y)
+        .count();
+
+    Ok(you_path.len() - common + santa_path.len() - common - 2)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -65,6 +94,21 @@ J)K
 K)L
 ";
 
+    const PROVIDED2: &str = "COM)B
+B)C
+C)D
+D)E
+E)F
+B)G
+G)H
+D)I
+E)J
+J)K
+K)L
+K)YOU
+I)SAN
+";
+
     #[test]
     fn part1_provided() {
         assert_eq!(part1(PROVIDED1).unwrap(), 42);
@@ -73,5 +117,15 @@ K)L
     #[test]
     fn part1_real() {
         assert_eq!(part1(INPUT).unwrap(), 140608);
+    }
+
+    #[test]
+    fn part2_provided() {
+        assert_eq!(part2(PROVIDED2).unwrap(), 4);
+    }
+
+    #[test]
+    fn part2_real() {
+        assert_eq!(part2(INPUT).unwrap(), 337);
     }
 }
