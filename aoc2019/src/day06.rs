@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::collections::HashSet;
 use std::iter;
 
 use aoc::err;
@@ -64,17 +65,10 @@ fn part2(input: &str) -> Result<usize> {
 
     let succ = |key: &String| orbits.get(key).map(|val| val.clone());
 
-    let you_path = iter::successors(Some("YOU".to_string()), succ).collect::<Vec<_>>();
-    let santa_path = iter::successors(Some("SAN".to_string()), succ).collect::<Vec<_>>();
+    let you_path = iter::successors(Some("YOU".to_string()), succ).collect::<HashSet<_>>();
+    let santa_path = iter::successors(Some("SAN".to_string()), succ).collect::<HashSet<_>>();
 
-    let common = you_path
-        .iter()
-        .rev()
-        .zip(santa_path.iter().rev())
-        .filter(|(x, y)| x == y)
-        .count();
-
-    Ok(you_path.len() - common + santa_path.len() - common - 2)
+    Ok(you_path.symmetric_difference(&santa_path).count() - 2)
 }
 
 #[cfg(test)]
