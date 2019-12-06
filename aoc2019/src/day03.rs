@@ -1,5 +1,4 @@
-use std::collections::HashMap;
-use std::collections::HashSet;
+use std::cmp::{max, min};
 use std::error::Error;
 use std::fmt::Write;
 use std::str::FromStr;
@@ -12,7 +11,7 @@ const INPUT: &str = include_str!("../input/day03.txt");
 pub fn run() -> Result<String> {
     let mut res = String::with_capacity(128);
 
-    let (first, second) = parse_paths(INPUT)?;
+    let (first, second) = parse_wires(INPUT)?;
 
     writeln!(res, "part 1: {}", part1(&first, &second)?)?;
     writeln!(res, "part 2: {}", part2(&first, &second)?)?;
@@ -20,11 +19,178 @@ pub fn run() -> Result<String> {
     Ok(res)
 }
 
-enum Move {
-    Up(i64),
-    Down(i64),
-    Left(i64),
-    Right(i64),
+fn manhattan_distance(a: &Point, b: &Point) -> u64 {
+    (a.x - b.x).abs() as u64 + (a.y - b.y).abs() as u64
+}
+
+fn part1(first_wire: &Wire, second_wire: &Wire) -> Result<u64> {
+    first_wire
+        .0
+        .iter()
+        .flat_map(|first_seg| {
+            second_wire
+                .0
+                .iter()
+                .map(move |second_seg| (first_seg, second_seg))
+        })
+        .filter_map(|(f, s)| match f.intersection(s) {
+            Some(Point { x: 0, y: 0 }) | None => None,
+            Some(p) => Some(p),
+        })
+        .map(|inter| manhattan_distance(&inter, &Point { x: 0, y: 0 }))
+        .min()
+        .ok_or_else(|| err!("wire was empty"))
+}
+
+fn part2(first_wire: &Wire, second_wire: &Wire) -> Result<u64> {
+    let mut min_dist = None;
+
+    let mut first_length = 0;
+
+    for seg1 in first_wire.0.iter() {
+        let mut second_length = 0;
+
+        for seg2 in second_wire.0.iter() {
+            if let Some(inter) = seg1.intersection(&seg2) {
+                if inter.x == 0 && inter.y == 0 {
+                    continue;
+                }
+                let path_length = first_length
+                    + second_length
+                    + manhattan_distance(&inter, &seg1.begin)
+                    + manhattan_distance(&inter, &seg2.begin);
+
+                min_dist = match min_dist {
+                    Some(dist) => Some(min(dist, path_length)),
+                    None => Some(path_length),
+                };
+            }
+
+            second_length += manhattan_distance(&seg2.begin, &seg2.end);
+        }
+
+        first_length += manhattan_distance(&seg1.begin, &seg1.end);
+    }
+
+    min_dist.ok_or_else(|| err!("wire was empty"))
+}
+
+fn parse_wires(input: &str) -> Result<(Wire, Wire)> {
+    let mut lines = input.lines();
+    let first = lines
+        .next()
+        .ok_or_else(|| err!("input missing a line"))?
+        .parse()?;
+    let second = lines
+        .next()
+        .ok_or_else(|| err!("input missing a line"))?
+        .parse()?;
+
+    Ok((first, second))
+}
+
+#[derive(Debug)]
+struct Wire(Vec<Segment>);
+
+impl FromStr for Wire {
+    type Err = Box<dyn Error>;
+
+    fn from_str(s: &str) -> Result<Wire> {
+        let moves = s
+            .trim_end()
+            .split(',')
+            .map(|m| m.parse())
+            .collect::<Result<Vec<Move>>>()
+            .map_err(|e| err!("failed to parse wire: {}", e))?;
+
+        let mut pos = Point { x: 0, y: 0 };
+
+        let mut wire = Vec::with_capacity(moves.len());
+        for mv in moves {
+            let mut new_pos = pos;
+            match mv.direction {
+                Direction::Up => {
+                    new_pos.y += mv.length;
+                }
+                Direction::Down => {
+                    new_pos.y -= mv.length;
+                }
+                Direction::Left => {
+                    new_pos.x -= mv.length;
+                }
+                Direction::Right => {
+                    new_pos.x += mv.length;
+                }
+            }
+
+            wire.push(Segment {
+                begin: pos,
+                end: new_pos,
+                min_x: min(pos.x, new_pos.x),
+                max_x: max(pos.x, new_pos.x),
+                min_y: min(pos.y, new_pos.y),
+                max_y: max(pos.y, new_pos.y),
+            });
+
+            pos = new_pos;
+        }
+
+        Ok(Wire(wire))
+    }
+}
+
+#[derive(Clone, Copy, Debug)]
+struct Point {
+    x: i64,
+    y: i64,
+}
+
+#[derive(Debug)]
+struct Segment {
+    begin: Point,
+    end: Point,
+    min_x: i64,
+    max_x: i64,
+    min_y: i64,
+    max_y: i64,
+}
+
+impl Segment {
+    fn intersection(&self, other: &Segment) -> Option<Point> {
+        if self.min_x >= other.min_x
+            && self.min_x <= other.max_x
+            && other.min_y >= self.min_y
+            && other.min_y <= self.max_y
+        {
+            Some(Point {
+                x: self.min_x,
+                y: other.min_y,
+            })
+        } else if other.min_x >= self.min_x
+            && other.min_x <= self.max_x
+            && self.min_y >= other.min_y
+            && self.min_y <= other.max_y
+        {
+            Some(Point {
+                x: other.min_x,
+                y: self.min_y,
+            })
+        } else {
+            None
+        }
+    }
+}
+
+enum Direction {
+    Up,
+    Down,
+    Left,
+    Right,
+}
+
+struct Move {
+    direction: Direction,
+    length: i64,
 }
 
 impl FromStr for Move {
@@ -42,105 +208,16 @@ impl FromStr for Move {
 
         let length = s.parse()?;
 
-        match direction {
-            'U' => Ok(Move::Up(length)),
-            'D' => Ok(Move::Down(length)),
-            'L' => Ok(Move::Left(length)),
-            'R' => Ok(Move::Right(length)),
-            _ => Err(err!("couldn't parse direction: {}", direction)),
-        }
+        let direction = match direction {
+            'U' => Direction::Up,
+            'D' => Direction::Down,
+            'L' => Direction::Left,
+            'R' => Direction::Right,
+            _ => return Err(err!("couldn't parse direction: {}", direction)),
+        };
+
+        Ok(Move { direction, length })
     }
-}
-
-fn path_count(mut a: (i64, i64), b: (i64, i64), mut start_count: u64) -> Vec<((i64, i64), u64)> {
-    let mut res = Vec::new();
-
-    while a != b {
-        if a.0 < b.0 {
-            a.0 += 1;
-        } else if a.0 > b.0 {
-            a.0 -= 1;
-        }
-
-        if a.1 < b.1 {
-            a.1 += 1;
-        } else if a.1 > b.1 {
-            a.1 -= 1;
-        }
-
-        start_count += 1;
-        res.push((a, start_count));
-    }
-
-    res
-}
-
-fn parse_path_with_count(line: &str) -> Result<HashMap<(i64, i64), u64>> {
-    let moves = line
-        .trim_end()
-        .split(',')
-        .map(|m| m.parse())
-        .collect::<Result<Vec<Move>>>()?;
-
-    let mut pos = (0, 0);
-    let mut count = 0;
-
-    Ok(moves
-        .iter()
-        .flat_map(|mv| {
-            let new_pos = match mv {
-                Move::Up(dy) => (pos.0, pos.1 - dy),
-                Move::Down(dy) => (pos.0, pos.1 + dy),
-                Move::Left(dx) => (pos.0 - dx, pos.1),
-                Move::Right(dx) => (pos.0 + dx, pos.1),
-            };
-
-            let p = path_count(pos, new_pos, count);
-            count += manhattan_distance(pos, new_pos);
-            pos = new_pos;
-            p
-        })
-        .collect())
-}
-
-fn parse_paths(input: &str) -> Result<(HashMap<(i64, i64), u64>, HashMap<(i64, i64), u64>)> {
-    let mut lines = input.lines();
-    let first_path =
-        parse_path_with_count(lines.next().ok_or_else(|| err!("missing line in input"))?)?;
-    let second_path =
-        parse_path_with_count(lines.next().ok_or_else(|| err!("missing line in input"))?)?;
-
-    Ok((first_path, second_path))
-}
-
-fn manhattan_distance(a: (i64, i64), b: (i64, i64)) -> u64 {
-    (a.0 - b.0).abs() as u64 + (a.1 - b.1).abs() as u64
-}
-
-fn part1(
-    first_path: &HashMap<(i64, i64), u64>,
-    second_path: &HashMap<(i64, i64), u64>,
-) -> Result<u64> {
-    let first_path = first_path.keys().collect::<HashSet<_>>();
-    let second_path = second_path.keys().collect::<HashSet<_>>();
-    let cross_locations = first_path.intersection(&second_path);
-
-    cross_locations
-        .map(|(x, y)| manhattan_distance((*x, *y), (0, 0)))
-        .min()
-        .ok_or_else(|| err!("the cables never crossed !"))
-}
-
-fn part2(
-    first_path: &HashMap<(i64, i64), u64>,
-    second_path: &HashMap<(i64, i64), u64>,
-) -> Result<u64> {
-    first_path
-        .keys()
-        .filter(|pos| second_path.contains_key(&pos))
-        .map(|pos| first_path.get(&pos).unwrap() + second_path.get(&pos).unwrap())
-        .min()
-        .ok_or_else(|| err!("cables never crossed !"))
 }
 
 #[cfg(test)]
@@ -161,33 +238,33 @@ U98,R91,D20,R16,D67,R40,U7,R15,U6,R7
 
     #[test]
     fn part1_provided() {
-        let (first, second) = parse_paths(PROVIDED1).unwrap();
+        let (first, second) = parse_wires(PROVIDED1).unwrap();
         assert_eq!(part1(&first, &second).unwrap(), 6);
-        let (first, second) = parse_paths(PROVIDED2).unwrap();
+        let (first, second) = parse_wires(PROVIDED2).unwrap();
         assert_eq!(part1(&first, &second).unwrap(), 159);
-        let (first, second) = parse_paths(PROVIDED3).unwrap();
+        let (first, second) = parse_wires(PROVIDED3).unwrap();
         assert_eq!(part1(&first, &second).unwrap(), 135);
     }
 
     #[test]
     fn part1_real() {
-        let (first, second) = parse_paths(INPUT).unwrap();
+        let (first, second) = parse_wires(INPUT).unwrap();
         assert_eq!(part1(&first, &second).unwrap(), 273);
     }
 
     #[test]
     fn part2_provided() {
-        let (first, second) = parse_paths(PROVIDED1).unwrap();
+        let (first, second) = parse_wires(PROVIDED1).unwrap();
         assert_eq!(part2(&first, &second).unwrap(), 30);
-        let (first, second) = parse_paths(PROVIDED2).unwrap();
+        let (first, second) = parse_wires(PROVIDED2).unwrap();
         assert_eq!(part2(&first, &second).unwrap(), 610);
-        let (first, second) = parse_paths(PROVIDED3).unwrap();
+        let (first, second) = parse_wires(PROVIDED3).unwrap();
         assert_eq!(part2(&first, &second).unwrap(), 410);
     }
 
     #[test]
     fn part2_real() {
-        let (first, second) = parse_paths(INPUT).unwrap();
+        let (first, second) = parse_wires(INPUT).unwrap();
         assert_eq!(part2(&first, &second).unwrap(), 15622);
     }
 }
