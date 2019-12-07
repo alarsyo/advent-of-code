@@ -2,3 +2,6 @@
 members = ["aoc*"]
 
 default-members = ["aoc2019"]
+
+[profile.release]
+debug = true
