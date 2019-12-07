@@ -56,10 +56,13 @@ impl Parameter {
         }
     }
 
-    fn get(&self, memory: &[i64]) -> Option<i64> {
+    fn get(&self, memory: &[i64]) -> Result<i64> {
         match self {
-            Parameter::Position(address) => memory.get(*address).copied(),
-            Parameter::Immediate(value) => Some(*value),
+            Parameter::Position(address) => match memory.get(*address) {
+                Some(val) => Ok(*val),
+                None => Err(err!("read out of bounds at address {}", address)),
+            },
+            Parameter::Immediate(value) => Ok(*value),
         }
     }
 
@@ -120,13 +123,14 @@ impl Intcode {
         let instruction = self.memory[self.ip];
 
         let opcode = instruction % 100;
+        let mode1 = instruction / 100;
+        let mode2 = instruction / 1000;
+        let mode3 = instruction / 10000;
         match opcode {
             1 => {
-                let op1 = Parameter::new(instruction / 100, self.memory.get(self.ip + 1).copied())?;
-                let op2 =
-                    Parameter::new(instruction / 1000, self.memory.get(self.ip + 2).copied())?;
-                let dst =
-                    Parameter::new(instruction / 10000, self.memory.get(self.ip + 3).copied())?;
+                let op1 = Parameter::new(mode1, self.memory.get(self.ip + 1).copied())?;
+                let op2 = Parameter::new(mode2, self.memory.get(self.ip + 2).copied())?;
+                let dst = Parameter::new(mode3, self.memory.get(self.ip + 3).copied())?;
 
                 if let Parameter::Immediate(_) = dst {
                     Err(err!("add: destination parameter can't be immediate"))
@@ -135,11 +139,9 @@ impl Intcode {
                 }
             }
             2 => {
-                let op1 = Parameter::new(instruction / 100, self.memory.get(self.ip + 1).copied())?;
-                let op2 =
-                    Parameter::new(instruction / 1000, self.memory.get(self.ip + 2).copied())?;
-                let dst =
-                    Parameter::new(instruction / 10000, self.memory.get(self.ip + 3).copied())?;
+                let op1 = Parameter::new(mode1, self.memory.get(self.ip + 1).copied())?;
+                let op2 = Parameter::new(mode2, self.memory.get(self.ip + 2).copied())?;
+                let dst = Parameter::new(mode3, self.memory.get(self.ip + 3).copied())?;
 
                 if let Parameter::Immediate(_) = dst {
                     Err(err!("multiply: destination parameter can't be immediate"))
@@ -148,7 +150,7 @@ impl Intcode {
                 }
             }
             3 => {
-                let dst = Parameter::new(instruction / 100, self.memory.get(self.ip + 1).copied())?;
+                let dst = Parameter::new(mode1, self.memory.get(self.ip + 1).copied())?;
 
                 if let Parameter::Immediate(_) = dst {
                     Err(err!("input: destination parameter can't be immediate"))
@@ -157,32 +159,26 @@ impl Intcode {
                 }
             }
             4 => {
-                let op = Parameter::new(instruction / 100, self.memory.get(self.ip + 1).copied())?;
+                let op = Parameter::new(mode1, self.memory.get(self.ip + 1).copied())?;
 
                 Ok(Opcode::Output(op))
             }
             5 => {
-                let test =
-                    Parameter::new(instruction / 100, self.memory.get(self.ip + 1).copied())?;
-                let dst =
-                    Parameter::new(instruction / 1000, self.memory.get(self.ip + 2).copied())?;
+                let test = Parameter::new(mode1, self.memory.get(self.ip + 1).copied())?;
+                let dst = Parameter::new(mode2, self.memory.get(self.ip + 2).copied())?;
 
                 Ok(Opcode::JumpTrue(test, dst))
             }
             6 => {
-                let test =
-                    Parameter::new(instruction / 100, self.memory.get(self.ip + 1).copied())?;
-                let dst =
-                    Parameter::new(instruction / 1000, self.memory.get(self.ip + 2).copied())?;
+                let test = Parameter::new(mode1, self.memory.get(self.ip + 1).copied())?;
+                let dst = Parameter::new(mode2, self.memory.get(self.ip + 2).copied())?;
 
                 Ok(Opcode::JumpFalse(test, dst))
             }
             7 => {
-                let op1 = Parameter::new(instruction / 100, self.memory.get(self.ip + 1).copied())?;
-                let op2 =
-                    Parameter::new(instruction / 1000, self.memory.get(self.ip + 2).copied())?;
-                let dst =
-                    Parameter::new(instruction / 10000, self.memory.get(self.ip + 3).copied())?;
+                let op1 = Parameter::new(mode1, self.memory.get(self.ip + 1).copied())?;
+                let op2 = Parameter::new(mode2, self.memory.get(self.ip + 2).copied())?;
+                let dst = Parameter::new(mode3, self.memory.get(self.ip + 3).copied())?;
 
                 if let Parameter::Immediate(_) = dst {
                     Err(err!("less than: destination parameter can't be immediate"))
@@ -191,11 +187,9 @@ impl Intcode {
                 }
             }
             8 => {
-                let op1 = Parameter::new(instruction / 100, self.memory.get(self.ip + 1).copied())?;
-                let op2 =
-                    Parameter::new(instruction / 1000, self.memory.get(self.ip + 2).copied())?;
-                let dst =
-                    Parameter::new(instruction / 10000, self.memory.get(self.ip + 3).copied())?;
+                let op1 = Parameter::new(mode1, self.memory.get(self.ip + 1).copied())?;
+                let op2 = Parameter::new(mode2, self.memory.get(self.ip + 2).copied())?;
+                let dst = Parameter::new(mode3, self.memory.get(self.ip + 3).copied())?;
 
                 if let Parameter::Immediate(_) = dst {
                     Err(err!("equals: destination parameter can't be immediate"))
@@ -218,24 +212,16 @@ impl Intcode {
 
             match opcode {
                 Opcode::Add(op1, op2, dst) => {
-                    let val1 = op1
-                        .get(&self.memory)
-                        .ok_or_else(|| err!("add: op1 out of bounds"))?;
-                    let val2 = op2
-                        .get(&self.memory)
-                        .ok_or_else(|| err!("add: op1 out of bounds"))?;
+                    let val1 = op1.get(&self.memory)?;
+                    let val2 = op2.get(&self.memory)?;
 
                     dst.set(&mut self.memory, val1 + val2)?;
 
                     self.ip += 4;
                 }
                 Opcode::Multiply(op1, op2, dst) => {
-                    let val1 = op1
-                        .get(&self.memory)
-                        .ok_or_else(|| err!("add: op1 out of bounds"))?;
-                    let val2 = op2
-                        .get(&self.memory)
-                        .ok_or_else(|| err!("add: op1 out of bounds"))?;
+                    let val1 = op1.get(&self.memory)?;
+                    let val2 = op2.get(&self.memory)?;
 
                     dst.set(&mut self.memory, val1 * val2)?;
 
@@ -251,21 +237,17 @@ impl Intcode {
                     self.ip += 2;
                 }
                 Opcode::Output(op) => {
-                    let val = op
-                        .get(&self.memory)
-                        .ok_or_else(|| err!("output: op out of bounds"))?;
+                    let val = op.get(&self.memory)?;
                     self.output.push(val);
 
                     self.ip += 2;
                 }
                 Opcode::JumpTrue(test, dst) => {
-                    let val = test
-                        .get(&self.memory)
-                        .ok_or_else(|| err!("jump true: op out of bounds"))?;
-                    let dst = dst
-                        .get(&self.memory)
-                        .filter(|dst| *dst >= 0)
-                        .ok_or_else(|| err!("jump true: op out of bounds"))?;
+                    let val = test.get(&self.memory)?;
+                    let dst = dst.get(&self.memory)?;
+                    if dst < 0 {
+                        return Err(err!("dst must be a valid address: {}", dst));
+                    }
 
                     if val != 0 {
                         self.ip = dst as usize;
@@ -274,13 +256,11 @@ impl Intcode {
                     }
                 }
                 Opcode::JumpFalse(test, dst) => {
-                    let val = test
-                        .get(&self.memory)
-                        .ok_or_else(|| err!("jump false: op out of bounds"))?;
-                    let dst = dst
-                        .get(&self.memory)
-                        .filter(|dst| *dst >= 0)
-                        .ok_or_else(|| err!("jump false: op out of bounds"))?;
+                    let val = test.get(&self.memory)?;
+                    let dst = dst.get(&self.memory)?;
+                    if dst < 0 {
+                        return Err(err!("dst must be a valid address: {}", dst));
+                    }
 
                     if val == 0 {
                         self.ip = dst as usize;
@@ -289,12 +269,8 @@ impl Intcode {
                     }
                 }
                 Opcode::LessThan(op1, op2, dst) => {
-                    let val1 = op1
-                        .get(&self.memory)
-                        .ok_or_else(|| err!("less than: op1 out of bounds"))?;
-                    let val2 = op2
-                        .get(&self.memory)
-                        .ok_or_else(|| err!("less than: op1 out of bounds"))?;
+                    let val1 = op1.get(&self.memory)?;
+                    let val2 = op2.get(&self.memory)?;
 
                     let res = if val1 < val2 { 1 } else { 0 };
                     dst.set(&mut self.memory, res)?;
@@ -302,12 +278,8 @@ impl Intcode {
                     self.ip += 4;
                 }
                 Opcode::Equals(op1, op2, dst) => {
-                    let val1 = op1
-                        .get(&self.memory)
-                        .ok_or_else(|| err!("equals: op1 out of bounds"))?;
-                    let val2 = op2
-                        .get(&self.memory)
-                        .ok_or_else(|| err!("equals: op1 out of bounds"))?;
+                    let val1 = op1.get(&self.memory)?;
+                    let val2 = op2.get(&self.memory)?;
 
                     let res = if val1 == val2 { 1 } else { 0 };
                     dst.set(&mut self.memory, res)?;
