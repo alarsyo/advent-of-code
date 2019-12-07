@@ -6,6 +6,7 @@ use aoc2019::day03;
 use aoc2019::day04;
 use aoc2019::day05;
 use aoc2019::day06;
+use aoc2019::day07;
 
 fn aoc2019_all(c: &mut Criterion) {
     c.bench_function("day01", |b| b.iter(|| day01::run().unwrap()));
@@ -14,6 +15,7 @@ fn aoc2019_all(c: &mut Criterion) {
     c.bench_function("day04", |b| b.iter(|| day04::run().unwrap()));
     c.bench_function("day05", |b| b.iter(|| day05::run().unwrap()));
     c.bench_function("day06", |b| b.iter(|| day06::run().unwrap()));
+    c.bench_function("day07", |b| b.iter(|| day07::run().unwrap()));
 }
 
 criterion_group! {
