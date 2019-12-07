@@ -8,23 +8,29 @@ const INPUT: &str = include_str!("../input/day04.txt");
 pub fn run() -> Result<String> {
     let mut res = String::with_capacity(128);
 
-    writeln!(res, "part 1: {}", part1(INPUT)?)?;
-    writeln!(res, "part 2: {}", part2(INPUT)?)?;
+    let (begin, end) = range(INPUT)?;
+
+    writeln!(res, "part 1: {}", part1(begin, end)?)?;
+    writeln!(res, "part 2: {}", part2(begin, end)?)?;
 
     Ok(res)
 }
 
-fn part1(input: &str) -> Result<usize> {
+fn range(input: &str) -> Result<(usize, usize)> {
     let mut range = input.trim_end().split('-');
-    let begin: usize = range
+    let begin = range
         .next()
         .ok_or_else(|| err!("invalid input: {}", input))?
         .parse()?;
-    let end: usize = range
+    let end = range
         .next()
         .ok_or_else(|| err!("invalid input: {}", input))?
         .parse()?;
 
+    Ok((begin, end))
+}
+
+fn part1(begin: usize, end: usize) -> Result<usize> {
     let mut digits = Vec::with_capacity(10);
     let mut res = 0;
     for n in begin..=end {
@@ -41,17 +47,7 @@ fn part1(input: &str) -> Result<usize> {
     Ok(res)
 }
 
-fn part2(input: &str) -> Result<usize> {
-    let mut range = input.trim_end().split('-');
-    let begin: usize = range
-        .next()
-        .ok_or_else(|| err!("invalid input: {}", input))?
-        .parse()?;
-    let end: usize = range
-        .next()
-        .ok_or_else(|| err!("invalid input: {}", input))?
-        .parse()?;
-
+fn part2(begin: usize, end: usize) -> Result<usize> {
     let mut res = 0;
     let mut digits = Vec::with_capacity(10);
 
@@ -126,25 +122,34 @@ mod tests {
 
     #[test]
     fn part1_provided() {
-        assert_eq!(part1("111111-111111").unwrap(), 1);
-        assert_eq!(part1("223450-223450").unwrap(), 0);
-        assert_eq!(part1("123789-123789").unwrap(), 0);
+        let (begin, end) = range("111111-111111").unwrap();
+        println!("{}, {}", begin, end);
+        assert_eq!(part1(begin, end).unwrap(), 1);
+        let (begin, end) = range("223450-223450").unwrap();
+        assert_eq!(part1(begin, end).unwrap(), 0);
+        let (begin, end) = range("123789-123789").unwrap();
+        assert_eq!(part1(begin, end).unwrap(), 0);
     }
 
     #[test]
     fn part1_real() {
-        assert_eq!(part1(INPUT).unwrap(), 1729);
+        let (begin, end) = range(INPUT).unwrap();
+        assert_eq!(part1(begin, end).unwrap(), 1729);
     }
 
     #[test]
     fn part2_provided() {
-        assert_eq!(part2("112233-112233").unwrap(), 1);
-        assert_eq!(part2("123444-123444").unwrap(), 0);
-        assert_eq!(part2("111122-111122").unwrap(), 1);
+        let (begin, end) = range("112233-112233").unwrap();
+        assert_eq!(part2(begin, end).unwrap(), 1);
+        let (begin, end) = range("123444-123444").unwrap();
+        assert_eq!(part2(begin, end).unwrap(), 0);
+        let (begin, end) = range("111122-111122").unwrap();
+        assert_eq!(part2(begin, end).unwrap(), 1);
     }
 
     #[test]
     fn part2_real() {
-        assert_eq!(part2(INPUT).unwrap(), 1172);
+        let (begin, end) = range(INPUT).unwrap();
+        assert_eq!(part2(begin, end).unwrap(), 1172);
     }
 }
