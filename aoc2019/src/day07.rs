@@ -12,6 +12,7 @@ pub fn run() -> Result<String> {
     let mut res = String::with_capacity(128);
 
     writeln!(res, "part 1: {}", part1(INPUT)?)?;
+    writeln!(res, "part 2: {}", part2(INPUT)?)?;
 
     Ok(res)
 }
@@ -67,6 +68,79 @@ fn part1(input: &str) -> Result<i64> {
     Ok(res)
 }
 
+fn part2(input: &str) -> Result<i64> {
+    let memory = parse_memory(input)?;
+
+    let combinations = permutations(&[5, 6, 7, 8, 9]);
+
+    let mut res = 0;
+    for combination in combinations {
+        let intcodes = &mut [
+            Intcode::with_memory(memory.clone()),
+            Intcode::with_memory(memory.clone()),
+            Intcode::with_memory(memory.clone()),
+            Intcode::with_memory(memory.clone()),
+            Intcode::with_memory(memory.clone()),
+        ];
+
+        for (phase, intcode) in combination.iter().zip(intcodes.iter_mut()) {
+            intcode.add_input(*phase);
+        }
+        intcodes[0].add_input(0);
+
+        let mut signal = None;
+        let mut num_halted = 0;
+        loop {
+            for i in 0..(intcodes.len() - 1) {
+                let (first, second) = intcodes.split_at_mut(i + 1);
+                let intcode = &mut first[i];
+                let next = &mut second[0];
+
+                let halted = intcode.run_and_wait()?;
+                if halted {
+                    num_halted += 1;
+                }
+
+                for out in intcode.output.iter() {
+                    next.add_input(*out);
+                }
+                intcode.output.clear();
+            }
+
+            let last_index = intcodes.len() - 1;
+            let (first, second) = intcodes.split_at_mut(last_index);
+            let first = &mut first[0];
+            let last = &mut second[0];
+            let halted = last.run_and_wait()?;
+
+            if halted {
+                let out = last
+                    .output
+                    .last()
+                    .copied()
+                    .ok_or_else(|| err!("last amplifier halted without output"))?;
+                signal = Some(out);
+            } else {
+                for out in last.output.iter() {
+                    first.add_input(*out);
+                }
+                last.output.clear();
+            }
+
+            if let Some(signal) = signal {
+                res = std::cmp::max(res, signal);
+                break;
+            }
+
+            if num_halted >= 4 {
+                return Err(err!("all non final amplifiers halted, feedback loop stuck"));
+            }
+        }
+    }
+
+    Ok(res)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -86,5 +160,20 @@ mod tests {
     #[test]
     fn part1_real() {
         assert_eq!(part1(INPUT).unwrap(), 844468);
+    }
+
+    const PROVIDED4: &str =
+        "3,26,1001,26,-4,26,3,27,1002,27,2,27,1,27,26,27,4,27,1001,28,-1,28,1005,28,6,99,0,0,5";
+    const PROVIDED5: &str = "3,52,1001,52,-5,52,3,53,1,52,56,54,1007,54,5,55,1005,55,26,1001,54,-5,54,1105,1,12,1,53,54,53,1008,54,0,55,1001,55,1,55,2,53,55,53,4,53,1001,56,-1,56,1005,56,6,99,0,0,0,0,10";
+
+    #[test]
+    fn part2_provided() {
+        assert_eq!(part2(PROVIDED4).unwrap(), 139629729);
+        assert_eq!(part2(PROVIDED5).unwrap(), 18216);
+    }
+
+    #[test]
+    fn part2_real() {
+        assert_eq!(part2(INPUT).unwrap(), 4215746);
     }
 }

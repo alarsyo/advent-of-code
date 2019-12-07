@@ -24,12 +24,14 @@ enum Opcode {
     Halt,
 }
 
+#[derive(Debug)]
 pub struct Intcode {
     pub memory: Vec<i64>,
     input: Vec<i64>,
     pub output: Vec<i64>,
     ip: usize,
     next_input: usize,
+    wait_input: bool,
 }
 
 impl Intcode {
@@ -46,6 +48,7 @@ impl Intcode {
             output: Vec::new(),
             ip: 0,
             next_input: 0,
+            wait_input: false,
         }
     }
 
@@ -136,7 +139,7 @@ impl Intcode {
         }
     }
 
-    pub fn run(&mut self) -> Result<()> {
+    fn exec(&mut self) -> Result<bool> {
         loop {
             if self.ip >= self.memory.len() {
                 return Err(err!("reached end of program without halting"));
@@ -165,10 +168,12 @@ impl Intcode {
                     let input = if self.next_input < self.input.len() {
                         let res = self.input[self.next_input];
                         self.next_input += 1;
-                        Ok(res)
+                        res
+                    } else if self.wait_input {
+                        break Ok(false);
                     } else {
-                        Err(err!("tried to read input but it was empty"))
-                    }?;
+                        break Err(err!("tried to read input but it was empty"));
+                    };
                     dst.set(&mut self.memory, input)?;
 
                     self.ip += 2;
@@ -223,9 +228,20 @@ impl Intcode {
 
                     self.ip += 4;
                 }
-                Opcode::Halt => break Ok(()),
+                Opcode::Halt => break Ok(true),
             }
         }
+    }
+
+    pub fn run_and_wait(&mut self) -> Result<bool> {
+        self.wait_input = true;
+        self.exec()
+    }
+
+    pub fn run(&mut self) -> Result<()> {
+        self.wait_input = false;
+        self.exec()?;
+        Ok(())
     }
 
     pub fn get_day02_output(&self) -> Option<i64> {
