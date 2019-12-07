@@ -97,6 +97,7 @@ struct Intcode {
     input: Vec<i64>,
     output: Vec<i64>,
     ip: usize,
+    next_input: usize,
 }
 
 impl Intcode {
@@ -112,6 +113,7 @@ impl Intcode {
             input: Vec::new(),
             output: Vec::new(),
             ip: 0,
+            next_input: 0,
         })
     }
 
@@ -228,10 +230,13 @@ impl Intcode {
                     self.ip += 4;
                 }
                 Opcode::Input(dst) => {
-                    let input = self
-                        .input
-                        .pop()
-                        .ok_or_else(|| err!("tried to read input but it was empty"))?;
+                    let input = if self.next_input < self.input.len() {
+                        let res = self.input[self.next_input];
+                        self.next_input += 1;
+                        Ok(res)
+                    } else {
+                        Err(err!("tried to read input but it was empty"))
+                    }?;
                     dst.set(&mut self.memory, input)?;
 
                     self.ip += 2;
