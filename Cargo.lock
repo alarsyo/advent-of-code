@@ -9,6 +9,7 @@ name = "aoc2015"
 version = "0.1.0"
 dependencies = [
  "aoc 0.1.0",
+ "criterion 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "md-5 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
@@ -17,6 +18,7 @@ name = "aoc2018"
 version = "0.1.0"
 dependencies = [
  "aoc 0.1.0",
+ "criterion 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]

@@ -5,7 +5,24 @@ authors = ["Antoine Martin <antoine97.martin@gmail.com>"]
 edition = "2018"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+#
+[dev-dependencies]
+
+criterion = "0.3"
 
 [dependencies]
 
 aoc = { path = "../aoc" }
+
+[lib]
+path = "src/lib.rs"
+bench = false
+
+[[bin]]
+name = "aoc2018"
+path = "src/main.rs"
+bench = false
+
+[[bench]]
+name = "bench"
+harness = false
