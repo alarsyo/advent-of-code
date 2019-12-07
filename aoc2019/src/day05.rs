@@ -108,13 +108,17 @@ impl Intcode {
             .map(|x| x.parse().map_err(|e| err!("couldn't parse int: {}", e)))
             .collect::<Result<Vec<i64>>>()?;
 
-        Ok(Intcode {
+        Ok(Intcode::with_memory(memory))
+    }
+
+    fn with_memory(memory: Vec<i64>) -> Self {
+        Intcode {
             memory,
             input: Vec::new(),
             output: Vec::new(),
             ip: 0,
             next_input: 0,
-        })
+        }
     }
 
     fn add_input(&mut self, value: i64) {
