@@ -59,11 +59,11 @@ fn part2(begin: usize, end: usize) -> Result<usize> {
         let mut pair = false;
         let mut count = 1;
         let mut prev = digits[0];
-        for i in 1..digits.len() {
-            if prev > digits[i] {
+        for digit in digits.iter().skip(1) {
+            if prev > *digit {
                 ordered = false;
                 break;
-            } else if prev == digits[i] {
+            } else if prev == *digit {
                 count += 1;
             } else {
                 if count == 2 {
@@ -72,7 +72,7 @@ fn part2(begin: usize, end: usize) -> Result<usize> {
                 count = 1;
             }
 
-            prev = digits[i];
+            prev = *digit;
         }
         pair = pair || count == 2;
 
