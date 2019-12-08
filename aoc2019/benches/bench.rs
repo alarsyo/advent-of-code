@@ -20,7 +20,7 @@ fn aoc2019_all(c: &mut Criterion) {
 
 criterion_group! {
     name = all_days;
-    config = Criterion::default().sample_size(10);
+    config = Criterion::default().sample_size(30);
     targets = aoc2019_all
 }
 criterion_main!(all_days);
