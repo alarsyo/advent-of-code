@@ -12,6 +12,7 @@ pub fn parse_memory(s: &str) -> Result<Vec<i64>> {
         .collect()
 }
 
+#[derive(Debug)]
 enum Opcode {
     Add(Parameter, Parameter, Parameter),
     Multiply(Parameter, Parameter, Parameter),
@@ -21,6 +22,7 @@ enum Opcode {
     JumpFalse(Parameter, Parameter),
     LessThan(Parameter, Parameter, Parameter),
     Equals(Parameter, Parameter, Parameter),
+    AdjustRelBase(Parameter),
     Halt,
 }
 
@@ -32,6 +34,7 @@ pub struct Intcode {
     ip: usize,
     next_input: usize,
     wait_input: bool,
+    relative_base: usize,
 }
 
 impl Intcode {
@@ -49,6 +52,7 @@ impl Intcode {
             ip: 0,
             next_input: 0,
             wait_input: false,
+            relative_base: 0,
         }
     }
 
@@ -134,6 +138,11 @@ impl Intcode {
                     Ok(Opcode::Equals(op1, op2, dst))
                 }
             }
+            9 => {
+                let offset = Parameter::new(mode1, self.memory.get(self.ip + 1).copied())?;
+
+                Ok(Opcode::AdjustRelBase(offset))
+            }
             99 => Ok(Opcode::Halt),
             _ => Err(err!("unknown opcode: {}", opcode)),
         }
@@ -149,18 +158,18 @@ impl Intcode {
 
             match opcode {
                 Opcode::Add(op1, op2, dst) => {
-                    let val1 = op1.get(&self.memory)?;
-                    let val2 = op2.get(&self.memory)?;
+                    let val1 = op1.get(&mut self.memory, self.relative_base)?;
+                    let val2 = op2.get(&mut self.memory, self.relative_base)?;
 
-                    dst.set(&mut self.memory, val1 + val2)?;
+                    dst.set(val1 + val2, &mut self.memory, self.relative_base)?;
 
                     self.ip += 4;
                 }
                 Opcode::Multiply(op1, op2, dst) => {
-                    let val1 = op1.get(&self.memory)?;
-                    let val2 = op2.get(&self.memory)?;
+                    let val1 = op1.get(&mut self.memory, self.relative_base)?;
+                    let val2 = op2.get(&mut self.memory, self.relative_base)?;
 
-                    dst.set(&mut self.memory, val1 * val2)?;
+                    dst.set(val1 * val2, &mut self.memory, self.relative_base)?;
 
                     self.ip += 4;
                 }
@@ -174,19 +183,19 @@ impl Intcode {
                     } else {
                         break Err(err!("tried to read input but it was empty"));
                     };
-                    dst.set(&mut self.memory, input)?;
+                    dst.set(input, &mut self.memory, self.relative_base)?;
 
                     self.ip += 2;
                 }
                 Opcode::Output(op) => {
-                    let val = op.get(&self.memory)?;
+                    let val = op.get(&mut self.memory, self.relative_base)?;
                     self.output.push(val);
 
                     self.ip += 2;
                 }
                 Opcode::JumpTrue(test, dst) => {
-                    let val = test.get(&self.memory)?;
-                    let dst = dst.get(&self.memory)?;
+                    let val = test.get(&mut self.memory, self.relative_base)?;
+                    let dst = dst.get(&mut self.memory, self.relative_base)?;
                     if dst < 0 {
                         return Err(err!("dst must be a valid address: {}", dst));
                     }
@@ -198,8 +207,8 @@ impl Intcode {
                     }
                 }
                 Opcode::JumpFalse(test, dst) => {
-                    let val = test.get(&self.memory)?;
-                    let dst = dst.get(&self.memory)?;
+                    let val = test.get(&mut self.memory, self.relative_base)?;
+                    let dst = dst.get(&mut self.memory, self.relative_base)?;
                     if dst < 0 {
                         return Err(err!("dst must be a valid address: {}", dst));
                     }
@@ -211,22 +220,28 @@ impl Intcode {
                     }
                 }
                 Opcode::LessThan(op1, op2, dst) => {
-                    let val1 = op1.get(&self.memory)?;
-                    let val2 = op2.get(&self.memory)?;
+                    let val1 = op1.get(&mut self.memory, self.relative_base)?;
+                    let val2 = op2.get(&mut self.memory, self.relative_base)?;
 
                     let res = if val1 < val2 { 1 } else { 0 };
-                    dst.set(&mut self.memory, res)?;
+                    dst.set(res, &mut self.memory, self.relative_base)?;
 
                     self.ip += 4;
                 }
                 Opcode::Equals(op1, op2, dst) => {
-                    let val1 = op1.get(&self.memory)?;
-                    let val2 = op2.get(&self.memory)?;
+                    let val1 = op1.get(&mut self.memory, self.relative_base)?;
+                    let val2 = op2.get(&mut self.memory, self.relative_base)?;
 
                     let res = if val1 == val2 { 1 } else { 0 };
-                    dst.set(&mut self.memory, res)?;
+                    dst.set(res, &mut self.memory, self.relative_base)?;
 
                     self.ip += 4;
+                }
+                Opcode::AdjustRelBase(offset) => {
+                    let offset = offset.get(&mut self.memory, self.relative_base)?;
+                    self.relative_base = self.relative_base.wrapping_add(offset as usize);
+
+                    self.ip += 2;
                 }
                 Opcode::Halt => break Ok(true),
             }
