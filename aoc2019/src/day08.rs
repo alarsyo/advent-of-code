@@ -26,20 +26,20 @@ fn part1(image: &Image) -> Result<usize> {
     let most_zero_layer = image
         .layers
         .iter()
-        .min_by_key(|l| l.pixels.iter().flat_map(|l| l).filter(|d| **d == 0).count())
+        .min_by_key(|l| l.pixels.iter().flatten().filter(|d| **d == 0).count())
         .ok_or_else(|| err!("image had 0 layers..."))?;
 
     let one_count = most_zero_layer
         .pixels
         .iter()
-        .flat_map(|l| l)
+        .flatten()
         .filter(|d| **d == 1)
         .count();
 
     let two_count = most_zero_layer
         .pixels
         .iter()
-        .flat_map(|l| l)
+        .flatten()
         .filter(|d| **d == 2)
         .count();
 
@@ -99,10 +99,10 @@ impl FromStr for Image {
 
         // overlap layers
         for layer in layers.iter() {
-            for i in 0..layer.pixels.len() {
-                for j in 0..layer.pixels[i].len() {
-                    if let 2 = result[i][j] {
-                        result[i][j] = layer.pixels[i][j];
+            for (src_row, dst_row) in layer.pixels.iter().zip(result.iter_mut()) {
+                for (src_pixel, dst_pixel) in src_row.iter().zip(dst_row.iter_mut()) {
+                    if let 2 = *dst_pixel {
+                        *dst_pixel = *src_pixel;
                     }
                 }
             }
