@@ -88,18 +88,13 @@ fn part2(input: &str) -> Result<i64> {
         }
         intcodes[0].add_input(0);
 
-        let mut signal = None;
-        let mut num_halted = 0;
         loop {
             for i in 0..(intcodes.len() - 1) {
                 let (first, second) = intcodes.split_at_mut(i + 1);
                 let intcode = &mut first[i];
                 let next = &mut second[0];
 
-                let halted = intcode.run_and_wait()?;
-                if halted {
-                    num_halted += 1;
-                }
+                intcode.run_and_wait()?;
 
                 for out in intcode.output.iter() {
                     next.add_input(*out);
@@ -114,26 +109,18 @@ fn part2(input: &str) -> Result<i64> {
             let halted = last.run_and_wait()?;
 
             if halted {
-                let out = last
-                    .output
-                    .last()
-                    .copied()
-                    .ok_or_else(|| err!("last amplifier halted without output"))?;
-                signal = Some(out);
+                match last.get_last_output() {
+                    Some(signal) => {
+                        res = std::cmp::max(res, signal);
+                        break;
+                    }
+                    None => return Err(err!("last amplifier halted without output")),
+                };
             } else {
                 for out in last.output.iter() {
                     first.add_input(*out);
                 }
                 last.output.clear();
-            }
-
-            if let Some(signal) = signal {
-                res = std::cmp::max(res, signal);
-                break;
-            }
-
-            if num_halted >= 4 {
-                return Err(err!("all non final amplifiers halted, feedback loop stuck"));
             }
         }
     }
