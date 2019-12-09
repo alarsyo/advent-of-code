@@ -58,7 +58,7 @@ fn part1(input: &str) -> Result<i64> {
             intcode.run()?;
 
             output = intcode
-                .get_day05_output()
+                .get_last_output()
                 .ok_or_else(|| err!("no output at end of pipeline!"))?;
         }
 

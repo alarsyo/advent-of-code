@@ -24,7 +24,7 @@ fn part1(memory: Vec<i64>) -> Result<i64> {
     intcode.add_input(1);
     intcode.run()?;
     intcode
-        .get_day05_output()
+        .get_last_output()
         .ok_or_else(|| err!("intcode output was empty!"))
 }
 
@@ -34,7 +34,7 @@ fn part2(memory: Vec<i64>) -> Result<i64> {
     intcode.add_input(2);
     intcode.run()?;
     intcode
-        .get_day05_output()
+        .get_last_output()
         .ok_or_else(|| err!("intcode output was empty!"))
 }
 

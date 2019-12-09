@@ -263,15 +263,7 @@ impl Intcode {
         self.memory.get(0).copied()
     }
 
-    pub fn get_day05_output(&self) -> Option<i64> {
-        for (i, out) in self.output.iter().enumerate() {
-            if i < self.output.len() - 1 {
-                assert_eq!(*out, 0);
-            } else {
-                return Some(*out);
-            }
-        }
-
-        None
+    pub fn get_last_output(&self) -> Option<i64> {
+        self.output.last().copied()
     }
 }

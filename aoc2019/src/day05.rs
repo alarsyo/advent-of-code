@@ -21,7 +21,7 @@ fn part1(input: &str) -> Result<i64> {
     intcode.add_input(1);
     intcode.run()?;
     intcode
-        .get_day05_output()
+        .get_last_output()
         .ok_or_else(|| err!("intcode gave no output"))
 }
 
@@ -30,7 +30,7 @@ fn part2(input: &str) -> Result<i64> {
     intcode.add_input(5);
     intcode.run()?;
     intcode
-        .get_day05_output()
+        .get_last_output()
         .ok_or_else(|| err!("intcode gave no output"))
 }
 
