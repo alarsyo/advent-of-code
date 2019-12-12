@@ -10,7 +10,10 @@ const INPUT: &str = include_str!("../input/day12.txt");
 pub fn run() -> Result<String> {
     let mut res = String::with_capacity(128);
 
-    writeln!(res, "part 1: {}", part1(INPUT, 1000)?)?;
+    let planets = parse_planets(INPUT)?;
+
+    writeln!(res, "part 1: {}", part1(planets.clone(), 1000)?)?;
+    writeln!(res, "part 2: {}", part2(planets)?)?;
 
     Ok(res)
 }
@@ -37,12 +40,11 @@ fn generate_pairs(n: usize) -> Vec<(usize, usize)> {
     res
 }
 
-fn part1(input: &str, steps: usize) -> Result<u64> {
-    let mut planets = input
-        .lines()
-        .map(|l| l.parse())
-        .collect::<Result<Vec<Planet>>>()?;
+fn parse_planets(input: &str) -> Result<Vec<Planet>> {
+    input.lines().map(|l| l.parse()).collect()
+}
 
+fn part1(mut planets: Vec<Planet>, steps: usize) -> Result<u64> {
     let pairs = generate_pairs(planets.len());
 
     for _ in 0..steps {
@@ -86,12 +88,107 @@ fn part1(input: &str, steps: usize) -> Result<u64> {
     Ok(planets.iter().map(|p| p.total_energy()).sum())
 }
 
+fn gcd(a: usize, b: usize) -> usize {
+    if a == 0 {
+        return b;
+    }
+
+    gcd(b % a, a)
+}
+
+fn lcm(a: usize, b: usize) -> usize {
+    (a * b) / gcd(a, b)
+}
+
+fn part2(mut planets: Vec<Planet>) -> Result<usize> {
+    let first_state = planets.clone();
+
+    let pairs = generate_pairs(planets.len());
+
+    let mut x_step = None;
+    let mut y_step = None;
+    let mut z_step = None;
+
+    for i in 1.. {
+        // update velocity
+        for pair in pairs.iter().copied() {
+            let (begin, end) = planets.split_at_mut(pair.1);
+            let first = &mut begin[pair.0];
+            let second = &mut end[0];
+
+            if first.position.x > second.position.x {
+                first.velocity.x -= 1;
+                second.velocity.x += 1;
+            } else if first.position.x < second.position.x {
+                first.velocity.x += 1;
+                second.velocity.x -= 1;
+            }
+
+            if first.position.y > second.position.y {
+                first.velocity.y -= 1;
+                second.velocity.y += 1;
+            } else if first.position.y < second.position.y {
+                first.velocity.y += 1;
+                second.velocity.y -= 1;
+            }
+
+            if first.position.z > second.position.z {
+                first.velocity.z -= 1;
+                second.velocity.z += 1;
+            } else if first.position.z < second.position.z {
+                first.velocity.z += 1;
+                second.velocity.z -= 1;
+            }
+        }
+
+        // update position
+        for planet in planets.iter_mut() {
+            planet.update_pos();
+        }
+
+        if x_step.is_none()
+            && planets
+                .iter()
+                .zip(first_state.iter())
+                .all(|(a, b)| a.position.x == b.position.x && a.velocity.x == b.velocity.x)
+        {
+            x_step = Some(i);
+        }
+
+        if y_step.is_none()
+            && planets
+                .iter()
+                .zip(first_state.iter())
+                .all(|(a, b)| a.position.y == b.position.y && a.velocity.y == b.velocity.y)
+        {
+            y_step = Some(i);
+        }
+
+        if z_step.is_none()
+            && planets
+                .iter()
+                .zip(first_state.iter())
+                .all(|(a, b)| a.position.z == b.position.z && a.velocity.z == b.velocity.z)
+        {
+            z_step = Some(i);
+        }
+
+        if let (Some(a), Some(b), Some(c)) = (x_step, y_step, z_step) {
+            return Ok(lcm(a, lcm(b, c)));
+        }
+    }
+
+    Err(err!("planets never reached the same state twice"))
+}
+
+#[derive(Clone)]
 struct Vec3 {
     x: i64,
     y: i64,
     z: i64,
 }
 
+#[derive(Clone)]
 struct Planet {
     position: Vec3,
     velocity: Vec3,
@@ -184,12 +281,29 @@ mod tests {
 
     #[test]
     fn part1_provided() {
-        assert_eq!(part1(PROVIDED1, 10).unwrap(), 179);
-        assert_eq!(part1(PROVIDED2, 100).unwrap(), 1940);
+        assert_eq!(part1(parse_planets(PROVIDED1).unwrap(), 10).unwrap(), 179);
+        assert_eq!(part1(parse_planets(PROVIDED2).unwrap(), 100).unwrap(), 1940);
     }
 
     #[test]
     fn part1_real() {
-        assert_eq!(part1(INPUT, 1000).unwrap(), 14907);
+        assert_eq!(part1(parse_planets(INPUT).unwrap(), 1000).unwrap(), 14907);
+    }
+
+    #[test]
+    fn part2_provided() {
+        assert_eq!(part2(parse_planets(PROVIDED1).unwrap()).unwrap(), 2772);
+        assert_eq!(
+            part2(parse_planets(PROVIDED2).unwrap()).unwrap(),
+            4686774924
+        );
+    }
+
+    #[test]
+    fn part2_real() {
+        assert_eq!(
+            part2(parse_planets(INPUT).unwrap()).unwrap(),
+            467_081_194_429_464
+        );
     }
 }
