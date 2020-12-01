@@ -37,14 +37,15 @@ fn part2(input: &str) -> Result<i64> {
 }
 
 fn find_2020_2_sum(entries: &[i64]) -> Result<(i64, i64)> {
+    let set: HashSet<i64> = entries.iter().copied().collect();
+
     for i in 0..entries.len() {
-        for j in 0..entries.len() {
-            if i == j {
-                continue;
-            }
-            if entries[i] + entries[j] == 2020 {
-                return Ok((entries[i], entries[j]));
-            }
+        let a = entries[i];
+
+        let b = 2020 - a;
+
+        if set.contains(&b) {
+            return Ok((a, b));
         }
     }
 
