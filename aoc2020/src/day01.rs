@@ -1,3 +1,4 @@
+use std::collections::HashSet;
 use std::fmt::Write;
 
 use aoc::{err, Result};
@@ -13,29 +14,29 @@ pub fn run() -> Result<String> {
     Ok(res)
 }
 
-fn part1(input: &str) -> Result<u64> {
+fn part1(input: &str) -> Result<i64> {
     let entries = input
         .lines()
-        .map(|line| line.parse::<u64>().map_err(|e| err!("{}", e)))
-        .collect::<Result<Vec<u64>>>()?;
+        .map(|line| line.parse::<i64>().map_err(|e| err!("{}", e)))
+        .collect::<Result<Vec<i64>>>()?;
 
     let (a, b) = find_2020_2_sum(&entries)?;
 
     Ok(a * b)
 }
 
-fn part2(input: &str) -> Result<u64> {
+fn part2(input: &str) -> Result<i64> {
     let entries = input
         .lines()
-        .map(|line| line.parse::<u64>().map_err(|e| err!("{}", e)))
-        .collect::<Result<Vec<u64>>>()?;
+        .map(|line| line.parse::<i64>().map_err(|e| err!("{}", e)))
+        .collect::<Result<Vec<i64>>>()?;
 
     let (a, b, c) = find_2020_3_sum(&entries)?;
 
     Ok(a * b * c)
 }
 
-fn find_2020_2_sum(entries: &[u64]) -> Result<(u64, u64)> {
+fn find_2020_2_sum(entries: &[i64]) -> Result<(i64, i64)> {
     for i in 0..entries.len() {
         for j in 0..entries.len() {
             if i == j {
@@ -50,21 +51,22 @@ fn find_2020_2_sum(entries: &[u64]) -> Result<(u64, u64)> {
     Err(err!("couldn't find 2 elements that sum to 2020"))
 }
 
-fn find_2020_3_sum(entries: &[u64]) -> Result<(u64, u64, u64)> {
+fn find_2020_3_sum(entries: &[i64]) -> Result<(i64, i64, i64)> {
+    let set: HashSet<i64> = entries.iter().copied().collect();
+
     for i in 0..entries.len() {
         for j in 0..entries.len() {
-            for k in 0..entries.len() {
-                if i == j || j == k || k == i {
-                    continue;
-                }
+            if i == j {
+                continue;
+            }
 
-                let a = entries[i];
-                let b = entries[j];
-                let c = entries[k];
+            let a = entries[i];
+            let b = entries[j];
 
-                if a + b + c == 2020 {
-                    return Ok((a, b, c));
-                }
+            let c = 2020 - a - b;
+
+            if set.contains(&c) {
+                return Ok((a, b, c));
             }
         }
     }
@@ -76,7 +78,7 @@ fn find_2020_3_sum(entries: &[u64]) -> Result<(u64, u64, u64)> {
 mod tests {
     use super::*;
 
-    static PROVIDED: &[u64] = &[1721, 979, 366, 299, 675, 1456];
+    static PROVIDED: &[i64] = &[1721, 979, 366, 299, 675, 1456];
 
     #[test]
     fn part1_provided() {
