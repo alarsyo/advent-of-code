@@ -16,15 +16,14 @@ pub fn run(days: &[DayFunc]) -> Result<()> {
     match args.next() {
         Some(arg) => {
             let day: usize = arg.parse().expect("Please provide a day number");
-            let res =
-                days[day - 1]().or_else(|e| Err(err!("error running day specified: {}", e)))?;
+            let res = days[day - 1]().map_err(|e| err!("error running day specified: {}", e))?;
             println!("{}", res);
         }
         None => {
             for (i, day) in days.iter().enumerate() {
                 let i = i + 1;
                 println!("day{}: ", i);
-                let res = day().or_else(|e| Err(err!("error running day {}: {}", i, e)))?;
+                let res = day().map_err(|e| err!("error running day {}: {}", i, e))?;
                 println!("{}", res);
             }
         }
