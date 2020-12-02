@@ -1,6 +1,7 @@
 use std::env;
 
-pub type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
+pub type Error = Box<dyn std::error::Error>;
+pub type Result<T> = std::result::Result<T, Error>;
 
 #[macro_export]
 macro_rules! err {
