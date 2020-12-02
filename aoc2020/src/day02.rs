@@ -1,5 +1,4 @@
 use std::fmt::Write;
-use std::ops::RangeInclusive;
 use std::str::FromStr;
 
 use aoc::{err, Result};
@@ -8,22 +7,24 @@ const INPUT: &str = include_str!("../input/day02.txt");
 
 #[derive(Debug)]
 struct PassPolicy {
-    repetitions: RangeInclusive<usize>,
+    min_bound: usize,
+    max_bound: usize,
     letter: u8,
     password: String,
 }
 
 impl PassPolicy {
-    fn new(repetitions: RangeInclusive<usize>, letter: u8, password: String) -> Self {
+    fn new(min_bound: usize, max_bound: usize, letter: u8, password: String) -> Self {
         Self {
-            repetitions,
+            min_bound,
+            max_bound,
             letter,
             password,
         }
     }
 
     #[allow(clippy::naive_bytecount)] // let's not pull a crate just for that
-    fn is_valid(&self) -> bool {
+    fn is_valid_part1(&self) -> bool {
         let occurrences = self
             .password
             .as_bytes()
@@ -31,7 +32,14 @@ impl PassPolicy {
             .filter(|&&b| b == self.letter)
             .count();
 
-        self.repetitions.contains(&occurrences)
+        let range = self.min_bound..=self.max_bound;
+
+        range.contains(&occurrences)
+    }
+
+    fn is_valid_part2(&self) -> bool {
+        let bytes = self.password.as_bytes();
+        (bytes[self.min_bound - 1] == self.letter) ^ (bytes[self.max_bound - 1] == self.letter)
     }
 }
 
@@ -64,66 +72,11 @@ impl FromStr for PassPolicy {
         let password = &s[(colon + 2)..];
 
         Ok(Self::new(
-            min_bound..=max_bound,
+            min_bound,
+            max_bound,
             letter,
             password.to_string(),
         ))
-    }
-}
-
-#[derive(Debug)]
-struct PassPolicyNew {
-    pos1: usize,
-    pos2: usize,
-    letter: u8,
-    password: String,
-}
-
-impl PassPolicyNew {
-    fn new(pos1: usize, pos2: usize, letter: u8, password: String) -> Self {
-        Self {
-            pos1,
-            pos2,
-            letter,
-            password,
-        }
-    }
-
-    fn is_valid(&self) -> bool {
-        let bytes = self.password.as_bytes();
-        (bytes[self.pos1 - 1] == self.letter) ^ (bytes[self.pos2 - 1] == self.letter)
-    }
-}
-
-impl FromStr for PassPolicyNew {
-    type Err = aoc::Error;
-
-    fn from_str(s: &str) -> Result<Self> {
-        let s = s.trim_end();
-
-        let space = s
-            .find(' ')
-            .ok_or_else(|| err!("couldn't parse password policy: didn't find space"))?;
-        let dash = s
-            .find('-')
-            .ok_or_else(|| err!("couldn't parse password policy: didn't find dash"))?;
-
-        let pos1 = s[..dash]
-            .parse::<usize>()
-            .map_err(|e| err!("couldn't  parse position: {}", e))?;
-        let pos2 = s[(dash + 1)..space]
-            .parse::<usize>()
-            .map_err(|e| err!("couldn't parse position: {}", e))?;
-
-        let colon = s
-            .find(':')
-            .ok_or_else(|| err!("couldn't parse password policy: didn't find colon"))?;
-
-        let letter = s.as_bytes()[colon - 1];
-
-        let password = &s[(colon + 2)..];
-
-        Ok(Self::new(pos1, pos2, letter, password.to_string()))
     }
 }
 
@@ -142,16 +95,22 @@ fn part1(input: &str) -> Result<usize> {
         .map(|line| line.parse::<PassPolicy>().map_err(|e| err!("{}", e)))
         .collect::<Result<Vec<PassPolicy>>>()?;
 
-    Ok(policies.iter().filter(|policy| policy.is_valid()).count())
+    Ok(policies
+        .iter()
+        .filter(|policy| policy.is_valid_part1())
+        .count())
 }
 
 fn part2(input: &str) -> Result<usize> {
     let policies = input
         .lines()
-        .map(|line| line.parse::<PassPolicyNew>().map_err(|e| err!("{}", e)))
-        .collect::<Result<Vec<PassPolicyNew>>>()?;
+        .map(|line| line.parse::<PassPolicy>().map_err(|e| err!("{}", e)))
+        .collect::<Result<Vec<PassPolicy>>>()?;
 
-    Ok(policies.iter().filter(|policy| policy.is_valid()).count())
+    Ok(policies
+        .iter()
+        .filter(|policy| policy.is_valid_part2())
+        .count())
 }
 
 #[cfg(test)]
@@ -164,9 +123,9 @@ mod tests {
 
     #[test]
     fn part1_provided() {
-        assert!(PROVIDED1.parse::<PassPolicy>().unwrap().is_valid());
-        assert!(!PROVIDED2.parse::<PassPolicy>().unwrap().is_valid());
-        assert!(PROVIDED3.parse::<PassPolicy>().unwrap().is_valid());
+        assert!(PROVIDED1.parse::<PassPolicy>().unwrap().is_valid_part1());
+        assert!(!PROVIDED2.parse::<PassPolicy>().unwrap().is_valid_part1());
+        assert!(PROVIDED3.parse::<PassPolicy>().unwrap().is_valid_part1());
     }
 
     #[test]
@@ -176,9 +135,9 @@ mod tests {
 
     #[test]
     fn part2_provided() {
-        assert!(PROVIDED1.parse::<PassPolicyNew>().unwrap().is_valid());
-        assert!(!PROVIDED2.parse::<PassPolicyNew>().unwrap().is_valid());
-        assert!(!PROVIDED3.parse::<PassPolicyNew>().unwrap().is_valid());
+        assert!(PROVIDED1.parse::<PassPolicy>().unwrap().is_valid_part2());
+        assert!(!PROVIDED2.parse::<PassPolicy>().unwrap().is_valid_part2());
+        assert!(!PROVIDED3.parse::<PassPolicy>().unwrap().is_valid_part2());
     }
 
     #[test]
