@@ -13,25 +13,17 @@ pub fn run() -> aoc::Result<String> {
     Ok(res)
 }
 
-fn part1(input: &str) -> aoc::Result<u64> {
+fn part1(input: &str) -> aoc::Result<usize> {
     let forest = input.parse()?;
 
-    Ok(count_trees(forest))
+    Ok(count_trees(&forest, (3, 1)))
 }
 
-fn count_trees(forest: Forest) -> u64 {
-    let mut count = 0;
+fn count_trees(forest: &Forest, (right, down): (usize, usize)) -> usize {
+    let vertical_range = (0..forest.height()).step_by(down);
+    let horizontal_range = (0..).step_by(right);
 
-    let vertical_range = 0..forest.height();
-    let horizontal_range = (0..).step_by(3);
-
-    for (i, j) in vertical_range.zip(horizontal_range) {
-        if forest[i][j] {
-            count += 1
-        }
-    }
-
-    count
+    vertical_range.zip(horizontal_range).filter(|(i, j)| forest[*i][*j]).count()
 }
 
 #[derive(Debug)]
@@ -87,14 +79,7 @@ impl FromStr for Forest {
     fn from_str(s: &str) -> aoc::Result<Self> {
         let trees = s
             .lines()
-            .map(|line| {
-                line.chars()
-                    .map(|c| match c {
-                        '.' => false,
-                        _ => true,
-                    })
-                    .collect()
-            })
+            .map(|line| line.chars().map(|c| matches!(c, '#')).collect())
             .collect();
 
         Ok(Self { trees })
