@@ -9,6 +9,7 @@ pub fn run() -> aoc::Result<String> {
     let mut res = String::with_capacity(128);
 
     writeln!(res, "part 1: {}", part1(INPUT)?)?;
+    writeln!(res, "part 2: {}", part2(INPUT)?)?;
 
     Ok(res)
 }
@@ -19,11 +20,25 @@ fn part1(input: &str) -> aoc::Result<usize> {
     Ok(count_trees(&forest, (3, 1)))
 }
 
+fn part2(input: &str) -> aoc::Result<usize> {
+    let forest = input.parse()?;
+
+    let slopes = &[(1, 1), (3, 1), (5, 1), (7, 1), (1, 2)];
+
+    Ok(slopes
+        .iter()
+        .map(|slope| count_trees(&forest, *slope))
+        .product())
+}
+
 fn count_trees(forest: &Forest, (right, down): (usize, usize)) -> usize {
     let vertical_range = (0..forest.height()).step_by(down);
     let horizontal_range = (0..).step_by(right);
 
-    vertical_range.zip(horizontal_range).filter(|(i, j)| forest[*i][*j]).count()
+    vertical_range
+        .zip(horizontal_range)
+        .filter(|(i, j)| forest[*i][*j])
+        .count()
 }
 
 #[derive(Debug)]
@@ -100,5 +115,23 @@ mod tests {
     #[test]
     fn part1_real() {
         assert_eq!(part1(INPUT).unwrap(), 242);
+    }
+
+    #[test]
+    fn part2_provided() {
+        let forest = PROVIDED.parse().unwrap();
+
+        assert_eq!(count_trees(&forest, (1, 1)), 2);
+        assert_eq!(count_trees(&forest, (3, 1)), 7);
+        assert_eq!(count_trees(&forest, (5, 1)), 3);
+        assert_eq!(count_trees(&forest, (7, 1)), 4);
+        assert_eq!(count_trees(&forest, (1, 2)), 2);
+
+        assert_eq!(part2(PROVIDED).unwrap(), 336);
+    }
+
+    #[test]
+    fn part2_real() {
+        assert_eq!(part2(INPUT).unwrap(), 2265549792);
     }
 }
