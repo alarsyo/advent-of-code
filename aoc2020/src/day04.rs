@@ -37,13 +37,17 @@ fn get_passports(input: &str) -> aoc::Result<Vec<Passport>> {
 fn part1(input: &str) -> aoc::Result<usize> {
     let passports = get_passports(input)?;
 
-    Ok(passports.iter().filter(|p| p.has_valid_fields()).count())
+    Ok(passports.iter().filter(|p| p.is_complete()).count())
 }
 
 fn part2(input: &str) -> aoc::Result<usize> {
     let passports = get_passports(input)?;
 
-    Ok(passports.iter().filter(|p| p.is_valid()).count())
+    Ok(passports
+        .into_iter()
+        .filter_map(|p| p.complete())
+        .filter(|p| p.is_valid())
+        .count())
 }
 
 #[derive(Debug)]
@@ -60,7 +64,7 @@ struct Passport {
 }
 
 impl Passport {
-    fn has_valid_fields(&self) -> bool {
+    fn is_complete(&self) -> bool {
         self.byr.is_some()
             && self.iyr.is_some()
             && self.eyr.is_some()
@@ -70,113 +74,16 @@ impl Passport {
             && self.pid.is_some()
     }
 
-    fn is_valid(&self) -> bool {
-        self.byr_valid()
-            && self.iyr_valid()
-            && self.eyr_valid()
-            && self.hgt_valid()
-            && self.hcl_valid()
-            && self.ecl_valid()
-            && self.pid_valid()
-    }
-
-    fn byr_valid(&self) -> bool {
-        let byr = match &self.byr {
-            Some(s) => s,
-            None => return false,
-        };
-
-        if let Ok(res) = byr.parse::<i64>() {
-            res >= 1920 && res <= 2002
-        } else {
-            false
-        }
-    }
-
-    fn iyr_valid(&self) -> bool {
-        let iyr = match &self.iyr {
-            Some(s) => s,
-            None => return false,
-        };
-
-        if let Ok(res) = iyr.parse::<i64>() {
-            res >= 2010 && res <= 2020
-        } else {
-            false
-        }
-    }
-
-    fn eyr_valid(&self) -> bool {
-        let eyr = match &self.eyr {
-            Some(s) => s,
-            None => return false,
-        };
-
-        if let Ok(res) = eyr.parse::<i64>() {
-            res >= 2020 && res <= 2030
-        } else {
-            false
-        }
-    }
-
-    fn hgt_valid(&self) -> bool {
-        let hgt = match &self.hgt {
-            Some(s) => s,
-            None => return false,
-        };
-
-        if let Some(num) = hgt.strip_suffix("in") {
-            if let Ok(res) = num.parse::<i64>() {
-                res >= 59 && res <= 76
-            } else {
-                false
-            }
-        } else if let Some(num) = hgt.strip_suffix("cm") {
-            if let Ok(res) = num.parse::<i64>() {
-                res >= 150 && res <= 193
-            } else {
-                false
-            }
-        } else {
-            false
-        }
-    }
-
-    fn hcl_valid(&self) -> bool {
-        let hcl = match &self.hcl {
-            Some(s) => s,
-            None => return false,
-        };
-
-        if let Some(rest) = hcl.strip_prefix("#") {
-            rest.chars().filter(|c| !c.is_ascii_hexdigit()).count() == 0
-        } else {
-            false
-        }
-    }
-
-    fn ecl_valid(&self) -> bool {
-        let ecl = match &self.ecl {
-            Some(s) => s,
-            None => return false,
-        };
-
-        ecl == "amb"
-            || ecl == "blu"
-            || ecl == "brn"
-            || ecl == "gry"
-            || ecl == "grn"
-            || ecl == "hzl"
-            || ecl == "oth"
-    }
-
-    fn pid_valid(&self) -> bool {
-        let pid = match &self.pid {
-            Some(s) => s,
-            None => return false,
-        };
-
-        pid.chars().filter(|c| !c.is_ascii_digit()).count() == 0 && pid.len() == 9
+    fn complete(mut self) -> Option<CompletePassport> {
+        Some(CompletePassport {
+            byr: self.byr.take()?,
+            iyr: self.iyr.take()?,
+            eyr: self.eyr.take()?,
+            hgt: self.hgt.take()?,
+            hcl: self.hcl.take()?,
+            ecl: self.ecl.take()?,
+            pid: self.pid.take()?,
+        })
     }
 }
 
@@ -206,6 +113,92 @@ impl FromStr for Passport {
             pid: fields.remove("pid"),
             cid: fields.remove("cid"),
         })
+    }
+}
+
+struct CompletePassport {
+    byr: String,
+    iyr: String,
+    eyr: String,
+    hgt: String,
+    hcl: String,
+    ecl: String,
+    pid: String,
+}
+
+impl CompletePassport {
+    fn is_valid(&self) -> bool {
+        self.byr_valid()
+            && self.iyr_valid()
+            && self.eyr_valid()
+            && self.hgt_valid()
+            && self.hcl_valid()
+            && self.ecl_valid()
+            && self.pid_valid()
+    }
+
+    fn byr_valid(&self) -> bool {
+        if let Ok(res) = self.byr.parse::<i64>() {
+            res >= 1920 && res <= 2002
+        } else {
+            false
+        }
+    }
+
+    fn iyr_valid(&self) -> bool {
+        if let Ok(res) = self.iyr.parse::<i64>() {
+            res >= 2010 && res <= 2020
+        } else {
+            false
+        }
+    }
+
+    fn eyr_valid(&self) -> bool {
+        if let Ok(res) = self.eyr.parse::<i64>() {
+            res >= 2020 && res <= 2030
+        } else {
+            false
+        }
+    }
+
+    fn hgt_valid(&self) -> bool {
+        if let Some(num) = self.hgt.strip_suffix("in") {
+            if let Ok(res) = num.parse::<i64>() {
+                res >= 59 && res <= 76
+            } else {
+                false
+            }
+        } else if let Some(num) = self.hgt.strip_suffix("cm") {
+            if let Ok(res) = num.parse::<i64>() {
+                res >= 150 && res <= 193
+            } else {
+                false
+            }
+        } else {
+            false
+        }
+    }
+
+    fn hcl_valid(&self) -> bool {
+        if let Some(rest) = self.hcl.strip_prefix("#") {
+            rest.chars().filter(|c| !c.is_ascii_hexdigit()).count() == 0
+        } else {
+            false
+        }
+    }
+
+    fn ecl_valid(&self) -> bool {
+        self.ecl == "amb"
+            || self.ecl == "blu"
+            || self.ecl == "brn"
+            || self.ecl == "gry"
+            || self.ecl == "grn"
+            || self.ecl == "hzl"
+            || self.ecl == "oth"
+    }
+
+    fn pid_valid(&self) -> bool {
+        self.pid.chars().filter(|c| !c.is_ascii_digit()).count() == 0 && self.pid.len() == 9
     }
 }
 
