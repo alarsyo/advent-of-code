@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use std::fmt::Write;
+use std::ops::RangeInclusive;
 use std::str::FromStr;
 
 const INPUT: &str = include_str!("../input/day04.txt");
@@ -138,42 +139,22 @@ impl CompletePassport {
     }
 
     fn byr_valid(&self) -> bool {
-        if let Ok(res) = self.byr.parse::<i64>() {
-            res >= 1920 && res <= 2002
-        } else {
-            false
-        }
+        is_number_in_range(&self.byr, 1920..=2002)
     }
 
     fn iyr_valid(&self) -> bool {
-        if let Ok(res) = self.iyr.parse::<i64>() {
-            res >= 2010 && res <= 2020
-        } else {
-            false
-        }
+        is_number_in_range(&self.iyr, 2010..=2020)
     }
 
     fn eyr_valid(&self) -> bool {
-        if let Ok(res) = self.eyr.parse::<i64>() {
-            res >= 2020 && res <= 2030
-        } else {
-            false
-        }
+        is_number_in_range(&self.eyr, 2020..=2030)
     }
 
     fn hgt_valid(&self) -> bool {
         if let Some(num) = self.hgt.strip_suffix("in") {
-            if let Ok(res) = num.parse::<i64>() {
-                res >= 59 && res <= 76
-            } else {
-                false
-            }
+            is_number_in_range(&num, 59..=76)
         } else if let Some(num) = self.hgt.strip_suffix("cm") {
-            if let Ok(res) = num.parse::<i64>() {
-                res >= 150 && res <= 193
-            } else {
-                false
-            }
+            is_number_in_range(&num, 150..=193)
         } else {
             false
         }
@@ -199,6 +180,13 @@ impl CompletePassport {
 
     fn pid_valid(&self) -> bool {
         self.pid.chars().filter(|c| !c.is_ascii_digit()).count() == 0 && self.pid.len() == 9
+    }
+}
+
+fn is_number_in_range(s: &str, range: RangeInclusive<i64>) -> bool {
+    match s.parse() {
+        Ok(res) => range.contains(&res),
+        Err(_) => false,
     }
 }
 
