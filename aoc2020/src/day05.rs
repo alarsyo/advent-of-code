@@ -9,6 +9,7 @@ pub fn run() -> aoc::Result<String> {
     let mut res = String::with_capacity(128);
 
     writeln!(res, "part 1: {}", part1(INPUT)?)?;
+    writeln!(res, "part 2: {}", part2(INPUT)?)?;
 
     Ok(res)
 }
@@ -27,7 +28,31 @@ fn part1(input: &str) -> aoc::Result<usize> {
         .ok_or_else(|| err!("0 seats processed"))
 }
 
-#[derive(Debug, PartialEq, Eq)]
+fn part2(input: &str) -> aoc::Result<usize> {
+    let mut seats = input
+        .lines()
+        .map(|line| line.parse())
+        .collect::<aoc::Result<Vec<Seat>>>()
+        .map_err(|e| err!("{}", e))?;
+
+    // Seats will be sorted by lexicographical order of fields thanks to `derive(PartialOrd, Ord)`,
+    // which should produce the same result as a manual implementation of `Ord` and `PartialOrd`
+    // using the `id()` method.
+    seats.sort_unstable();
+
+    let mut prev_id = None;
+    for id in seats.iter().map(|s| s.id()) {
+        match prev_id {
+            Some(pid) if pid == (id - 1) => prev_id = Some(id),
+            Some(pid) => return Ok(pid + 1),
+            None => prev_id = Some(id),
+        }
+    }
+
+    Err(err!("didn't find missing seat"))
+}
+
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
 struct Seat {
     row: usize,
     column: usize,
@@ -104,5 +129,10 @@ mod tests {
     #[test]
     fn part1_real() {
         assert_eq!(part1(INPUT).unwrap(), 850);
+    }
+
+    #[test]
+    fn part2_real() {
+        assert_eq!(part2(INPUT).unwrap(), 599);
     }
 }
