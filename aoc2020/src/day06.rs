@@ -41,12 +41,7 @@ fn part1(input: &str) -> aoc::Result<usize> {
 
     Ok(groups
         .iter()
-        .map(|group| {
-            group.answers.iter().fold(HashSet::new(), |set, answers| {
-                set.union(answers).copied().collect()
-            })
-        })
-        .map(|set| set.len())
+        .map(|group| group.unique_positive_answers().len())
         .sum())
 }
 
@@ -55,21 +50,29 @@ fn part2(input: &str) -> aoc::Result<usize> {
 
     Ok(groups
         .iter()
-        .map(|group| {
-            group
-                .answers
-                .iter()
-                .skip(1)
-                .fold(group.answers[0].clone(), |set, answers| {
-                    set.intersection(answers).copied().collect()
-                })
-        })
-        .map(|set| set.len())
+        .map(|group| group.common_positive_answers().len())
         .sum())
 }
 
 struct Group {
     answers: Vec<HashSet<u8>>,
+}
+
+impl Group {
+    fn unique_positive_answers(&self) -> HashSet<u8> {
+        self.answers.iter().fold(HashSet::new(), |set, answers| {
+            set.union(answers).copied().collect()
+        })
+    }
+
+    fn common_positive_answers(&self) -> HashSet<u8> {
+        self.answers
+            .iter()
+            .skip(1)
+            .fold(self.answers[0].clone(), |set, answers| {
+                set.intersection(answers).copied().collect()
+            })
+    }
 }
 
 #[cfg(test)]
