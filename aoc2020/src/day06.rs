@@ -7,6 +7,7 @@ pub fn run() -> aoc::Result<String> {
     let mut res = String::with_capacity(128);
 
     writeln!(res, "part 1: {}", part1(INPUT)?)?;
+    writeln!(res, "part 2: {}", part2(INPUT)?)?;
 
     Ok(res)
 }
@@ -49,6 +50,24 @@ fn part1(input: &str) -> aoc::Result<usize> {
         .sum())
 }
 
+fn part2(input: &str) -> aoc::Result<usize> {
+    let groups = get_groups(input)?;
+
+    Ok(groups
+        .iter()
+        .map(|group| {
+            group
+                .answers
+                .iter()
+                .skip(1)
+                .fold(group.answers[0].clone(), |set, answers| {
+                    set.intersection(answers).copied().collect()
+                })
+        })
+        .map(|set| set.len())
+        .sum())
+}
+
 struct Group {
     answers: Vec<HashSet<u8>>,
 }
@@ -67,5 +86,15 @@ mod tests {
     #[test]
     fn part1_real() {
         assert_eq!(part1(INPUT).unwrap(), 6382);
+    }
+
+    #[test]
+    fn part2_provided() {
+        assert_eq!(part2(PROVIDED).unwrap(), 6);
+    }
+
+    #[test]
+    fn part2_real() {
+        assert_eq!(part2(INPUT).unwrap(), 3197);
     }
 }
