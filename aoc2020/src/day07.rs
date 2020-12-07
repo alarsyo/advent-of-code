@@ -10,6 +10,7 @@ pub fn run() -> aoc::Result<String> {
     let mut res = String::with_capacity(128);
 
     writeln!(res, "part 1: {}", part1(INPUT)?)?;
+    writeln!(res, "part 2: {}", part2(INPUT)?)?;
 
     Ok(res)
 }
@@ -33,6 +34,24 @@ fn part1(input: &str) -> aoc::Result<usize> {
         .count())
 }
 
+fn part2(input: &str) -> aoc::Result<usize> {
+    let bag_rules = input
+        .lines()
+        .map(|line| line.parse())
+        .collect::<aoc::Result<Vec<BagRule>>>()
+        .unwrap();
+
+    // create map with Key = color, Value = BagRule
+    let bag_rules_map: HashMap<String, BagRule> = bag_rules
+        .iter()
+        .map(|bag_rule| (bag_rule.color.clone(), bag_rule.clone()))
+        .collect();
+
+    let shiny_gold = &bag_rules_map["shiny gold"];
+
+    Ok(shiny_gold.num_inner_bags(&bag_rules_map))
+}
+
 #[derive(Debug, PartialEq, Eq, Clone)]
 struct BagRule {
     color: String,
@@ -51,6 +70,18 @@ impl BagRule {
 
             bag_rule.can_contain(color, all_bags)
         })
+    }
+
+    fn num_inner_bags(&self, all_bags: &HashMap<String, BagRule>) -> usize {
+        self.contains
+            .iter()
+            .map(|(count, c)| {
+                // fetch rules for this bag in map
+                let bag_rule = &all_bags[c];
+
+                count + count * bag_rule.num_inner_bags(all_bags)
+            })
+            .sum()
     }
 }
 
@@ -114,11 +145,12 @@ impl FromStr for BagRule {
 mod tests {
     use super::*;
 
-    static PROVIDED: &'static str = include_str!("../input/day07_provided.txt");
+    static PROVIDED1: &'static str = include_str!("../input/day07_provided1.txt");
+    static PROVIDED2: &'static str = include_str!("../input/day07_provided2.txt");
 
     #[test]
     fn part1_provided_parse() {
-        let bag_rules = PROVIDED
+        let bag_rules = PROVIDED1
             .lines()
             .map(|line| line.parse())
             .collect::<aoc::Result<Vec<BagRule>>>()
@@ -187,11 +219,22 @@ mod tests {
 
     #[test]
     fn part1_provided_compute() {
-        assert_eq!(part1(PROVIDED).unwrap(), 4);
+        assert_eq!(part1(PROVIDED1).unwrap(), 4);
     }
 
     #[test]
     fn part1_real() {
         assert_eq!(part1(INPUT).unwrap(), 272);
+    }
+
+    #[test]
+    fn part2_provided() {
+        assert_eq!(part2(PROVIDED1).unwrap(), 32);
+        assert_eq!(part2(PROVIDED2).unwrap(), 126);
+    }
+
+    #[test]
+    fn part2_real() {
+        assert_eq!(part2(INPUT).unwrap(), 172246);
     }
 }
