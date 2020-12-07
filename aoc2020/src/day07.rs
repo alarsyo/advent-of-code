@@ -28,9 +28,11 @@ fn part1(input: &str) -> aoc::Result<usize> {
         .map(|bag_rule| (bag_rule.color.clone(), bag_rule.clone()))
         .collect();
 
+    let mut memoized = HashMap::new();
+
     Ok(bag_rules
         .iter()
-        .filter(|bag| bag.can_contain("shiny gold", &bag_rules_map))
+        .filter(|bag| bag.can_contain("shiny gold", &bag_rules_map, &mut memoized))
         .count())
 }
 
@@ -59,17 +61,28 @@ struct BagRule {
 }
 
 impl BagRule {
-    fn can_contain(&self, color: &str, all_bags: &HashMap<String, BagRule>) -> bool {
-        if self.contains.iter().any(|(_, c)| c == color) {
-            return true;
-        }
+    fn can_contain(
+        &self,
+        color: &str,
+        all_bags: &HashMap<String, BagRule>,
+        memoized: &mut HashMap<String, bool>,
+    ) -> bool {
+        return match memoized.get(&self.color) {
+            Some(value) => *value,
+            None => {
+                let value = self.contains.iter().any(|(_, c)| c == color)
+                    || self.contains.iter().any(|(_, c)| {
+                        // fetch rules for this bag in map
+                        let bag_rule = &all_bags[c];
 
-        self.contains.iter().any(|(_, c)| {
-            // fetch rules for this bag in map
-            let bag_rule = &all_bags[c];
+                        bag_rule.can_contain(color, all_bags, memoized)
+                    });
 
-            bag_rule.can_contain(color, all_bags)
-        })
+                memoized.insert(self.color.clone(), value);
+
+                value
+            }
+        };
     }
 
     fn num_inner_bags(&self, all_bags: &HashMap<String, BagRule>) -> usize {
