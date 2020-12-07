@@ -30,6 +30,9 @@ fn part1(input: &str) -> aoc::Result<usize> {
 
     let mut memoized = HashMap::new();
 
+    // NOTE: part 1 can also be solved efficiently by using a graph where a bag has its parents as
+    //       neighbours, and then by computing the size of the sub graph accessible from 'shiny
+    //       gold'
     Ok(bag_rules
         .iter()
         .filter(|bag| bag.can_contain("shiny gold", &bag_rules_map, &mut memoized))
