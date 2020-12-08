@@ -9,6 +9,7 @@ pub fn run() -> aoc::Result<String> {
     let mut res = String::with_capacity(128);
 
     writeln!(res, "part 1: {}", part1(INPUT)?)?;
+    writeln!(res, "part 2: {}", part2(INPUT)?)?;
 
     Ok(res)
 }
@@ -25,6 +26,34 @@ fn part1(input: &str) -> aoc::Result<i64> {
         ExitStatus::InfiniteLoop(value) => value,
         ExitStatus::End(_) => return Err(err!("interpreter doesn't have an infinite loop")),
     })
+}
+
+fn part2(input: &str) -> aoc::Result<i64> {
+    let instructions = input
+        .lines()
+        .map(|line| line.parse())
+        .collect::<aoc::Result<Vec<Instruction>>>()?;
+
+    for idx in 0..instructions.len() {
+        let mut instructions = instructions.clone();
+
+        match instructions[idx] {
+            Instruction::Acc(_) => continue,
+            Instruction::Jmp(offset) => instructions[idx] = Instruction::Nop(offset),
+            Instruction::Nop(offset) => instructions[idx] = Instruction::Jmp(offset),
+        };
+
+        let mut interpreter = Interpreter::new(instructions);
+
+        match interpreter.run() {
+            ExitStatus::InfiniteLoop(_) => continue,
+            ExitStatus::End(value) => return Ok(value),
+        }
+    }
+
+    Err(err!(
+        "interpreter always had an infinite loop, no solution found"
+    ))
 }
 
 struct Interpreter {
@@ -54,7 +83,7 @@ impl Interpreter {
                 self.idx += 1;
             }
             Instruction::Jmp(offset) => self.idx = self.idx.wrapping_add(offset as usize),
-            Instruction::Nop => self.idx += 1,
+            Instruction::Nop(_) => self.idx += 1,
         }
     }
 
@@ -69,14 +98,15 @@ impl Interpreter {
             self.step();
         }
 
-        return ExitStatus::End(self.accumulator);
+        ExitStatus::End(self.accumulator)
     }
 }
 
+#[derive(Clone)]
 enum Instruction {
     Acc(i64),
     Jmp(i64),
-    Nop,
+    Nop(i64),
 }
 
 impl std::str::FromStr for Instruction {
@@ -93,7 +123,7 @@ impl std::str::FromStr for Instruction {
         Ok(match inst {
             "acc" => Self::Acc(arg),
             "jmp" => Self::Jmp(arg),
-            "nop" => Self::Nop,
+            "nop" => Self::Nop(arg),
             _ => return Err(err!("unrecognized instruction `{}`", inst)),
         })
     }
@@ -113,5 +143,15 @@ mod tests {
     #[test]
     fn part1_real() {
         assert_eq!(part1(INPUT).unwrap(), 1675);
+    }
+
+    #[test]
+    fn part2_provided() {
+        assert_eq!(part2(PROVIDED).unwrap(), 8);
+    }
+
+    #[test]
+    fn part2_real() {
+        assert_eq!(part2(INPUT).unwrap(), 1532);
     }
 }
