@@ -21,23 +21,21 @@ fn part1(input: &str) -> aoc::Result<i64> {
 
     let mut interpreter = Interpreter::new(instructions);
 
-    let mut set = HashSet::new();
-
-    loop {
-        if !set.insert(interpreter.idx) {
-            break;
-        }
-
-        interpreter.step();
-    }
-
-    Ok(interpreter.accumulator)
+    Ok(match interpreter.run() {
+        ExitStatus::InfiniteLoop(value) => value,
+        ExitStatus::End(_) => return Err(err!("interpreter doesn't have an infinite loop")),
+    })
 }
 
 struct Interpreter {
     idx: usize,
     accumulator: i64,
     memory: Vec<Instruction>,
+}
+
+enum ExitStatus {
+    InfiniteLoop(i64),
+    End(i64),
 }
 
 impl Interpreter {
@@ -58,6 +56,20 @@ impl Interpreter {
             Instruction::Jmp(offset) => self.idx = self.idx.wrapping_add(offset as usize),
             Instruction::Nop => self.idx += 1,
         }
+    }
+
+    fn run(&mut self) -> ExitStatus {
+        let mut set = HashSet::new();
+
+        while self.idx < self.memory.len() {
+            if !set.insert(self.idx) {
+                return ExitStatus::InfiniteLoop(self.accumulator);
+            }
+
+            self.step();
+        }
+
+        return ExitStatus::End(self.accumulator);
     }
 }
 
