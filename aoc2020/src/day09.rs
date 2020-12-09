@@ -54,15 +54,20 @@ fn part1(input: &str) -> aoc::Result<u64> {
     Ok(solution)
 }
 
-fn find_contiguous_range(numbers: &[u64], total: u64, total_idx: usize) -> aoc::Result<(u64, u64)> {
-    for i in 0..total_idx {
-        for j in (i + 1)..total_idx {
-            let range = &numbers[i..=j];
+fn find_contiguous_range(numbers: &[u64], total: u64) -> aoc::Result<(u64, u64)> {
+    // compute cumulated sums for the whole range
+    let (sums, _) = numbers.iter().fold((vec![0], 0), |(mut vec, acc), n| {
+        let acc = acc + n;
+        vec.push(acc);
 
-            if range.iter().sum::<u64>() == total {
-                // it's safe to unwrap here because j > i so the range always has one number
-                let min = range.iter().min().unwrap();
-                let max = range.iter().max().unwrap();
+        (vec, acc)
+    });
+
+    for i in 0..sums.len() {
+        for j in (i + 1)..sums.len() {
+            if sums[j] - sums[i] == total {
+                let min = numbers[i..j].iter().min().unwrap();
+                let max = numbers[i..j].iter().max().unwrap();
 
                 return Ok((*min, *max));
             }
@@ -81,7 +86,7 @@ fn part2(input: &str) -> aoc::Result<u64> {
 
     let (outlier, idx) = find_outlier(&numbers, 25)?;
 
-    let (min, max) = find_contiguous_range(&numbers, outlier, idx)?;
+    let (min, max) = find_contiguous_range(&numbers[..idx], outlier)?;
 
     Ok(min + max)
 }
@@ -116,7 +121,7 @@ mod tests {
 
         let (outlier, idx) = find_outlier(&numbers, 5).unwrap();
 
-        let (min, max) = find_contiguous_range(&numbers, outlier, idx).unwrap();
+        let (min, max) = find_contiguous_range(&numbers[..idx], outlier).unwrap();
 
         assert_eq!(min, 15);
         assert_eq!(max, 47);
