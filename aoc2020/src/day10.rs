@@ -39,7 +39,9 @@ fn part1(input: &str) -> aoc::Result<usize> {
 
     let mut differences: [usize; 4] = [0; 4];
 
-    for (prev, next) in jolts.iter().zip(jolts.iter().skip(1)) {
+    for window in jolts.windows(2) {
+        let prev = window[0];
+        let next = window[1];
         let difference = (next - prev) as usize;
         differences[difference] += 1;
     }
