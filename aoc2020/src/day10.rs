@@ -65,7 +65,7 @@ fn find_possibilities(jolts: &[u64], possibilities: &mut HashMap<u64, usize>) ->
         .copied()
         // we need the index to step in the jolt slice
         .enumerate()
-        // skip the current adapter one
+        // skip the current adapter
         .skip(1)
         // its 3 successors can possibly be removed
         .take(3)
