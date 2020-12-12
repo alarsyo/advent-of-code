@@ -43,6 +43,12 @@ fn part2(input: &str) -> aoc::Result<i64> {
     Ok(ship.manhattan_distance())
 }
 
+fn get_quadrants(degrees: i64) -> usize {
+    debug_assert!(degrees % 90 == 0, "only right angles are supported");
+
+    (degrees / 90) as usize
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum Direction {
     North,
@@ -60,8 +66,7 @@ impl Direction {
     ];
 
     fn rotate(self, turn_dir: TurnDirection, degrees: i64) -> Direction {
-        debug_assert!(degrees % 90 == 0, "only right angles are supported");
-        let quadrants = (degrees / 90) as usize;
+        let quadrants = get_quadrants(degrees);
 
         let directions_iter = Self::CLOCKWISE_DIRECTIONS.iter().copied();
 
@@ -203,9 +208,7 @@ impl Ship {
             ActionKind::Move(dir) => self.waypoint.coordinates.move_towards(dir, action.arg),
 
             ActionKind::Turn(turn_dir) => {
-                debug_assert!(action.arg % 90 == 0, "only right angles are supported");
-
-                let quadrants = (action.arg / 90) as usize % 4;
+                let quadrants = get_quadrants(action.arg);
 
                 self.waypoint.turn(turn_dir, quadrants);
             }
