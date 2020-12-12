@@ -59,7 +59,7 @@ impl Direction {
         Direction::West,
     ];
 
-    fn rotate(self, turn_dir: TurnDirection, degrees: u16) -> Direction {
+    fn rotate(self, turn_dir: TurnDirection, degrees: i64) -> Direction {
         debug_assert!(degrees % 90 == 0, "only right angles are supported");
         let quadrants = (degrees / 90) as usize;
 
@@ -109,7 +109,7 @@ enum ActionKind {
 #[derive(Debug, Clone)]
 struct Action {
     kind: ActionKind,
-    arg: u16,
+    arg: i64,
 }
 
 impl std::str::FromStr for Action {
@@ -188,7 +188,7 @@ impl Ship {
 
     fn process(&mut self, action: Action) {
         match action.kind {
-            ActionKind::Move(dir) => self.coordinates.move_towards(dir, action.arg as i64),
+            ActionKind::Move(dir) => self.coordinates.move_towards(dir, action.arg),
 
             ActionKind::Turn(turn_dir) => {
                 self.direction = self.direction.rotate(turn_dir, action.arg);
@@ -196,7 +196,7 @@ impl Ship {
 
             ActionKind::Forward => self
                 .coordinates
-                .move_towards(self.direction, action.arg as i64),
+                .move_towards(self.direction, action.arg),
         }
     }
 
@@ -205,7 +205,7 @@ impl Ship {
             ActionKind::Move(dir) => self
                 .waypoint
                 .coordinates
-                .move_towards(dir, action.arg as i64),
+                .move_towards(dir, action.arg),
 
             ActionKind::Turn(turn_dir) => {
                 debug_assert!(action.arg % 90 == 0, "only right angles are supported");
@@ -220,9 +220,9 @@ impl Ship {
                 let (dx, dy) = self.waypoint.diff();
 
                 self.coordinates
-                    .move_towards(west_east, dx * action.arg as i64);
+                    .move_towards(west_east, dx * action.arg);
                 self.coordinates
-                    .move_towards(north_south, dy * action.arg as i64);
+                    .move_towards(north_south, dy * action.arg);
             }
         }
     }
@@ -257,8 +257,8 @@ impl Waypoint {
 
     fn diff(&self) -> (i64, i64) {
         (
-            self.coordinates.x.abs() as i64,
-            self.coordinates.y.abs() as i64,
+            self.coordinates.x.abs(),
+            self.coordinates.y.abs(),
         )
     }
 
