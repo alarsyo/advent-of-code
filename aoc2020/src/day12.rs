@@ -51,6 +51,46 @@ enum Direction {
     West,
 }
 
+impl Direction {
+    const CLOCKWISE_DIRECTIONS: &'static [Direction] = &[
+        Direction::North,
+        Direction::East,
+        Direction::South,
+        Direction::West,
+    ];
+
+    fn rotate(self, turn_dir: TurnDirection, degrees: u16) -> Direction {
+        debug_assert!(degrees % 90 == 0, "only right angles are supported");
+        let quadrants = (degrees / 90) as usize;
+
+        let directions_iter = Self::CLOCKWISE_DIRECTIONS.iter().copied();
+
+        if turn_dir == TurnDirection::Left {
+            // go through cardinal directions the other way around, anti-clockwise
+            Self::find_direction(directions_iter.rev(), quadrants, self)
+        } else {
+            Self::find_direction(directions_iter, quadrants, self)
+        }
+    }
+
+    fn find_direction<I>(iter: I, quarters: usize, current_direction: Direction) -> Direction
+    where
+        I: Iterator<Item = Direction>,
+        I: std::clone::Clone,
+    {
+        iter
+            // this is litteraly a circle, reaching West and turning 90 degrees right means facing
+            // North again
+            .cycle()
+            // find our current ship direction
+            .skip_while(|dir| *dir != current_direction)
+            // skip as many quarters as needed
+            .nth(quarters)
+            // we can unwrap safely because we called .cycle() on a non empty iterator
+            .unwrap()
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum TurnDirection {
     Left,
@@ -127,32 +167,8 @@ impl Ship {
         }
     }
 
-    const CLOCKWISE_DIRECTIONS: &'static [Direction] = &[
-        Direction::North,
-        Direction::East,
-        Direction::South,
-        Direction::West,
-    ];
-
     fn manhattan_distance(&self) -> i64 {
         self.x.abs() + self.y.abs()
-    }
-
-    fn find_direction<I>(iter: I, quarters: usize, current_direction: Direction) -> Direction
-    where
-        I: Iterator<Item = Direction>,
-        I: std::clone::Clone,
-    {
-        iter
-            // this is litteraly a circle, reaching West and turning 90 degrees right means
-            // facing North again
-            .cycle()
-            // find our current ship direction
-            .skip_while(|dir| *dir != current_direction)
-            // skip as many quarters as needed
-            .nth(quarters)
-            // we can unwrap safely because we called .cycle() on a non empty iterator
-            .unwrap()
     }
 
     fn process(&mut self, action: Action) {
@@ -160,20 +176,7 @@ impl Ship {
             ActionKind::Move(dir) => self.forward(dir, action.arg),
 
             ActionKind::Turn(turn_dir) => {
-                debug_assert!(action.arg % 90 == 0, "only right angles are supported");
-
-                let quarters = (action.arg / 90) as usize;
-
-                let directions_iter = Self::CLOCKWISE_DIRECTIONS.iter().copied();
-
-                let new_dir = if turn_dir == TurnDirection::Left {
-                    // go through cardinal directions the other way around, anti-clockwise
-                    Ship::find_direction(directions_iter.rev(), quarters, self.direction)
-                } else {
-                    Ship::find_direction(directions_iter, quarters, self.direction)
-                };
-
-                self.direction = new_dir;
+                self.direction = self.direction.rotate(turn_dir, action.arg);
             }
 
             ActionKind::Forward => self.forward(self.direction, action.arg),
