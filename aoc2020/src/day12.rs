@@ -8,6 +8,7 @@ pub fn run() -> aoc::Result<String> {
     let mut res = String::with_capacity(128);
 
     writeln!(res, "part 1: {}", part1(INPUT)?)?;
+    writeln!(res, "part 2: {}", part2(INPUT)?)?;
 
     Ok(res)
 }
@@ -22,6 +23,21 @@ fn part1(input: &str) -> aoc::Result<i64> {
 
     for a in actions {
         ship.process(a);
+    }
+
+    Ok(ship.manhattan_distance())
+}
+
+fn part2(input: &str) -> aoc::Result<i64> {
+    let actions: Vec<Action> = input
+        .lines()
+        .map(|line| line.parse())
+        .collect::<aoc::Result<_>>()?;
+
+    let mut ship = Ship::new();
+
+    for a in actions {
+        ship.process_with_waypoint(a);
     }
 
     Ok(ship.manhattan_distance())
@@ -92,6 +108,8 @@ struct Ship {
     direction: Direction,
     x: i64,
     y: i64,
+
+    waypoint: Waypoint,
 }
 
 impl Ship {
@@ -100,6 +118,7 @@ impl Ship {
             direction: Direction::East,
             x: 0,
             y: 0,
+            waypoint: Waypoint::new(),
         }
     }
 
@@ -156,15 +175,87 @@ impl Ship {
         }
     }
 
+    fn process_with_waypoint(&mut self, action: Action) {
+        match action.kind {
+            ActionKind::Move(dir) => match dir {
+                Direction::North => self.waypoint.y -= action.arg as i64,
+                Direction::South => self.waypoint.y += action.arg as i64,
+                Direction::West => self.waypoint.x -= action.arg as i64,
+                Direction::East => self.waypoint.x += action.arg as i64,
+            },
+
+            ActionKind::Left => {
+                debug_assert!(action.arg % 90 == 0, "only right angles are supported");
+
+                let quarters = (action.arg / 90) as usize % 4;
+
+                for _ in 0..quarters {
+                    let x = self.waypoint.x as i64;
+                    let y = self.waypoint.y as i64;
+
+                    self.waypoint.x = y;
+                    self.waypoint.y = -x;
+                }
+            }
+            ActionKind::Right => {
+                debug_assert!(action.arg % 90 == 0, "only right angles are supported");
+
+                let quarters = (action.arg / 90) as usize % 4;
+
+                for _ in 0..quarters {
+                    let x = self.waypoint.x as i64;
+                    let y = self.waypoint.y as i64;
+
+                    self.waypoint.x = -y;
+                    self.waypoint.y = x;
+                }
+            }
+
+            ActionKind::Forward => {
+                let (west_east, north_south) = self.waypoint.as_dirs();
+
+                self.forward(west_east, self.waypoint.x.abs() as u16 * action.arg);
+                self.forward(north_south, self.waypoint.y.abs() as u16 * action.arg);
+            }
+        }
+    }
+
     fn forward(&mut self, direction: Direction, arg: u16) {
         let arg = arg as i64;
 
         match direction {
-            Direction::North => self.y -= arg,
-            Direction::South => self.y += arg,
-            Direction::West => self.x -= arg,
-            Direction::East => self.x += arg,
+            Direction::North => self.y -= arg as i64,
+            Direction::South => self.y += arg as i64,
+            Direction::West => self.x -= arg as i64,
+            Direction::East => self.x += arg as i64,
         }
+    }
+}
+
+#[derive(Debug, Clone)]
+struct Waypoint {
+    x: i64,
+    y: i64,
+}
+
+impl Waypoint {
+    fn new() -> Self {
+        Self { x: 10, y: -1 }
+    }
+
+    fn as_dirs(&self) -> (Direction, Direction) {
+        let west_east = if self.x < 0 {
+            Direction::West
+        } else {
+            Direction::East
+        };
+        let north_south = if self.y < 0 {
+            Direction::North
+        } else {
+            Direction::South
+        };
+
+        (west_east, north_south)
     }
 }
 
@@ -182,5 +273,15 @@ mod tests {
     #[test]
     fn part1_real() {
         assert_eq!(part1(INPUT).unwrap(), 1589);
+    }
+
+    #[test]
+    fn part2_provided() {
+        assert_eq!(part2(PROVIDED).unwrap(), 286);
+    }
+
+    #[test]
+    fn part2_real() {
+        assert_eq!(part2(INPUT).unwrap(), 23960);
     }
 }
