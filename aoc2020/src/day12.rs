@@ -149,10 +149,26 @@ impl std::str::FromStr for Action {
 }
 
 #[derive(Debug, Clone)]
-struct Ship {
-    direction: Direction,
+struct Coordinates {
     x: i64,
     y: i64,
+}
+
+impl Coordinates {
+    fn move_towards(&mut self, direction: Direction, distance: i64) {
+        match direction {
+            Direction::North => self.y -= distance,
+            Direction::South => self.y += distance,
+            Direction::West => self.x -= distance,
+            Direction::East => self.x += distance,
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
+struct Ship {
+    direction: Direction,
+    coordinates: Coordinates,
 
     waypoint: Waypoint,
 }
@@ -161,36 +177,35 @@ impl Ship {
     fn new() -> Self {
         Self {
             direction: Direction::East,
-            x: 0,
-            y: 0,
+            coordinates: Coordinates { x: 0, y: 0 },
             waypoint: Waypoint::new(),
         }
     }
 
     fn manhattan_distance(&self) -> i64 {
-        self.x.abs() + self.y.abs()
+        self.coordinates.x.abs() + self.coordinates.y.abs()
     }
 
     fn process(&mut self, action: Action) {
         match action.kind {
-            ActionKind::Move(dir) => self.forward(dir, action.arg),
+            ActionKind::Move(dir) => self.coordinates.move_towards(dir, action.arg as i64),
 
             ActionKind::Turn(turn_dir) => {
                 self.direction = self.direction.rotate(turn_dir, action.arg);
             }
 
-            ActionKind::Forward => self.forward(self.direction, action.arg),
+            ActionKind::Forward => self
+                .coordinates
+                .move_towards(self.direction, action.arg as i64),
         }
     }
 
     fn process_with_waypoint(&mut self, action: Action) {
         match action.kind {
-            ActionKind::Move(dir) => match dir {
-                Direction::North => self.waypoint.y -= action.arg as i64,
-                Direction::South => self.waypoint.y += action.arg as i64,
-                Direction::West => self.waypoint.x -= action.arg as i64,
-                Direction::East => self.waypoint.x += action.arg as i64,
-            },
+            ActionKind::Move(dir) => self
+                .waypoint
+                .coordinates
+                .move_towards(dir, action.arg as i64),
 
             ActionKind::Turn(turn_dir) => {
                 debug_assert!(action.arg % 90 == 0, "only right angles are supported");
@@ -202,43 +217,36 @@ impl Ship {
 
             ActionKind::Forward => {
                 let (west_east, north_south) = self.waypoint.as_dirs();
+                let (dx, dy) = self.waypoint.diff();
 
-                self.forward(west_east, self.waypoint.x.abs() as u16 * action.arg);
-                self.forward(north_south, self.waypoint.y.abs() as u16 * action.arg);
+                self.coordinates
+                    .move_towards(west_east, dx * action.arg as i64);
+                self.coordinates
+                    .move_towards(north_south, dy * action.arg as i64);
             }
-        }
-    }
-
-    fn forward(&mut self, direction: Direction, arg: u16) {
-        let arg = arg as i64;
-
-        match direction {
-            Direction::North => self.y -= arg as i64,
-            Direction::South => self.y += arg as i64,
-            Direction::West => self.x -= arg as i64,
-            Direction::East => self.x += arg as i64,
         }
     }
 }
 
 #[derive(Debug, Clone)]
 struct Waypoint {
-    x: i64,
-    y: i64,
+    coordinates: Coordinates,
 }
 
 impl Waypoint {
     fn new() -> Self {
-        Self { x: 10, y: -1 }
+        Self {
+            coordinates: Coordinates { x: 10, y: -1 },
+        }
     }
 
     fn as_dirs(&self) -> (Direction, Direction) {
-        let west_east = if self.x < 0 {
+        let west_east = if self.coordinates.x < 0 {
             Direction::West
         } else {
             Direction::East
         };
-        let north_south = if self.y < 0 {
+        let north_south = if self.coordinates.y < 0 {
             Direction::North
         } else {
             Direction::South
@@ -247,18 +255,27 @@ impl Waypoint {
         (west_east, north_south)
     }
 
+    fn diff(&self) -> (i64, i64) {
+        (
+            self.coordinates.x.abs() as i64,
+            self.coordinates.y.abs() as i64,
+        )
+    }
+
     fn turn(&mut self, turn_dir: TurnDirection, quadrants: usize) {
+        let coords = &mut self.coordinates;
+
         for _ in 0..quadrants {
-            let mut x = self.x;
-            let mut y = self.y;
+            let mut x = coords.x;
+            let mut y = coords.y;
 
             match turn_dir {
                 TurnDirection::Left => x = -x,
                 TurnDirection::Right => y = -y,
             }
 
-            self.x = y;
-            self.y = x;
+            coords.x = y;
+            coords.y = x;
         }
     }
 }
