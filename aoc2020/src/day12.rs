@@ -22,7 +22,7 @@ fn part1(input: &str) -> aoc::Result<i64> {
     let mut ship = Ship::new();
 
     for a in actions {
-        ship.process(a);
+        ship.process(&a);
     }
 
     Ok(ship.manhattan_distance())
@@ -37,7 +37,7 @@ fn part2(input: &str) -> aoc::Result<i64> {
     let mut ship = Ship::new();
 
     for a in actions {
-        ship.process_with_waypoint(a);
+        ship.process_with_waypoint(&a);
     }
 
     Ok(ship.manhattan_distance())
@@ -186,7 +186,7 @@ impl Ship {
         self.coordinates.x.abs() + self.coordinates.y.abs()
     }
 
-    fn process(&mut self, action: Action) {
+    fn process(&mut self, action: &Action) {
         match action.kind {
             ActionKind::Move(dir) => self.coordinates.move_towards(dir, action.arg),
 
@@ -194,18 +194,13 @@ impl Ship {
                 self.direction = self.direction.rotate(turn_dir, action.arg);
             }
 
-            ActionKind::Forward => self
-                .coordinates
-                .move_towards(self.direction, action.arg),
+            ActionKind::Forward => self.coordinates.move_towards(self.direction, action.arg),
         }
     }
 
-    fn process_with_waypoint(&mut self, action: Action) {
+    fn process_with_waypoint(&mut self, action: &Action) {
         match action.kind {
-            ActionKind::Move(dir) => self
-                .waypoint
-                .coordinates
-                .move_towards(dir, action.arg),
+            ActionKind::Move(dir) => self.waypoint.coordinates.move_towards(dir, action.arg),
 
             ActionKind::Turn(turn_dir) => {
                 debug_assert!(action.arg % 90 == 0, "only right angles are supported");
@@ -216,13 +211,9 @@ impl Ship {
             }
 
             ActionKind::Forward => {
-                let (west_east, north_south) = self.waypoint.as_dirs();
-                let (dx, dy) = self.waypoint.diff();
-
-                self.coordinates
-                    .move_towards(west_east, dx * action.arg);
-                self.coordinates
-                    .move_towards(north_south, dy * action.arg);
+                for mv in self.waypoint.as_moves(action.arg).iter() {
+                    self.process(mv);
+                }
             }
         }
     }
@@ -240,7 +231,11 @@ impl Waypoint {
         }
     }
 
-    fn as_dirs(&self) -> (Direction, Direction) {
+    /// as_moves returns Actions with ActionKind::Move representing the moves the ship should take
+    /// to reach the waypoint
+    ///
+    /// this allows reusing the Forward logic of part 1 to move the ship towards the waypoint
+    fn as_moves(&self, steps: i64) -> [Action; 2] {
         let west_east = if self.coordinates.x < 0 {
             Direction::West
         } else {
@@ -252,14 +247,16 @@ impl Waypoint {
             Direction::South
         };
 
-        (west_east, north_south)
-    }
-
-    fn diff(&self) -> (i64, i64) {
-        (
-            self.coordinates.x.abs(),
-            self.coordinates.y.abs(),
-        )
+        [
+            Action {
+                kind: ActionKind::Move(west_east),
+                arg: self.coordinates.x.abs() * steps,
+            },
+            Action {
+                kind: ActionKind::Move(north_south),
+                arg: self.coordinates.y.abs() * steps,
+            },
+        ]
     }
 
     fn turn(&mut self, turn_dir: TurnDirection, quadrants: usize) {
