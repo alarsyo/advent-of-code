@@ -35,7 +35,7 @@ enum Direction {
     West,
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum ActionKind {
     Move(Direction),
 
@@ -114,45 +114,42 @@ impl Ship {
         self.x.abs() + self.y.abs()
     }
 
+    fn find_direction<I>(iter: I, quarters: usize, current_direction: Direction) -> Direction
+    where
+        I: Iterator<Item = Direction>,
+        I: std::clone::Clone,
+    {
+        iter
+            // this is litteraly a circle, reaching West and turning 90 degrees right means
+            // facing North again
+            .cycle()
+            // find our current ship direction
+            .skip_while(|dir| *dir != current_direction)
+            // skip as many quarters as needed
+            .nth(quarters)
+            // we can unwrap safely because we called .cycle() on a non empty iterator
+            .unwrap()
+    }
+
     fn process(&mut self, action: Action) {
         match action.kind {
             ActionKind::Move(dir) => self.forward(dir, action.arg),
 
-            ActionKind::Right => {
+            ActionKind::Right | ActionKind::Left => {
                 debug_assert!(action.arg % 90 == 0, "only right angles are supported");
 
-                let quarters = action.arg / 90;
+                let quarters = (action.arg / 90) as usize;
 
-                let new_dir = Self::CLOCKWISE_DIRECTIONS
-                    .iter()
-                    // this is litteraly a circle, reaching West and turning 90 degrees right means
-                    // facing North again
-                    .cycle()
-                    // find our current ship direction
-                    .skip_while(|dir| **dir != self.direction)
-                    // skip as many quarters as needed
-                    .nth(quarters as usize)
-                    // we can unwrap safely because we called .cycle() on a non empty iterator
-                    .unwrap();
+                let directions_iter = Self::CLOCKWISE_DIRECTIONS.iter().copied();
 
-                self.direction = *new_dir;
-            }
+                let new_dir = if action.kind == ActionKind::Left {
+                    // go through cardinal directions the other way around, anti-clockwise
+                    Ship::find_direction(directions_iter.rev(), quarters, self.direction)
+                } else {
+                    Ship::find_direction(directions_iter, quarters, self.direction)
+                };
 
-            ActionKind::Left => {
-                debug_assert!(action.arg % 90 == 0, "only right angles are supported");
-
-                let quarters = action.arg / 90;
-
-                let new_dir = Self::CLOCKWISE_DIRECTIONS
-                    .iter()
-                    // same thing as above, but reverse direction first!
-                    .rev()
-                    .cycle()
-                    .skip_while(|dir| **dir != self.direction)
-                    .nth(quarters as usize)
-                    .unwrap();
-
-                self.direction = *new_dir;
+                self.direction = new_dir;
             }
 
             ActionKind::Forward => self.forward(self.direction, action.arg),
