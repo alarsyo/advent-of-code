@@ -52,11 +52,16 @@ enum Direction {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum TurnDirection {
+    Left,
+    Right,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum ActionKind {
     Move(Direction),
 
-    Left,
-    Right,
+    Turn(TurnDirection),
 
     Forward,
 }
@@ -87,8 +92,8 @@ impl std::str::FromStr for Action {
             'E' => ActionKind::Move(Direction::East),
             'W' => ActionKind::Move(Direction::West),
 
-            'L' => ActionKind::Left,
-            'R' => ActionKind::Right,
+            'L' => ActionKind::Turn(TurnDirection::Left),
+            'R' => ActionKind::Turn(TurnDirection::Right),
 
             'F' => ActionKind::Forward,
 
@@ -154,14 +159,14 @@ impl Ship {
         match action.kind {
             ActionKind::Move(dir) => self.forward(dir, action.arg),
 
-            ActionKind::Right | ActionKind::Left => {
+            ActionKind::Turn(turn_dir) => {
                 debug_assert!(action.arg % 90 == 0, "only right angles are supported");
 
                 let quarters = (action.arg / 90) as usize;
 
                 let directions_iter = Self::CLOCKWISE_DIRECTIONS.iter().copied();
 
-                let new_dir = if action.kind == ActionKind::Left {
+                let new_dir = if turn_dir == TurnDirection::Left {
                     // go through cardinal directions the other way around, anti-clockwise
                     Ship::find_direction(directions_iter.rev(), quarters, self.direction)
                 } else {
@@ -184,31 +189,12 @@ impl Ship {
                 Direction::East => self.waypoint.x += action.arg as i64,
             },
 
-            ActionKind::Left => {
+            ActionKind::Turn(turn_dir) => {
                 debug_assert!(action.arg % 90 == 0, "only right angles are supported");
 
-                let quarters = (action.arg / 90) as usize % 4;
+                let quadrants = (action.arg / 90) as usize % 4;
 
-                for _ in 0..quarters {
-                    let x = self.waypoint.x as i64;
-                    let y = self.waypoint.y as i64;
-
-                    self.waypoint.x = y;
-                    self.waypoint.y = -x;
-                }
-            }
-            ActionKind::Right => {
-                debug_assert!(action.arg % 90 == 0, "only right angles are supported");
-
-                let quarters = (action.arg / 90) as usize % 4;
-
-                for _ in 0..quarters {
-                    let x = self.waypoint.x as i64;
-                    let y = self.waypoint.y as i64;
-
-                    self.waypoint.x = -y;
-                    self.waypoint.y = x;
-                }
+                self.waypoint.turn(turn_dir, quadrants);
             }
 
             ActionKind::Forward => {
@@ -256,6 +242,21 @@ impl Waypoint {
         };
 
         (west_east, north_south)
+    }
+
+    fn turn(&mut self, turn_dir: TurnDirection, quadrants: usize) {
+        for _ in 0..quadrants {
+            let mut x = self.x;
+            let mut y = self.y;
+
+            match turn_dir {
+                TurnDirection::Left => x = -x,
+                TurnDirection::Right => y = -y,
+            }
+
+            self.x = y;
+            self.y = x;
+        }
     }
 }
 
