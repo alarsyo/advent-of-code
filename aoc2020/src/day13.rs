@@ -3,7 +3,6 @@ use std::fmt::Write;
 use aoc::err;
 
 const INPUT: &str = include_str!("../input/day13.txt");
-const PROVIDED: &str = include_str!("../input/day13_provided.txt");
 
 pub fn run() -> aoc::Result<String> {
     let mut res = String::with_capacity(128);
@@ -54,9 +53,11 @@ fn part2(input: &str) -> aoc::Result<u64> {
     // we don't need the first line anymore, skip it
     lines.next().ok_or_else(|| err!("input was empty"))?;
 
-    let bus_ids: Vec<(u64, u64)> = lines
-        .next()
-        .ok_or_else(|| err!("no second line"))?
+    find_timestamp(lines.next().ok_or_else(|| err!("no second line"))?)
+}
+
+fn find_timestamp(input: &str) -> aoc::Result<u64> {
+    let bus_ids: Vec<(u64, u64)> = input
         .split(',')
         .enumerate()
         .filter_map(|(idx, num)| {
@@ -97,6 +98,8 @@ fn satisfies_constraint(solution: u64, (remainder, divisor): (u64, u64)) -> bool
 mod tests {
     use super::*;
 
+    const PROVIDED: &str = include_str!("../input/day13_provided.txt");
+
     #[test]
     fn part1_provided() {
         assert_eq!(part1(PROVIDED).unwrap(), 295);
@@ -105,6 +108,21 @@ mod tests {
     #[test]
     fn part1_real() {
         assert_eq!(part1(INPUT).unwrap(), 3269);
+    }
+
+    #[test]
+    fn part2_small_samples() {
+        let tests = &[
+            ("17,x,13,19", 3417),
+            ("67,7,59,61", 754018),
+            ("67,x,7,59,61", 779210),
+            ("67,7,x,59,61", 1261476),
+            ("1789,37,47,1889", 1202161486),
+        ];
+
+        for &(input, expected) in tests {
+            assert_eq!(find_timestamp(input).unwrap(), expected);
+        }
     }
 
     #[test]
