@@ -1,8 +1,7 @@
 use std::collections::HashSet;
 use std::fmt::Write;
 
-use aoc::err;
-use aoc::Result;
+use anyhow::{Context, Result};
 
 const INPUT: &str = include_str!("../input/day10.txt");
 
@@ -85,7 +84,7 @@ fn part1(input: &str) -> Result<usize> {
         };
     }
 
-    let best = best.ok_or_else(|| err!("zero asteroid provided"))?;
+    let best = best.context("zero asteroid provided")?;
     Ok(best.len())
 }
 

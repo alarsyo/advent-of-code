@@ -1,7 +1,6 @@
 use std::fmt::Write;
 
-use aoc::err;
-use aoc::Result;
+use anyhow::{anyhow, bail, Context, Result};
 
 use crate::intcode::{parse_memory, Intcode};
 
@@ -28,7 +27,7 @@ fn part1(mut input: Vec<i64>) -> Result<i64> {
 
     intcode
         .get_day02_output()
-        .ok_or_else(|| err!("intcode memory was empty!"))
+        .context("intcode memory was empty!")
 }
 
 fn part2(input: &[i64], res: i64) -> Result<i64> {
@@ -46,11 +45,11 @@ fn part2(input: &[i64], res: i64) -> Result<i64> {
                     return Ok(noun * 100 + verb);
                 }
             }
-            None => return Err(err!("intcode memory was empty!")),
+            None => bail!("intcode memory was empty!"),
         }
     }
 
-    Err(err!(
+    Err(anyhow!(
         "couldn't find noun/verb combination that produces {}",
         res
     ))

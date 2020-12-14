@@ -1,8 +1,7 @@
 use std::collections::VecDeque;
 use std::fmt::Write;
 
-use aoc::err;
-use aoc::Result;
+use anyhow::{bail, Context, Result};
 
 use crate::intcode::{parse_memory, Intcode};
 
@@ -59,7 +58,7 @@ fn part1(input: &str) -> Result<i64> {
 
             output = intcode
                 .get_last_output()
-                .ok_or_else(|| err!("no output at end of pipeline!"))?;
+                .context("no output at end of pipeline!")?;
         }
 
         res = std::cmp::max(res, output);
@@ -114,7 +113,7 @@ fn part2(input: &str) -> Result<i64> {
                         res = std::cmp::max(res, signal);
                         break;
                     }
-                    None => return Err(err!("last amplifier halted without output")),
+                    None => bail!("last amplifier halted without output"),
                 };
             } else {
                 for out in last.output.iter() {

@@ -1,7 +1,6 @@
 use std::fmt::Write;
 
-use aoc::err;
-use aoc::Result;
+use anyhow::{Context, Result};
 
 const INPUT: &str = include_str!("../input/day04.txt");
 
@@ -20,11 +19,11 @@ fn range(input: &str) -> Result<(usize, usize)> {
     let mut range = input.trim_end().split('-');
     let begin = range
         .next()
-        .ok_or_else(|| err!("invalid input: {}", input))?
+        .with_context(|| format!("invalid input: {}", input))?
         .parse()?;
     let end = range
         .next()
-        .ok_or_else(|| err!("invalid input: {}", input))?
+        .with_context(|| format!("invalid input: {}", input))?
         .parse()?;
 
     Ok((begin, end))

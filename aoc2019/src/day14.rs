@@ -2,8 +2,7 @@ use std::cmp::Ordering;
 use std::collections::HashMap;
 use std::fmt::Write;
 
-use aoc::err;
-use aoc::Result;
+use anyhow::{Context, Result};
 
 const INPUT: &str = include_str!("../input/day14.txt");
 
@@ -22,7 +21,7 @@ fn parse_recipes(input: &str) -> Result<HashMap<String, Recipe>> {
     for line in input.lines() {
         let arrow = line
             .find(" => ")
-            .ok_or_else(|| err!("couldn't find arrow in line: {}", line))?;
+            .with_context(|| format!("couldn't find arrow in line: {}", line))?;
 
         let elems = &line[..arrow];
         let elems = elems
@@ -30,7 +29,7 @@ fn parse_recipes(input: &str) -> Result<HashMap<String, Recipe>> {
             .map(|elem| {
                 let space = elem
                     .find(' ')
-                    .ok_or_else(|| err!("couldn't find separator for elem {}", elem))?;
+                    .with_context(|| format!("couldn't find separator for elem {}", elem))?;
                 let amount = elem[..space].parse()?;
                 let name = &elem[(space + 1)..];
 
@@ -44,7 +43,7 @@ fn parse_recipes(input: &str) -> Result<HashMap<String, Recipe>> {
         let result = &line[(arrow + 4)..].trim_end();
         let space = result
             .find(' ')
-            .ok_or_else(|| err!("couldn't find separator for result {}", result))?;
+            .with_context(|| format!("couldn't find separator for result {}", result))?;
         let result_amount = result[..space].parse()?;
         let result_name = &result[(space + 1)..];
 
@@ -76,7 +75,7 @@ fn get_ore_cost(
     if in_stock < quantity {
         let recipe = recipes
             .get(&material)
-            .ok_or_else(|| err!("couldn't find recipe for {}", material))?;
+            .with_context(|| format!("couldn't find recipe for {}", material))?;
 
         let needed = quantity - in_stock;
         let num_reactions = (needed + recipe.produced - 1) / recipe.produced;

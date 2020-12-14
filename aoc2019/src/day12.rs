@@ -1,9 +1,7 @@
-use std::error::Error;
 use std::fmt::Write;
 use std::str::FromStr;
 
-use aoc::err;
-use aoc::Result;
+use anyhow::{anyhow, Context, Result};
 
 const INPUT: &str = include_str!("../input/day12.txt");
 
@@ -178,7 +176,7 @@ fn part2(mut planets: Vec<Planet>) -> Result<usize> {
         }
     }
 
-    Err(err!("planets never reached the same state twice"))
+    Err(anyhow!("planets never reached the same state twice"))
 }
 
 #[derive(Clone)]
@@ -224,38 +222,38 @@ impl Planet {
 }
 
 impl FromStr for Planet {
-    type Err = Box<dyn Error>;
+    type Err = anyhow::Error;
 
     fn from_str(s: &str) -> Result<Self> {
         let x_equals = s
             .find("x=")
-            .ok_or_else(|| err!("couldn't find x value for planet: {}", s))?;
+            .with_context(|| format!("couldn't find x value for planet: {}", s))?;
 
         let comma = s
             .find(',')
-            .ok_or_else(|| err!("couldn't find comma after x value: {}", s))?;
+            .with_context(|| format!("couldn't find comma after x value: {}", s))?;
 
         let x = s[(x_equals + 2)..comma].parse()?;
         let s = &s[(comma + 1)..];
 
         let y_equals = s
             .find("y=")
-            .ok_or_else(|| err!("couldn't find y value for planet: {}", s))?;
+            .with_context(|| format!("couldn't find y value for planet: {}", s))?;
 
         let comma = s
             .find(',')
-            .ok_or_else(|| err!("couldn't find comma after y value: {}", s))?;
+            .with_context(|| format!("couldn't find comma after y value: {}", s))?;
 
         let y = s[(y_equals + 2)..comma].parse()?;
         let s = &s[(comma + 1)..];
 
         let z_equals = s
             .find("z=")
-            .ok_or_else(|| err!("couldn't find z value for planet: {}", s))?;
+            .with_context(|| format!("couldn't find z value for planet: {}", s))?;
 
         let bracket = s
             .find('>')
-            .ok_or_else(|| err!("couldn't find bracket after z value: {}", s))?;
+            .with_context(|| format!("couldn't find bracket after z value: {}", s))?;
 
         let z = s[(z_equals + 2)..bracket].parse()?;
 

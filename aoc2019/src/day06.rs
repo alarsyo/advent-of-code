@@ -3,8 +3,7 @@ use std::collections::HashSet;
 use std::fmt::Write;
 use std::iter;
 
-use aoc::err;
-use aoc::Result;
+use anyhow::{Context, Result};
 
 const INPUT: &str = include_str!("../input/day06.txt");
 
@@ -42,7 +41,7 @@ fn part1(input: &str) -> Result<u64> {
         .map(|line| {
             let paren = line
                 .find(')')
-                .ok_or_else(|| err!("couldn't find `)` in line: {}", line))?;
+                .with_context(|| format!("couldn't find `)` in line: {}", line))?;
             Ok((line[paren + 1..].to_string(), line[..paren].to_string()))
         })
         .collect::<Result<HashMap<String, String>>>()?;
@@ -61,7 +60,7 @@ fn part2(input: &str) -> Result<usize> {
         .map(|line| {
             let paren = line
                 .find(')')
-                .ok_or_else(|| err!("couldn't find `)` in line: {}", line))?;
+                .with_context(|| format!("couldn't find `)` in line: {}", line))?;
             Ok((line[paren + 1..].to_string(), line[..paren].to_string()))
         })
         .collect::<Result<HashMap<String, String>>>()?;
