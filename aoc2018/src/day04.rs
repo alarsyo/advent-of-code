@@ -1,10 +1,8 @@
 use std::collections::HashMap;
-use std::error::Error;
 use std::fmt::Write;
 use std::str::FromStr;
 
-use aoc::err;
-use aoc::Result;
+use anyhow::{anyhow, bail, Context, Result};
 
 const INPUT: &str = include_str!("../input/day04.txt");
 
@@ -30,7 +28,7 @@ enum Event {
 }
 
 impl FromStr for Event {
-    type Err = Box<dyn Error>;
+    type Err = anyhow::Error;
 
     fn from_str(s: &str) -> Result<Self> {
         if s.find("wakes up").is_some() {
@@ -38,13 +36,13 @@ impl FromStr for Event {
         } else if s.find("falls asleep").is_some() {
             Ok(Event::FallAsleep)
         } else if s.find("begins shift").is_some() {
-            let pound = s.find('#').ok_or_else(|| err!("`#` not found"))?;
+            let pound = s.find('#').context("`#` not found")?;
             let s = &s[(pound + 1)..];
-            let space = s.find(' ').ok_or_else(|| err!("` ` not found after `#`"))?;
+            let space = s.find(' ').context("` ` not found after `#`")?;
             let id = s[..space].parse()?;
             Ok(Event::ShiftChange(id))
         } else {
-            Err(err!("unknown event type"))
+            Err(anyhow!("unknown event type"))
         }
     }
 }
@@ -60,28 +58,28 @@ struct Date {
 }
 
 impl FromStr for Date {
-    type Err = Box<dyn Error>;
+    type Err = anyhow::Error;
 
     fn from_str(s: &str) -> Result<Self> {
-        let lbracket = s.find('[').ok_or_else(|| err!("`[` not found"))?;
+        let lbracket = s.find('[').context("`[` not found")?;
         let s = &s[(lbracket + 1)..];
-        let dash = s.find('-').ok_or_else(|| err!("`-` not found"))?;
+        let dash = s.find('-').context("`-` not found")?;
 
         let year = s[..dash].parse()?;
         let s = &s[(dash + 1)..];
-        let dash = s.find('-').ok_or_else(|| err!("`-` not found"))?;
+        let dash = s.find('-').context("`-` not found")?;
 
         let month = s[..dash].parse()?;
         let s = &s[(dash + 1)..];
-        let space = s.find(' ').ok_or_else(|| err!("` ` not found"))?;
+        let space = s.find(' ').context("` ` not found")?;
 
         let day = s[..space].parse()?;
         let s = &s[(space + 1)..];
-        let colon = s.find(':').ok_or_else(|| err!("`:` not found"))?;
+        let colon = s.find(':').context("`:` not found")?;
 
         let hour = s[..colon].parse()?;
         let s = &s[(colon + 1)..];
-        let rbracket = s.find(']').ok_or_else(|| err!("`]` not found"))?;
+        let rbracket = s.find(']').context("`]` not found")?;
 
         let minute = s[..rbracket].parse()?;
 
@@ -102,11 +100,11 @@ struct LogEntry {
 }
 
 impl FromStr for LogEntry {
-    type Err = Box<dyn Error>;
+    type Err = anyhow::Error;
 
     fn from_str(s: &str) -> Result<Self> {
-        let date: Date = s.parse().map_err(|e| err!("couldn't parse date: {}", e))?;
-        let event = s.parse().map_err(|e| err!("couldn't parse event: {}", e))?;
+        let date: Date = s.parse().context("couldn't parse date")?;
+        let event = s.parse().context("couldn't parse event")?;
 
         let entry = LogEntry { date, event };
 
@@ -134,7 +132,7 @@ fn part1(input: &str) -> Result<u64> {
 
         match guard_id {
             Some(id) => map.entry(id).or_default().push(log_entry),
-            None => return Err(err!("event before first shift")),
+            None => bail!("event before first shift"),
         }
     }
 
@@ -157,13 +155,13 @@ fn part1(input: &str) -> Result<u64> {
                         }
                         fell_asleep = None;
                     }
-                    None => return Err(err!("woke up before falling asleep")),
+                    None => bail!("woke up before falling asleep"),
                 },
             }
         }
 
         if fell_asleep.is_some() {
-            return Err(err!("fell asleep but never woke up!"));
+            bail!("fell asleep but never woke up!");
         }
 
         sleep_freq_per_guard.insert(id, sleep_freq);

@@ -13,6 +13,7 @@ criterion = "0.3"
 [dependencies]
 
 aoc = { path = "../aoc" }
+anyhow = "1.0"
 
 [lib]
 path = "src/lib.rs"
