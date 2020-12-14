@@ -1,0 +1,4 @@
+mask = X1001X
+mem[42] = 100
+mask = 00X0XX
+mem[26] = 1
