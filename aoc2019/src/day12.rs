@@ -1,3 +1,4 @@
+use std::cmp::Ordering;
 use std::fmt::Write;
 use std::str::FromStr;
 
@@ -52,28 +53,40 @@ fn part1(mut planets: Vec<Planet>, steps: usize) -> Result<u64> {
             let first = &mut begin[pair.0];
             let second = &mut end[0];
 
-            if first.position.x > second.position.x {
-                first.velocity.x -= 1;
-                second.velocity.x += 1;
-            } else if first.position.x < second.position.x {
-                first.velocity.x += 1;
-                second.velocity.x -= 1;
+            match first.position.x.cmp(&second.position.x) {
+                Ordering::Greater => {
+                    first.velocity.x -= 1;
+                    second.velocity.x += 1;
+                }
+                Ordering::Less => {
+                    first.velocity.x += 1;
+                    second.velocity.x -= 1;
+                }
+                Ordering::Equal => {}
             }
 
-            if first.position.y > second.position.y {
-                first.velocity.y -= 1;
-                second.velocity.y += 1;
-            } else if first.position.y < second.position.y {
-                first.velocity.y += 1;
-                second.velocity.y -= 1;
+            match first.position.y.cmp(&second.position.y) {
+                Ordering::Greater => {
+                    first.velocity.y -= 1;
+                    second.velocity.y += 1;
+                }
+                Ordering::Less => {
+                    first.velocity.y += 1;
+                    second.velocity.y -= 1;
+                }
+                Ordering::Equal => {}
             }
 
-            if first.position.z > second.position.z {
-                first.velocity.z -= 1;
-                second.velocity.z += 1;
-            } else if first.position.z < second.position.z {
-                first.velocity.z += 1;
-                second.velocity.z -= 1;
+            match first.position.z.cmp(&second.position.z) {
+                Ordering::Greater => {
+                    first.velocity.z -= 1;
+                    second.velocity.z += 1;
+                }
+                Ordering::Less => {
+                    first.velocity.z += 1;
+                    second.velocity.z -= 1;
+                }
+                Ordering::Equal => {}
             }
         }
 
@@ -114,28 +127,40 @@ fn part2(mut planets: Vec<Planet>) -> Result<usize> {
             let first = &mut begin[pair.0];
             let second = &mut end[0];
 
-            if first.position.x > second.position.x {
-                first.velocity.x -= 1;
-                second.velocity.x += 1;
-            } else if first.position.x < second.position.x {
-                first.velocity.x += 1;
-                second.velocity.x -= 1;
+            match first.position.x.cmp(&second.position.x) {
+                Ordering::Greater => {
+                    first.velocity.x -= 1;
+                    second.velocity.x += 1;
+                }
+                Ordering::Less => {
+                    first.velocity.x += 1;
+                    second.velocity.x -= 1;
+                }
+                Ordering::Equal => {}
             }
 
-            if first.position.y > second.position.y {
-                first.velocity.y -= 1;
-                second.velocity.y += 1;
-            } else if first.position.y < second.position.y {
-                first.velocity.y += 1;
-                second.velocity.y -= 1;
+            match first.position.y.cmp(&second.position.y) {
+                Ordering::Greater => {
+                    first.velocity.y -= 1;
+                    second.velocity.y += 1;
+                }
+                Ordering::Less => {
+                    first.velocity.y += 1;
+                    second.velocity.y -= 1;
+                }
+                Ordering::Equal => {}
             }
 
-            if first.position.z > second.position.z {
-                first.velocity.z -= 1;
-                second.velocity.z += 1;
-            } else if first.position.z < second.position.z {
-                first.velocity.z += 1;
-                second.velocity.z -= 1;
+            match first.position.z.cmp(&second.position.z) {
+                Ordering::Greater => {
+                    first.velocity.z -= 1;
+                    second.velocity.z += 1;
+                }
+                Ordering::Less => {
+                    first.velocity.z += 1;
+                    second.velocity.z -= 1;
+                }
+                Ordering::Equal => {}
             }
         }
 

@@ -1,3 +1,4 @@
+use std::cmp::Ordering;
 use std::collections::HashMap;
 use std::fmt::{self, Display, Write};
 
@@ -30,13 +31,7 @@ fn part1(memory: Vec<i64>) -> Result<usize> {
         map.insert(pos, tile);
     }
 
-    Ok(map
-        .values()
-        .filter(|t| match t {
-            Tile::Block => true,
-            _ => false,
-        })
-        .count())
+    Ok(map.values().filter(|t| matches!(t, Tile::Block)).count())
 }
 
 #[allow(dead_code)]
@@ -50,12 +45,10 @@ fn print_screen(screen: &[Vec<Tile>]) {
 }
 
 fn get_next_move(paddle_pos: (i64, i64), ball_pos: (i64, i64)) -> i64 {
-    if ball_pos.0 > paddle_pos.0 {
-        1
-    } else if ball_pos.0 == paddle_pos.0 {
-        0
-    } else {
-        -1
+    match ball_pos.0.cmp(&paddle_pos.0) {
+        Ordering::Greater => 1,
+        Ordering::Equal => 0,
+        Ordering::Less => -1,
     }
 }
 

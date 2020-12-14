@@ -190,7 +190,7 @@ impl FromStr for Move {
     fn from_str(s: &str) -> Result<Self> {
         let direction = s
             .chars()
-            .nth(0)
+            .next()
             .context("couldn't get direction char in move")?;
 
         let s = s.get(1..).context("move missing length")?;

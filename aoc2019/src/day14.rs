@@ -90,7 +90,7 @@ fn get_ore_cost(
         in_stock += num_reactions * recipe.produced;
     }
 
-    inventory.insert(material.clone(), in_stock - quantity);
+    inventory.insert(material, in_stock - quantity);
 
     Ok(total)
 }
