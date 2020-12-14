@@ -1,3 +1,4 @@
+use std::cmp::Ordering;
 use std::fmt::Write;
 
 use anyhow::{Context, Result};
@@ -59,16 +60,20 @@ fn part2(begin: usize, end: usize) -> Result<usize> {
         let mut count = 1;
         let mut prev = digits[0];
         for digit in digits.iter().skip(1) {
-            if prev > *digit {
-                ordered = false;
-                break;
-            } else if prev == *digit {
-                count += 1;
-            } else {
-                if count == 2 {
-                    pair = true;
+            match prev.cmp(digit) {
+                Ordering::Greater => {
+                    ordered = false;
+                    break;
                 }
-                count = 1;
+                Ordering::Equal => {
+                    count += 1;
+                }
+                Ordering::Less => {
+                    if count == 2 {
+                        pair = true;
+                    }
+                    count = 1;
+                }
             }
 
             prev = *digit;
