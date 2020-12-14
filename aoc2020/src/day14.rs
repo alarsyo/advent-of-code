@@ -17,7 +17,7 @@ pub fn run() -> aoc::Result<String> {
 fn part1(input: &str) -> aoc::Result<u64> {
     let mut program: Program = input.parse()?;
 
-    program.run()?;
+    program.run_part1()?;
 
     Ok(program.memory_sum())
 }
@@ -30,6 +30,7 @@ fn part2(input: &str) -> aoc::Result<u64> {
     Ok(program.memory_sum())
 }
 
+/// Represents the kind of mask we want to apply at a specific offset
 #[derive(Debug, Clone, Copy)]
 enum Mask {
     Floating,
@@ -37,6 +38,7 @@ enum Mask {
     Zero,
 }
 
+/// An iterator over all possible values produced by applying `masks` on a single value
 #[derive(Debug)]
 struct FloatingIterator<'a> {
     masks: &'a [Mask],
@@ -48,6 +50,7 @@ struct FloatingIterator<'a> {
 
 impl<'a> FloatingIterator<'a> {
     fn new(masks: &'a [Mask], mut n: usize) -> Self {
+        // apply non-floating masks here, we don't want to process them in every iteration
         for (offset, mask) in masks.iter().enumerate() {
             if let Mask::One = mask {
                 n |= 1 << offset;
@@ -62,6 +65,7 @@ impl<'a> FloatingIterator<'a> {
         }
     }
 
+    /// Returns the offset of the next Floating Mask it finds after offset, if any
     fn find_next_floating(masks: &[Mask], offset: usize) -> Option<usize> {
         masks
             .iter()
@@ -105,14 +109,17 @@ impl<'a> Iterator for FloatingIterator<'a> {
             let (offset, state) = self.stack.last_mut().unwrap();
             match state {
                 FloatingState::Unapplied => {
+                    // apply the Zero mask
                     self.current_value &= !(1 << *offset);
                     *state = FloatingState::AppliedZero;
                 }
                 FloatingState::AppliedZero => {
+                    // apply the One mask
                     self.current_value |= 1 << *offset;
                     *state = FloatingState::AppliedZeroAndOne;
                 }
                 FloatingState::AppliedZeroAndOne => {
+                    // we've applied all possibilities for this mask, we can unwind our stack
                     self.stack.pop();
 
                     if self.stack.is_empty() {
@@ -125,7 +132,7 @@ impl<'a> Iterator for FloatingIterator<'a> {
                 }
             }
 
-            // we've applied our current mask transform, now we "recurse" and find the next one
+            // we've applied our current mask transform, now we "recur" and find the next one
             match FloatingIterator::find_next_floating(self.masks, *offset + 1) {
                 Some(offset) => self.stack.push((offset, FloatingState::Unapplied)),
                 None => {
@@ -143,7 +150,9 @@ struct BitMask {
 }
 
 impl BitMask {
-    /// function used for part 1: 'X' bits just don't do anything
+    /// Function used for part 1: 'X' bits just don't do anything
+    ///
+    /// This discards Floating masks, returning a single modified value
     fn apply_no_floating(&self, mut n: u64) -> u64 {
         for (offset, mask) in self.masks.iter().enumerate() {
             match mask {
@@ -156,6 +165,10 @@ impl BitMask {
         n
     }
 
+    /// Returns an iterator over all possible values when applying the BitMask
+    ///
+    /// This takes into account Floating masks, which produce multiple possibilities, hence the need
+    /// for an iterator
     fn apply(&self, n: usize) -> impl Iterator<Item = usize> + '_ {
         FloatingIterator::new(&self.masks, n)
     }
@@ -239,7 +252,7 @@ struct Program {
 }
 
 impl Program {
-    fn run(&mut self) -> aoc::Result<()> {
+    fn run_part1(&mut self) -> aoc::Result<()> {
         for inst in &self.instructions {
             match inst {
                 Instruction::ChangeMask(bitmask) => self.current_mask = Some(bitmask.clone()),
