@@ -1,7 +1,7 @@
 use std::collections::HashSet;
 use std::fmt::Write;
 
-use aoc::{err, Result};
+use anyhow::{anyhow, Result};
 
 const INPUT: &str = include_str!("../input/day01.txt");
 
@@ -17,7 +17,7 @@ pub fn run() -> Result<String> {
 fn part1(input: &str) -> Result<i64> {
     let entries = input
         .lines()
-        .map(|line| line.parse::<i64>().map_err(|e| err!("{}", e)))
+        .map(|line| line.parse::<i64>().map_err(anyhow::Error::new))
         .collect::<Result<Vec<i64>>>()?;
 
     let (a, b) = find_2020_2_sum(&entries)?;
@@ -28,8 +28,8 @@ fn part1(input: &str) -> Result<i64> {
 fn part2(input: &str) -> Result<i64> {
     let entries = input
         .lines()
-        .map(|line| line.parse::<i64>().map_err(|e| err!("{}", e)))
-        .collect::<Result<Vec<i64>>>()?;
+        .map(|line| line.parse::<i64>().map_err(anyhow::Error::new))
+        .collect::<Result<Vec<_>>>()?;
 
     let (a, b, c) = find_2020_3_sum(&entries)?;
 
@@ -47,7 +47,7 @@ fn find_2020_2_sum(entries: &[i64]) -> Result<(i64, i64)> {
         }
     }
 
-    Err(err!("couldn't find 2 elements that sum to 2020"))
+    Err(anyhow!("couldn't find 2 elements that sum to 2020"))
 }
 
 fn find_2020_3_sum(entries: &[i64]) -> Result<(i64, i64, i64)> {
@@ -70,7 +70,7 @@ fn find_2020_3_sum(entries: &[i64]) -> Result<(i64, i64, i64)> {
         }
     }
 
-    Err(err!("couldn't find 2 elements that sum to 2020"))
+    Err(anyhow!("couldn't find 2 elements that sum to 2020"))
 }
 
 #[cfg(test)]

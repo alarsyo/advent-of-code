@@ -2,11 +2,11 @@ use std::collections::HashMap;
 use std::fmt::Write;
 use std::str::FromStr;
 
-use aoc::err;
+use anyhow::{Context, Result};
 
 const INPUT: &str = include_str!("../input/day07.txt");
 
-pub fn run() -> aoc::Result<String> {
+pub fn run() -> Result<String> {
     let mut res = String::with_capacity(128);
 
     writeln!(res, "part 1: {}", part1(INPUT)?)?;
@@ -15,11 +15,11 @@ pub fn run() -> aoc::Result<String> {
     Ok(res)
 }
 
-fn part1(input: &str) -> aoc::Result<usize> {
+fn part1(input: &str) -> Result<usize> {
     let bag_rules = input
         .lines()
         .map(|line| line.parse())
-        .collect::<aoc::Result<Vec<BagRule>>>()
+        .collect::<Result<Vec<BagRule>>>()
         .unwrap();
 
     // create map with Key = color, Value = BagRule
@@ -39,11 +39,11 @@ fn part1(input: &str) -> aoc::Result<usize> {
         .count())
 }
 
-fn part2(input: &str) -> aoc::Result<usize> {
+fn part2(input: &str) -> Result<usize> {
     let bag_rules = input
         .lines()
         .map(|line| line.parse())
-        .collect::<aoc::Result<Vec<BagRule>>>()
+        .collect::<Result<Vec<BagRule>>>()
         .unwrap();
 
     // create map with Key = color, Value = BagRule
@@ -102,9 +102,9 @@ impl BagRule {
 }
 
 impl FromStr for BagRule {
-    type Err = aoc::Error;
+    type Err = anyhow::Error;
 
-    fn from_str(s: &str) -> aoc::Result<Self> {
+    fn from_str(s: &str) -> Result<Self> {
         let words: Vec<&str> = s.split(' ').collect();
 
         // let's assume our input is always valid for now
@@ -130,7 +130,7 @@ impl FromStr for BagRule {
                 number => {
                     let n = number
                         .parse()
-                        .map_err(|e| err!("couldn't parse number `{}` in bag rule", e))?;
+                        .context("couldn't parse number in bag rule")?;
 
                     let adjective = words[1];
                     let color = words[2];
@@ -169,7 +169,7 @@ mod tests {
         let bag_rules = PROVIDED1
             .lines()
             .map(|line| line.parse())
-            .collect::<aoc::Result<Vec<BagRule>>>()
+            .collect::<Result<Vec<BagRule>>>()
             .unwrap();
 
         let expected = vec![

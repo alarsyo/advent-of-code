@@ -1,11 +1,11 @@
 use std::collections::HashSet;
 use std::fmt::Write;
 
-use aoc::err;
+use anyhow::{anyhow, bail, Context, Result};
 
 const INPUT: &str = include_str!("../input/day08.txt");
 
-pub fn run() -> aoc::Result<String> {
+pub fn run() -> Result<String> {
     let mut res = String::with_capacity(128);
 
     writeln!(res, "part 1: {}", part1(INPUT)?)?;
@@ -14,25 +14,25 @@ pub fn run() -> aoc::Result<String> {
     Ok(res)
 }
 
-fn part1(input: &str) -> aoc::Result<i64> {
+fn part1(input: &str) -> Result<i64> {
     let instructions = input
         .lines()
         .map(|line| line.parse())
-        .collect::<aoc::Result<Vec<Instruction>>>()?;
+        .collect::<Result<Vec<Instruction>>>()?;
 
     let mut interpreter = Interpreter::new(instructions);
 
     Ok(match interpreter.run() {
         ExitStatus::InfiniteLoop(value) => value,
-        ExitStatus::End(_) => return Err(err!("interpreter doesn't have an infinite loop")),
+        ExitStatus::End(_) => bail!("interpreter doesn't have an infinite loop"),
     })
 }
 
-fn part2(input: &str) -> aoc::Result<i64> {
+fn part2(input: &str) -> Result<i64> {
     let instructions = input
         .lines()
         .map(|line| line.parse())
-        .collect::<aoc::Result<Vec<Instruction>>>()?;
+        .collect::<Result<Vec<Instruction>>>()?;
 
     for idx in 0..instructions.len() {
         let mut instructions = instructions.clone();
@@ -51,7 +51,7 @@ fn part2(input: &str) -> aoc::Result<i64> {
         }
     }
 
-    Err(err!(
+    Err(anyhow!(
         "interpreter always had an infinite loop, no solution found"
     ))
 }
@@ -110,21 +110,21 @@ enum Instruction {
 }
 
 impl std::str::FromStr for Instruction {
-    type Err = aoc::Error;
+    type Err = anyhow::Error;
 
-    fn from_str(s: &str) -> aoc::Result<Self> {
-        let space = s.find(' ').ok_or_else(|| err!("couldn't split on space"))?;
+    fn from_str(s: &str) -> Result<Self> {
+        let space = s.find(' ').context("couldn't split on space")?;
 
         let inst = &s[..space];
         let arg = s[(space + 1)..]
             .parse()
-            .map_err(|e| err!("couldn't parse argument for instruction: {}", e))?;
+            .context("couldn't parse argument for instruction")?;
 
         Ok(match inst {
             "acc" => Self::Acc(arg),
             "jmp" => Self::Jmp(arg),
             "nop" => Self::Nop(arg),
-            _ => return Err(err!("unrecognized instruction `{}`", inst)),
+            _ => bail!("unrecognized instruction `{}`", inst),
         })
     }
 }

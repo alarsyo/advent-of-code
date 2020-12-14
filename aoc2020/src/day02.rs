@@ -1,7 +1,7 @@
 use std::fmt::Write;
 use std::str::FromStr;
 
-use aoc::{err, Result};
+use anyhow::{Context, Result};
 
 const INPUT: &str = include_str!("../input/day02.txt");
 
@@ -44,28 +44,28 @@ impl PassPolicy {
 }
 
 impl FromStr for PassPolicy {
-    type Err = aoc::Error;
+    type Err = anyhow::Error;
 
     fn from_str(s: &str) -> Result<Self> {
         let s = s.trim_end();
 
         let space = s
             .find(' ')
-            .ok_or_else(|| err!("couldn't parse password policy: didn't find space"))?;
+            .context("couldn't parse password policy: didn't find space")?;
         let dash = s
             .find('-')
-            .ok_or_else(|| err!("couldn't parse password policy: didn't find dash"))?;
+            .context("couldn't parse password policy: didn't find dash")?;
 
         let min_bound = s[..dash]
             .parse::<usize>()
-            .map_err(|e| err!("couldn't  parse range: {}", e))?;
+            .context("couldn't  parse range")?;
         let max_bound = s[(dash + 1)..space]
             .parse::<usize>()
-            .map_err(|e| err!("couldn't parse range: {}", e))?;
+            .context("couldn't parse range")?;
 
         let colon = s
             .find(':')
-            .ok_or_else(|| err!("couldn't parse password policy: didn't find colon"))?;
+            .context("couldn't parse password policy: didn't find colon")?;
 
         let letter = s.as_bytes()[colon - 1];
 
@@ -92,7 +92,7 @@ pub fn run() -> Result<String> {
 fn part1(input: &str) -> Result<usize> {
     let policies = input
         .lines()
-        .map(|line| line.parse::<PassPolicy>().map_err(|e| err!("{}", e)))
+        .map(|line| line.parse::<PassPolicy>())
         .collect::<Result<Vec<PassPolicy>>>()?;
 
     Ok(policies
@@ -104,7 +104,7 @@ fn part1(input: &str) -> Result<usize> {
 fn part2(input: &str) -> Result<usize> {
     let policies = input
         .lines()
-        .map(|line| line.parse::<PassPolicy>().map_err(|e| err!("{}", e)))
+        .map(|line| line.parse::<PassPolicy>())
         .collect::<Result<Vec<PassPolicy>>>()?;
 
     Ok(policies

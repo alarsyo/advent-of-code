@@ -1,10 +1,10 @@
 use std::fmt::Write;
 
-use aoc::err;
+use anyhow::{anyhow, Result};
 
 const INPUT: &str = include_str!("../input/day09.txt");
 
-pub fn run() -> aoc::Result<String> {
+pub fn run() -> Result<String> {
     let mut res = String::with_capacity(128);
 
     writeln!(res, "part 1: {}", part1(INPUT)?)?;
@@ -27,7 +27,7 @@ fn find_pair_sum(data: &[u64], total: u64) -> Option<(u64, u64)> {
     None
 }
 
-fn find_outlier(numbers: &[u64], preamble_size: usize) -> aoc::Result<(u64, usize)> {
+fn find_outlier(numbers: &[u64], preamble_size: usize) -> Result<(u64, usize)> {
     // start checking numbers after the preamble only
     for i in preamble_size..numbers.len() {
         let preamble = &numbers[(i - preamble_size)..i];
@@ -39,22 +39,21 @@ fn find_outlier(numbers: &[u64], preamble_size: usize) -> aoc::Result<(u64, usiz
         }
     }
 
-    Err(err!("couldn't find number with that property"))
+    Err(anyhow!("couldn't find number with that property"))
 }
 
-fn part1(input: &str) -> aoc::Result<u64> {
+fn part1(input: &str) -> Result<u64> {
     let numbers = input
         .lines()
-        .map(|line| line.parse::<u64>())
-        .collect::<Result<Vec<u64>, _>>()
-        .map_err(|e| err!("couldn't parse number: {}", e))?;
+        .map(|line| line.parse::<u64>().map_err(anyhow::Error::new))
+        .collect::<Result<Vec<u64>, _>>()?;
 
     let (solution, _) = find_outlier(&numbers, 25)?;
 
     Ok(solution)
 }
 
-fn find_contiguous_range(numbers: &[u64], total: u64) -> aoc::Result<(u64, u64)> {
+fn find_contiguous_range(numbers: &[u64], total: u64) -> Result<(u64, u64)> {
     // compute cumulated sums for the whole range
     let (sums, _) = numbers.iter().fold((vec![0], 0), |(mut vec, acc), n| {
         let acc = acc + n;
@@ -74,15 +73,14 @@ fn find_contiguous_range(numbers: &[u64], total: u64) -> aoc::Result<(u64, u64)>
         }
     }
 
-    Err(err!("couldn't find number with that property"))
+    Err(anyhow!("couldn't find number with that property"))
 }
 
-fn part2(input: &str) -> aoc::Result<u64> {
+fn part2(input: &str) -> Result<u64> {
     let numbers = input
         .lines()
-        .map(|line| line.parse::<u64>())
-        .collect::<Result<Vec<u64>, _>>()
-        .map_err(|e| err!("couldn't parse number: {}", e))?;
+        .map(|line| line.parse::<u64>().map_err(anyhow::Error::new))
+        .collect::<Result<Vec<u64>, _>>()?;
 
     let (outlier, idx) = find_outlier(&numbers, 25)?;
 

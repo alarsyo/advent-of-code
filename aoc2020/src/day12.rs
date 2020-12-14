@@ -1,10 +1,10 @@
 use std::fmt::Write;
 
-use aoc::err;
+use anyhow::{bail, Context, Result};
 
 const INPUT: &str = include_str!("../input/day12.txt");
 
-pub fn run() -> aoc::Result<String> {
+pub fn run() -> Result<String> {
     let mut res = String::with_capacity(128);
 
     writeln!(res, "part 1: {}", part1(INPUT)?)?;
@@ -13,11 +13,11 @@ pub fn run() -> aoc::Result<String> {
     Ok(res)
 }
 
-fn part1(input: &str) -> aoc::Result<i64> {
+fn part1(input: &str) -> Result<i64> {
     let actions: Vec<Action> = input
         .lines()
         .map(|line| line.parse())
-        .collect::<aoc::Result<_>>()?;
+        .collect::<Result<_>>()?;
 
     let mut ship = Ship::new();
 
@@ -28,11 +28,11 @@ fn part1(input: &str) -> aoc::Result<i64> {
     Ok(ship.manhattan_distance())
 }
 
-fn part2(input: &str) -> aoc::Result<i64> {
+fn part2(input: &str) -> Result<i64> {
     let actions: Vec<Action> = input
         .lines()
         .map(|line| line.parse())
-        .collect::<aoc::Result<_>>()?;
+        .collect::<Result<_>>()?;
 
     let mut ship = Ship::new();
 
@@ -118,9 +118,9 @@ struct Action {
 }
 
 impl std::str::FromStr for Action {
-    type Err = aoc::Error;
+    type Err = anyhow::Error;
 
-    fn from_str(s: &str) -> aoc::Result<Self> {
+    fn from_str(s: &str) -> Result<Self> {
         debug_assert!(
             s.len() >= 2,
             "tried to parse action but it is too short: `{}`",
@@ -129,7 +129,7 @@ impl std::str::FromStr for Action {
         let letter = s
             .chars()
             .next()
-            .ok_or_else(|| err!("couldn't parse action: empty string"))?;
+            .context("couldn't parse action: empty string")?;
 
         let kind = match letter {
             'N' => ActionKind::Move(Direction::North),
@@ -142,12 +142,10 @@ impl std::str::FromStr for Action {
 
             'F' => ActionKind::Forward,
 
-            _ => return Err(err!("couldn't parse action with letter `{}`", letter)),
+            _ => bail!("couldn't parse action with letter `{}`", letter),
         };
 
-        let arg = s[1..]
-            .parse()
-            .map_err(|e| err!("couldn't parse action arg: {}", e))?;
+        let arg = s[1..].parse().context("couldn't parse action arg")?;
 
         Ok(Self { kind, arg })
     }

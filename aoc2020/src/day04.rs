@@ -3,9 +3,11 @@ use std::fmt::Write;
 use std::ops::RangeInclusive;
 use std::str::FromStr;
 
+use anyhow::Result;
+
 const INPUT: &str = include_str!("../input/day04.txt");
 
-pub fn run() -> aoc::Result<String> {
+pub fn run() -> Result<String> {
     let mut res = String::with_capacity(128);
 
     writeln!(res, "part 1: {}", part1(INPUT)?)?;
@@ -14,7 +16,7 @@ pub fn run() -> aoc::Result<String> {
     Ok(res)
 }
 
-fn get_passports(input: &str) -> aoc::Result<Vec<Passport>> {
+fn get_passports(input: &str) -> Result<Vec<Passport>> {
     let mut passports: Vec<Passport> = Vec::new();
 
     let mut passport = String::new();
@@ -35,13 +37,13 @@ fn get_passports(input: &str) -> aoc::Result<Vec<Passport>> {
     Ok(passports)
 }
 
-fn part1(input: &str) -> aoc::Result<usize> {
+fn part1(input: &str) -> Result<usize> {
     let passports = get_passports(input)?;
 
     Ok(passports.iter().filter(|p| p.is_complete()).count())
 }
 
-fn part2(input: &str) -> aoc::Result<usize> {
+fn part2(input: &str) -> Result<usize> {
     let passports = get_passports(input)?;
 
     Ok(passports
@@ -89,9 +91,9 @@ impl Passport {
 }
 
 impl FromStr for Passport {
-    type Err = aoc::Error;
+    type Err = anyhow::Error;
 
-    fn from_str(s: &str) -> aoc::Result<Self> {
+    fn from_str(s: &str) -> Result<Self> {
         let mut fields: HashMap<&str, String> = s
             .split_whitespace()
             .map(|f| {

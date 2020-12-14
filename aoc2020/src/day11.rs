@@ -1,10 +1,10 @@
 use std::fmt::Write;
 
-use aoc::err;
+use anyhow::{anyhow, Result};
 
 const INPUT: &str = include_str!("../input/day11.txt");
 
-pub fn run() -> aoc::Result<String> {
+pub fn run() -> Result<String> {
     let mut res = String::with_capacity(128);
 
     writeln!(res, "part 1: {}", part1(INPUT)?)?;
@@ -13,7 +13,7 @@ pub fn run() -> aoc::Result<String> {
     Ok(res)
 }
 
-fn part1(input: &str) -> aoc::Result<usize> {
+fn part1(input: &str) -> Result<usize> {
     let mut layout: Layout = input.parse()?;
 
     let occupied_threshold = 4;
@@ -22,7 +22,7 @@ fn part1(input: &str) -> aoc::Result<usize> {
     Ok(layout.occupied_seats())
 }
 
-fn part2(input: &str) -> aoc::Result<usize> {
+fn part2(input: &str) -> Result<usize> {
     let mut layout: Layout = input.parse()?;
 
     let occupied_threshold = 5;
@@ -177,9 +177,9 @@ impl std::ops::IndexMut<usize> for Layout {
 }
 
 impl std::str::FromStr for Layout {
-    type Err = aoc::Error;
+    type Err = anyhow::Error;
 
-    fn from_str(s: &str) -> aoc::Result<Self> {
+    fn from_str(s: &str) -> Result<Self> {
         let grid = s
             .lines()
             .map(|line| {
@@ -188,11 +188,11 @@ impl std::str::FromStr for Layout {
                         '.' => Ok(Cell::Floor),
                         'L' => Ok(Cell::EmptySeat),
                         '#' => Ok(Cell::OccupiedSeat),
-                        _ => Err(err!("unknown char `{}`", c)),
+                        _ => Err(anyhow!("unknown char `{}`", c)),
                     })
                     .collect()
             })
-            .collect::<aoc::Result<Grid>>()?;
+            .collect::<Result<Grid>>()?;
 
         let height = grid.len();
         let width = grid[0].len();

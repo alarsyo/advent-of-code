@@ -1,9 +1,11 @@
 use std::collections::HashSet;
 use std::fmt::Write;
 
+use anyhow::Result;
+
 const INPUT: &str = include_str!("../input/day06.txt");
 
-pub fn run() -> aoc::Result<String> {
+pub fn run() -> Result<String> {
     let mut res = String::with_capacity(128);
 
     writeln!(res, "part 1: {}", part1(INPUT)?)?;
@@ -12,7 +14,7 @@ pub fn run() -> aoc::Result<String> {
     Ok(res)
 }
 
-fn get_groups(input: &str) -> aoc::Result<Vec<Group>> {
+fn get_groups(input: &str) -> Result<Vec<Group>> {
     let mut groups = Vec::new();
 
     let mut answers = Vec::new();
@@ -36,7 +38,7 @@ fn get_groups(input: &str) -> aoc::Result<Vec<Group>> {
     Ok(groups)
 }
 
-fn part1(input: &str) -> aoc::Result<usize> {
+fn part1(input: &str) -> Result<usize> {
     let groups = get_groups(input)?;
 
     Ok(groups
@@ -45,7 +47,7 @@ fn part1(input: &str) -> aoc::Result<usize> {
         .sum())
 }
 
-fn part2(input: &str) -> aoc::Result<usize> {
+fn part2(input: &str) -> Result<usize> {
     let groups = get_groups(input)?;
 
     Ok(groups

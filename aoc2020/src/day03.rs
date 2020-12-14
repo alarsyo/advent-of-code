@@ -3,9 +3,11 @@ use std::iter::FromIterator;
 use std::ops::Index;
 use std::str::FromStr;
 
+use anyhow::Result;
+
 const INPUT: &str = include_str!("../input/day03.txt");
 
-pub fn run() -> aoc::Result<String> {
+pub fn run() -> Result<String> {
     let mut res = String::with_capacity(128);
 
     writeln!(res, "part 1: {}", part1(INPUT)?)?;
@@ -14,13 +16,13 @@ pub fn run() -> aoc::Result<String> {
     Ok(res)
 }
 
-fn part1(input: &str) -> aoc::Result<usize> {
+fn part1(input: &str) -> Result<usize> {
     let forest = input.parse()?;
 
     Ok(count_trees(&forest, (3, 1)))
 }
 
-fn part2(input: &str) -> aoc::Result<usize> {
+fn part2(input: &str) -> Result<usize> {
     let forest = input.parse()?;
 
     let slopes = &[(1, 1), (3, 1), (5, 1), (7, 1), (1, 2)];
@@ -89,9 +91,9 @@ impl Index<usize> for Forest {
 }
 
 impl FromStr for Forest {
-    type Err = aoc::Error;
+    type Err = anyhow::Error;
 
-    fn from_str(s: &str) -> aoc::Result<Self> {
+    fn from_str(s: &str) -> Result<Self> {
         let trees = s
             .lines()
             .map(|line| line.chars().map(|c| matches!(c, '#')).collect())
