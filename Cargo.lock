@@ -17,6 +17,7 @@ dependencies = [
 name = "aoc2015"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
  "aoc",
  "criterion",
  "md-5",

@@ -1,9 +1,7 @@
-use std::error::Error;
 use std::fmt::Write;
 use std::str::FromStr;
 
-use aoc::err;
-use aoc::Result;
+use anyhow::{Context, Result};
 
 const INPUT: &str = include_str!("../input/day02.txt");
 
@@ -64,19 +62,19 @@ struct Present {
 }
 
 impl FromStr for Present {
-    type Err = Box<dyn Error>;
+    type Err = anyhow::Error;
 
     fn from_str(s: &str) -> Result<Self> {
         let x = s
             .find('x')
-            .ok_or_else(|| err!("couldn't find first `x` in {}", s))?;
+            .with_context(|| format!("couldn't find first `x` in {}", s))?;
 
         let length = s[..x].parse()?;
 
         let s = &s[(x + 1)..];
         let x = s
             .find('x')
-            .ok_or_else(|| err!("couldn't find second `x` in {}", s))?;
+            .with_context(|| format!("couldn't find second `x` in {}", s))?;
 
         let width = s[..x].parse()?;
 

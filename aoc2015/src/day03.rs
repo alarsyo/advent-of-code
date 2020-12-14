@@ -1,8 +1,7 @@
 use std::collections::HashSet;
 use std::fmt::Write;
 
-use aoc::err;
-use aoc::Result;
+use anyhow::{bail, Result};
 
 const INPUT: &str = include_str!("../input/day03.txt");
 
@@ -29,7 +28,7 @@ fn part1(input: &str) -> Result<usize> {
             '<' => x -= 1,
             '^' => y -= 1,
             'v' => y += 1,
-            _ => return Err(err!("unidentified move: `{}`", c)),
+            _ => bail!("unidentified move: `{}`", c),
         }
 
         houses.insert((x, y));
@@ -56,7 +55,7 @@ fn part2(input: &str) -> Result<usize> {
                 '<' => santa_x -= 1,
                 '^' => santa_y -= 1,
                 'v' => santa_y += 1,
-                _ => return Err(err!("unidentified move: `{}`", c)),
+                _ => bail!("unidentified move: `{}`", c),
             }
 
             houses.insert((santa_x, santa_y));
@@ -66,7 +65,7 @@ fn part2(input: &str) -> Result<usize> {
                 '<' => robot_x -= 1,
                 '^' => robot_y -= 1,
                 'v' => robot_y += 1,
-                _ => return Err(err!("unidentified move: `{}`", c)),
+                _ => bail!("unidentified move: `{}`", c),
             }
 
             houses.insert((robot_x, robot_y));

@@ -2,8 +2,7 @@ use std::fmt::Write;
 
 use md5::{Digest, Md5};
 
-use aoc::err;
-use aoc::Result;
+use anyhow::{anyhow, Result};
 
 const INPUT: &str = include_str!("../input/day04.txt");
 
@@ -33,7 +32,7 @@ fn part1(input: &str) -> Result<u64> {
         }
     }
 
-    Err(err!("couldn't find a suitable number"))
+    Err(anyhow!("couldn't find a suitable number"))
 }
 
 fn part2(input: &str) -> Result<u64> {
@@ -53,7 +52,7 @@ fn part2(input: &str) -> Result<u64> {
         }
     }
 
-    Err(err!("couldn't find a suitable number"))
+    Err(anyhow!("couldn't find a suitable number"))
 }
 
 #[cfg(test)]

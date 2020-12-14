@@ -1,9 +1,7 @@
-use std::error::Error;
 use std::fmt::Write;
 use std::str::FromStr;
 
-use aoc::err;
-use aoc::Result;
+use anyhow::{bail, Context, Result};
 
 const INPUT: &str = include_str!("../input/day06.txt");
 
@@ -22,7 +20,7 @@ fn part1(input: &str) -> Result<usize> {
         .map(|line| {
             line.trim_end()
                 .parse()
-                .map_err(|e| err!("couldn't parse instruction: {}", e))
+                .context("couldn't parse instruction: {}")
         })
         .collect::<Result<Vec<Instruction>>>()?;
 
@@ -61,7 +59,7 @@ fn part2(input: &str) -> Result<u64> {
         .map(|line| {
             line.trim_end()
                 .parse()
-                .map_err(|e| err!("couldn't parse instruction: {}", e))
+                .context("couldn't parse instruction: {}")
         })
         .collect::<Result<Vec<Instruction>>>()?;
 
@@ -119,19 +117,19 @@ impl IntoIterator for Instruction {
 }
 
 impl FromStr for Instruction {
-    type Err = Box<dyn Error>;
+    type Err = anyhow::Error;
 
     fn from_str(s: &str) -> Result<Self> {
         let mut space = s
             .find(' ')
-            .ok_or_else(|| err!("couldn't parse instruction: {}", s))?;
+            .with_context(|| format!("couldn't parse instruction: {}", s))?;
 
         let action = if &s[..space] == "toggle" {
             Action::Toggle
         } else if &s[..space] == "turn" {
             space = s[(space + 1)..]
                 .find(' ')
-                .ok_or_else(|| err!("couldn't parse instruction: {}", s))?
+                .with_context(|| format!("couldn't parse instruction: {}", s))?
                 + space
                 + 1;
             if &s[..space] == "turn on" {
@@ -139,22 +137,22 @@ impl FromStr for Instruction {
             } else if &s[..space] == "turn off" {
                 Action::TurnOff
             } else {
-                return Err(err!("couldn't identify action: {}", &s[..space]));
+                bail!("couldn't identify action: {}", &s[..space]);
             }
         } else {
-            return Err(err!("couldn't identify action: {}", s));
+            bail!("couldn't identify action: {}", s);
         };
         let s = &s[(space + 1)..];
 
         let comma = s
             .find(',')
-            .ok_or_else(|| err!("couldn't parse instruction: {}", s))?;
+            .with_context(|| format!("couldn't parse instruction: {}", s))?;
         let x = s[..comma].parse()?;
         let s = &s[(comma + 1)..];
 
         let space = s
             .find(' ')
-            .ok_or_else(|| err!("couldn't parse instruction: {}", s))?;
+            .with_context(|| format!("couldn't parse instruction: {}", s))?;
         let y = s[..space].parse()?;
         let s = &s[(space + 1)..];
 
@@ -162,12 +160,12 @@ impl FromStr for Instruction {
 
         let through = s
             .find("through ")
-            .ok_or_else(|| err!("couldn't parse instruction: {}", s))?;
+            .with_context(|| format!("couldn't parse instruction: {}", s))?;
         let s = &s[(through + 8)..];
 
         let comma = s
             .find(',')
-            .ok_or_else(|| err!("couldn't parse instruction: {}", s))?;
+            .with_context(|| format!("couldn't parse instruction: {}", s))?;
         let x = s[..comma].parse()?;
         let s = &s[(comma + 1)..];
 
