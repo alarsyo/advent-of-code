@@ -22,22 +22,25 @@ fn part1(input: &str) -> aoc::Result<u64> {
 }
 
 #[derive(Debug, Clone, Copy)]
-enum MaskType {
-    And,
-    Or,
+enum Mask {
+    Floating,
+    One,
+    Zero,
 }
 
 #[derive(Debug, Clone)]
 struct BitMask {
-    masks: Vec<(MaskType, u64)>,
+    masks: Vec<Mask>,
 }
 
 impl BitMask {
-    fn apply(&self, mut n: u64) -> u64 {
-        for (mask_type, mask) in &self.masks {
-            match mask_type {
-                MaskType::And => n &= mask,
-                MaskType::Or => n |= mask,
+    /// function used for part 1: 'X' bits just don't do anything
+    fn apply_no_floating(&self, mut n: u64) -> u64 {
+        for (offset, mask) in self.masks.iter().enumerate() {
+            match mask {
+                Mask::Floating => {}
+                Mask::One => n |= 1 << offset,
+                Mask::Zero => n &= !(1 << offset),
             }
         }
 
@@ -52,18 +55,14 @@ impl std::str::FromStr for BitMask {
         let masks = s
             .chars()
             .rev()
-            .enumerate()
-            .filter_map(|(idx, c)| match c {
-                '1' => {
-                    let m = 1 << idx;
-                    Some(Ok((MaskType::Or, m)))
+            .map(|c| {
+                // idx will never be higher than 36 so this is fine
+                match c {
+                    '1' => Ok(Mask::One),
+                    '0' => Ok(Mask::Zero),
+                    'X' => Ok(Mask::Floating),
+                    _ => Err(err!("unknown character in mask: `{}`", c)),
                 }
-                '0' => {
-                    let m = !(1 << idx);
-                    Some(Ok((MaskType::And, m)))
-                }
-                'X' => None,
-                _ => Some(Err(err!("unknown character in mask: `{}`", c))),
             })
             .collect::<aoc::Result<_>>()?;
 
@@ -134,7 +133,8 @@ impl Program {
 
                 Instruction::MemWrite { offset, value } => match &self.current_mask {
                     Some(bitmask) => {
-                        self.memory.insert(*offset, bitmask.apply(*value));
+                        self.memory
+                            .insert(*offset, bitmask.apply_no_floating(*value));
                     }
                     None => {
                         return Err(err!("tried to execute MemWrite but mask isn't initialized"))
