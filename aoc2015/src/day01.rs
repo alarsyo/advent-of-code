@@ -1,7 +1,6 @@
 use std::fmt::Write;
 
-use aoc::err;
-use aoc::Result;
+use anyhow::{anyhow, bail, Result};
 
 const INPUT: &str = include_str!("../input/day01.txt");
 
@@ -33,7 +32,7 @@ fn part2(input: &str) -> Result<usize> {
         match c {
             '(' => sum += 1,
             ')' => sum -= 1,
-            _ => return Err(err!("unidentified character in input: {}", c)),
+            _ => bail!("unidentified character in input: {}", c),
         };
 
         if sum < 0 {
@@ -43,7 +42,7 @@ fn part2(input: &str) -> Result<usize> {
     }
 
     match res {
-        0 => Err(err!("never reached the basement...")),
+        0 => Err(anyhow!("never reached the basement...")),
         _ => Ok(res),
     }
 }
