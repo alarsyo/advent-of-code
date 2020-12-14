@@ -1,0 +1,10 @@
+#+title: Advent of Code
+
+Solutions to the [[https://adventofcode.com][Advent of Code]], in Rust.
+
+I've started doing these in 2019, mainly to learn Rust. Comparing my solutions
+to others', such as [[https://github.com/BurntSushi/advent-of-code][BurntSushi's repo for 2018]], helped a lot to learn Rust
+idioms.
+
+Years [[file:aoc2019/][2019]] and [[file:aoc2020/][2020]] are the most complete, and I did these mostly on the day the
+problems were released.
