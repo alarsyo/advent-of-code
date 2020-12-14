@@ -1,7 +1,6 @@
 use std::fmt::Write;
 
-use aoc::err;
-use aoc::Result;
+use anyhow::{Context, Result};
 
 use crate::intcode::{parse_memory, Intcode};
 
@@ -25,7 +24,7 @@ fn part1(memory: Vec<i64>) -> Result<i64> {
     intcode.run()?;
     intcode
         .get_last_output()
-        .ok_or_else(|| err!("intcode output was empty!"))
+        .context("intcode output was empty!")
 }
 
 fn part2(memory: Vec<i64>) -> Result<i64> {
@@ -35,7 +34,7 @@ fn part2(memory: Vec<i64>) -> Result<i64> {
     intcode.run()?;
     intcode
         .get_last_output()
-        .ok_or_else(|| err!("intcode output was empty!"))
+        .context("intcode output was empty!")
 }
 
 #[cfg(test)]

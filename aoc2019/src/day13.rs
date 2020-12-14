@@ -1,8 +1,7 @@
 use std::collections::HashMap;
 use std::fmt::{self, Display, Write};
 
-use aoc::err;
-use aoc::Result;
+use anyhow::{bail, Result};
 
 use crate::intcode::{parse_memory, Intcode};
 
@@ -119,7 +118,7 @@ impl Tile {
             2 => Tile::Block,
             3 => Tile::Paddle,
             4 => Tile::Ball,
-            _ => return Err(err!("couldn't associate number with tile: {}", n)),
+            _ => bail!("couldn't associate number with tile: {}", n),
         };
 
         Ok(tile)

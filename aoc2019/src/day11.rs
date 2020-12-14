@@ -1,8 +1,7 @@
 use std::collections::HashMap;
 use std::fmt::Write;
 
-use aoc::err;
-use aoc::Result;
+use anyhow::{bail, Result};
 
 use crate::intcode::Intcode;
 
@@ -40,7 +39,7 @@ fn part2(input: &str, res: &mut String) -> Result<()> {
 
 fn write_board(res: &mut String, board: HashMap<Position, bool>) -> Result<()> {
     if board.is_empty() {
-        return Err(err!("board was empty"));
+        bail!("board was empty");
     }
 
     let min_x = board.keys().map(|p| p.x).min().unwrap();
@@ -106,13 +105,13 @@ impl Robot {
                 match color {
                     0 => board.insert(self.pos, false),
                     1 => board.insert(self.pos, true),
-                    _ => return Err(err!("robot brain output different from 0 or 1")),
+                    _ => bail!("robot brain output different from 0 or 1"),
                 };
 
                 match direction {
                     0 => self.turn_left(),
                     1 => self.turn_right(),
-                    _ => return Err(err!("robot brain output different from 0 or 1")),
+                    _ => bail!("robot brain output different from 0 or 1"),
                 };
                 self.move_forward();
                 self.brain.output.clear();

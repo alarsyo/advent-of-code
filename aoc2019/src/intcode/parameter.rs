@@ -1,5 +1,4 @@
-use aoc::err;
-use aoc::Result;
+use anyhow::{anyhow, Context, Result};
 
 #[derive(Debug)]
 pub enum Parameter {
@@ -10,13 +9,13 @@ pub enum Parameter {
 
 impl Parameter {
     pub fn new(mode: i64, val: Option<i64>) -> Result<Self> {
-        let val = val.ok_or_else(|| err!("parameter value out of bounds"))?;
+        let val = val.context("parameter value out of bounds")?;
         let mode = mode % 10;
 
         match mode {
             0 => {
                 if val < 0 {
-                    Err(err!("negative value for position parameter: {}", val))
+                    Err(anyhow!("negative value for position parameter: {}", val))
                 } else {
                     let val = val as usize;
                     Ok(Parameter::Position(val))
@@ -24,7 +23,7 @@ impl Parameter {
             }
             1 => Ok(Parameter::Immediate(val)),
             2 => Ok(Parameter::Relative(val)),
-            _ => Err(err!("wrong mode for parameter: {}", mode)),
+            _ => Err(anyhow!("wrong mode for parameter: {}", mode)),
         }
     }
 
@@ -75,7 +74,7 @@ impl Parameter {
                 }
                 Ok(())
             }
-            Parameter::Immediate(_) => Err(err!("cannot write to immediate parameter")),
+            Parameter::Immediate(_) => Err(anyhow!("cannot write to immediate parameter")),
             Parameter::Relative(offset) => {
                 let address = relative_base.wrapping_add(*offset as usize);
                 let cell = memory.get_mut(address);

@@ -1,10 +1,8 @@
 use std::cmp::{max, min};
-use std::error::Error;
 use std::fmt::Write;
 use std::str::FromStr;
 
-use aoc::err;
-use aoc::Result;
+use anyhow::{bail, Context, Result};
 
 const INPUT: &str = include_str!("../input/day03.txt");
 
@@ -39,7 +37,7 @@ fn part1(first_wire: &Wire, second_wire: &Wire) -> Result<u64> {
         })
         .map(|inter| manhattan_distance(&inter, &Point { x: 0, y: 0 }))
         .min()
-        .ok_or_else(|| err!("wire was empty"))
+        .context("wire was empty")
 }
 
 fn part2(first_wire: &Wire, second_wire: &Wire) -> Result<u64> {
@@ -72,19 +70,13 @@ fn part2(first_wire: &Wire, second_wire: &Wire) -> Result<u64> {
         first_length += manhattan_distance(&seg1.begin, &seg1.end);
     }
 
-    min_dist.ok_or_else(|| err!("wire was empty"))
+    min_dist.context("wire was empty")
 }
 
 fn parse_wires(input: &str) -> Result<(Wire, Wire)> {
     let mut lines = input.lines();
-    let first = lines
-        .next()
-        .ok_or_else(|| err!("input missing a line"))?
-        .parse()?;
-    let second = lines
-        .next()
-        .ok_or_else(|| err!("input missing a line"))?
-        .parse()?;
+    let first = lines.next().context("input missing a line")?.parse()?;
+    let second = lines.next().context("input missing a line")?.parse()?;
 
     Ok((first, second))
 }
@@ -93,15 +85,14 @@ fn parse_wires(input: &str) -> Result<(Wire, Wire)> {
 struct Wire(Vec<Segment>);
 
 impl FromStr for Wire {
-    type Err = Box<dyn Error>;
+    type Err = anyhow::Error;
 
     fn from_str(s: &str) -> Result<Wire> {
         let moves = s
             .trim_end()
             .split(',')
-            .map(|m| m.parse())
-            .collect::<Result<Vec<Move>>>()
-            .map_err(|e| err!("failed to parse wire: {}", e))?;
+            .map(|m| m.parse().context("failed to parse wire"))
+            .collect::<Result<Vec<Move>>>()?;
 
         let mut pos = Point { x: 0, y: 0 };
 
@@ -194,17 +185,15 @@ struct Move {
 }
 
 impl FromStr for Move {
-    type Err = Box<dyn Error>;
+    type Err = anyhow::Error;
 
     fn from_str(s: &str) -> Result<Self> {
         let direction = s
             .chars()
             .nth(0)
-            .ok_or_else(|| err!("couldn't get direction char in move: {}", s))?;
+            .context("couldn't get direction char in move")?;
 
-        let s = s
-            .get(1..)
-            .ok_or_else(|| err!("move missing length: {}", s))?;
+        let s = s.get(1..).context("move missing length")?;
 
         let length = s.parse()?;
 
@@ -213,7 +202,7 @@ impl FromStr for Move {
             'D' => Direction::Down,
             'L' => Direction::Left,
             'R' => Direction::Right,
-            _ => return Err(err!("couldn't parse direction: {}", direction)),
+            _ => bail!("couldn't parse direction: {}", direction),
         };
 
         Ok(Move { direction, length })

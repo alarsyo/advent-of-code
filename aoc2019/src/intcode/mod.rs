@@ -1,5 +1,4 @@
-use aoc::err;
-use aoc::Result;
+use anyhow::{anyhow, bail, Result};
 
 mod parameter;
 
@@ -8,7 +7,7 @@ use parameter::Parameter;
 pub fn parse_memory(s: &str) -> Result<Vec<i64>> {
     s.trim_end()
         .split(',')
-        .map(|x| x.parse().map_err(|e| err!("couldn't parse int: {}", e)))
+        .map(|x| x.parse().map_err(anyhow::Error::new))
         .collect()
 }
 
@@ -74,7 +73,7 @@ impl Intcode {
                 let dst = Parameter::new(mode3, self.memory.get(self.ip + 3).copied())?;
 
                 if let Parameter::Immediate(_) = dst {
-                    Err(err!("add: destination parameter can't be immediate"))
+                    Err(anyhow!("add: destination parameter can't be immediate"))
                 } else {
                     Ok(Opcode::Add(op1, op2, dst))
                 }
@@ -85,7 +84,9 @@ impl Intcode {
                 let dst = Parameter::new(mode3, self.memory.get(self.ip + 3).copied())?;
 
                 if let Parameter::Immediate(_) = dst {
-                    Err(err!("multiply: destination parameter can't be immediate"))
+                    Err(anyhow!(
+                        "multiply: destination parameter can't be immediate"
+                    ))
                 } else {
                     Ok(Opcode::Multiply(op1, op2, dst))
                 }
@@ -94,7 +95,7 @@ impl Intcode {
                 let dst = Parameter::new(mode1, self.memory.get(self.ip + 1).copied())?;
 
                 if let Parameter::Immediate(_) = dst {
-                    Err(err!("input: destination parameter can't be immediate"))
+                    Err(anyhow!("input: destination parameter can't be immediate"))
                 } else {
                     Ok(Opcode::Input(dst))
                 }
@@ -122,7 +123,9 @@ impl Intcode {
                 let dst = Parameter::new(mode3, self.memory.get(self.ip + 3).copied())?;
 
                 if let Parameter::Immediate(_) = dst {
-                    Err(err!("less than: destination parameter can't be immediate"))
+                    Err(anyhow!(
+                        "less than: destination parameter can't be immediate"
+                    ))
                 } else {
                     Ok(Opcode::LessThan(op1, op2, dst))
                 }
@@ -133,7 +136,7 @@ impl Intcode {
                 let dst = Parameter::new(mode3, self.memory.get(self.ip + 3).copied())?;
 
                 if let Parameter::Immediate(_) = dst {
-                    Err(err!("equals: destination parameter can't be immediate"))
+                    Err(anyhow!("equals: destination parameter can't be immediate"))
                 } else {
                     Ok(Opcode::Equals(op1, op2, dst))
                 }
@@ -144,14 +147,14 @@ impl Intcode {
                 Ok(Opcode::AdjustRelBase(offset))
             }
             99 => Ok(Opcode::Halt),
-            _ => Err(err!("unknown opcode: {}", opcode)),
+            _ => Err(anyhow!("unknown opcode: {}", opcode)),
         }
     }
 
     fn exec(&mut self) -> Result<bool> {
         loop {
             if self.ip >= self.memory.len() {
-                return Err(err!("reached end of program without halting"));
+                bail!("reached end of program without halting");
             }
 
             let opcode = self.get_opcode()?;
@@ -181,7 +184,7 @@ impl Intcode {
                     } else if self.wait_input {
                         break Ok(false);
                     } else {
-                        break Err(err!("tried to read input but it was empty"));
+                        break Err(anyhow!("tried to read input but it was empty"));
                     };
                     dst.set(input, &mut self.memory, self.relative_base)?;
 
@@ -197,7 +200,7 @@ impl Intcode {
                     let val = test.get(&mut self.memory, self.relative_base)?;
                     let dst = dst.get(&mut self.memory, self.relative_base)?;
                     if dst < 0 {
-                        return Err(err!("dst must be a valid address: {}", dst));
+                        bail!("dst must be a valid address: {}", dst);
                     }
 
                     if val != 0 {
@@ -210,7 +213,7 @@ impl Intcode {
                     let val = test.get(&mut self.memory, self.relative_base)?;
                     let dst = dst.get(&mut self.memory, self.relative_base)?;
                     if dst < 0 {
-                        return Err(err!("dst must be a valid address: {}", dst));
+                        bail!("dst must be a valid address: {}", dst);
                     }
 
                     if val == 0 {

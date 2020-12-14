@@ -1,6 +1,6 @@
 use std::fmt::Write;
 
-use aoc::Result;
+use anyhow::Result;
 
 const INPUT: &str = include_str!("../input/day01.txt");
 
@@ -21,10 +21,7 @@ fn part1(input: &str) -> Result<u64> {
     input
         .lines()
         .map(|line| line.parse::<u64>())
-        .map(|w| match w {
-            Ok(w) => Ok(fuel_needed(w)),
-            Err(e) => Err(Box::from(e)),
-        })
+        .map(|w| w.map(fuel_needed).map_err(anyhow::Error::new))
         .sum()
 }
 
@@ -44,10 +41,7 @@ fn part2(input: &str) -> Result<u64> {
     input
         .lines()
         .map(|line| line.parse::<u64>())
-        .map(|w| match w {
-            Ok(w) => Ok(cumulated_fuel_needed(w)),
-            Err(e) => Err(Box::from(e)),
-        })
+        .map(|w| w.map(cumulated_fuel_needed).map_err(anyhow::Error::new))
         .sum()
 }
 

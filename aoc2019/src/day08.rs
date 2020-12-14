@@ -1,9 +1,7 @@
-use std::error::Error;
 use std::fmt::{self, Write};
 use std::str::FromStr;
 
-use aoc::err;
-use aoc::Result;
+use anyhow::{Context, Result};
 
 const IMG_WIDTH: usize = 25;
 const IMG_HEIGHT: usize = 6;
@@ -27,7 +25,7 @@ fn part1(image: &Image) -> Result<usize> {
         .layers
         .iter()
         .min_by_key(|l| l.pixels.iter().flatten().filter(|d| **d == 0).count())
-        .ok_or_else(|| err!("image had 0 layers..."))?;
+        .context("image had 0 layers...")?;
 
     let one_count = most_zero_layer
         .pixels
@@ -74,7 +72,7 @@ impl fmt::Display for Image {
 }
 
 impl FromStr for Image {
-    type Err = Box<dyn Error>;
+    type Err = anyhow::Error;
 
     fn from_str(s: &str) -> Result<Self> {
         let s = s.trim_end();

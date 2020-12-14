@@ -1,7 +1,6 @@
 use std::fmt::Write;
 
-use aoc::err;
-use aoc::Result;
+use anyhow::{Context, Result};
 
 use crate::intcode::Intcode;
 
@@ -20,18 +19,14 @@ fn part1(input: &str) -> Result<i64> {
     let mut intcode = Intcode::new(input)?;
     intcode.add_input(1);
     intcode.run()?;
-    intcode
-        .get_last_output()
-        .ok_or_else(|| err!("intcode gave no output"))
+    intcode.get_last_output().context("intcode gave no output")
 }
 
 fn part2(input: &str) -> Result<i64> {
     let mut intcode = Intcode::new(input)?;
     intcode.add_input(5);
     intcode.run()?;
-    intcode
-        .get_last_output()
-        .ok_or_else(|| err!("intcode gave no output"))
+    intcode.get_last_output().context("intcode gave no output")
 }
 
 #[cfg(test)]
