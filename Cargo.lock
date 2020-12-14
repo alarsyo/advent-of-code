@@ -27,6 +27,7 @@ dependencies = [
 name = "aoc2018"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
  "aoc",
  "criterion",
 ]

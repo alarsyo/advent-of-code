@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::fmt::Write;
 
-use aoc::Result;
+use anyhow::Result;
 
 const INPUT: &str = include_str!("../input/day02.txt");
 

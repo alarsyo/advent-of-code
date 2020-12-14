@@ -1,5 +1,6 @@
+use anyhow::Result;
+
 use aoc::DayFunc;
-use aoc::Result;
 
 use aoc2018::day01;
 use aoc2018::day02;

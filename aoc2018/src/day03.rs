@@ -1,11 +1,9 @@
 use std::collections::HashMap;
 use std::collections::HashSet;
-use std::error::Error;
 use std::fmt::Write;
 use std::str::FromStr;
 
-use aoc::err;
-use aoc::Result;
+use anyhow::{Context, Result};
 
 const INPUT: &str = include_str!("../input/day03.txt");
 
@@ -27,7 +25,7 @@ struct Claim {
 }
 
 impl FromStr for Claim {
-    type Err = Box<dyn Error>;
+    type Err = anyhow::Error;
 
     /// Parses a claim from a line
     ///
@@ -41,22 +39,20 @@ impl FromStr for Claim {
         let s = &s[1..];
 
         // find ' @ ' separator
-        let at = s
-            .find(" @ ")
-            .ok_or_else(|| err!("` @ ` delimiter not found"))?;
+        let at = s.find(" @ ").context("` @ ` delimiter not found")?;
         let id = s[..at].parse()?;
         let s = &s[(at + 3)..];
 
         // parse 'X,Y: WxH
-        let comma = s.find(',').ok_or_else(|| err!("`,` delimiter not found"))?;
-        let colon = s.find(':').ok_or_else(|| err!("`:` delimiter not found"))?;
+        let comma = s.find(',').context("`,` delimiter not found")?;
+        let colon = s.find(':').context("`:` delimiter not found")?;
         let x = s[..comma].parse()?;
         let y = s[(comma + 1)..colon].parse()?;
 
         // reduce line to 'WxH'
         let s = &s[(colon + 2)..];
 
-        let sep = s.find('x').ok_or_else(|| err!("`x` delimiter not found"))?;
+        let sep = s.find('x').context("`x` delimiter not found")?;
         let width = s[..sep].parse()?;
         let height = s[(sep + 1)..].parse()?;
 
@@ -77,7 +73,7 @@ fn part1(input: &str) -> Result<u64> {
     for line in input.lines() {
         let claim: Claim = line
             .parse()
-            .or_else(|e| Err(err!("couldn't parse line: `{}`, {}", line, e)))?;
+            .with_context(|| format!("couldn't parse line: `{}`", line))?;
 
         for i in 0..claim.width {
             for j in 0..claim.height {
@@ -106,7 +102,7 @@ fn part2(input: &str) -> Result<usize> {
     for line in input.lines() {
         let claim: Claim = line
             .parse()
-            .or_else(|e| Err(err!("couldn't parse line: `{}`, {}", line, e)))?;
+            .with_context(|| format!("couldn't parse line: `{}`", line))?;
         set.insert(claim.id);
 
         for i in 0..claim.width {
