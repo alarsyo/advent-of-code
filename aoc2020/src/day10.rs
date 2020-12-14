@@ -1,11 +1,11 @@
 use std::collections::HashMap;
 use std::fmt::Write;
 
-use aoc::err;
+use anyhow::{bail, Result};
 
 const INPUT: &str = include_str!("../input/day10.txt");
 
-pub fn run() -> aoc::Result<String> {
+pub fn run() -> Result<String> {
     let mut res = String::with_capacity(128);
 
     writeln!(res, "part 1: {}", part1(INPUT)?)?;
@@ -14,17 +14,14 @@ pub fn run() -> aoc::Result<String> {
     Ok(res)
 }
 
-fn part1(input: &str) -> aoc::Result<usize> {
+fn part1(input: &str) -> Result<usize> {
     let mut jolts = input
         .lines()
-        .map(|line| {
-            line.parse()
-                .map_err(|e| err!("couldn't parse joltage: {}", e))
-        })
-        .collect::<aoc::Result<Vec<u64>>>()?;
+        .map(|line| line.parse().map_err(anyhow::Error::new))
+        .collect::<Result<Vec<u64>>>()?;
 
     if jolts.is_empty() {
-        return Err(err!("input was empty!"));
+        bail!("input was empty!");
     }
 
     // charging outlet can be added
@@ -80,17 +77,14 @@ fn find_possibilities(jolts: &[u64], possibilities: &mut HashMap<u64, usize>) ->
     possibilities_from_here
 }
 
-fn part2(input: &str) -> aoc::Result<usize> {
+fn part2(input: &str) -> Result<usize> {
     let mut jolts = input
         .lines()
-        .map(|line| {
-            line.parse()
-                .map_err(|e| err!("couldn't parse joltage: {}", e))
-        })
-        .collect::<aoc::Result<Vec<u64>>>()?;
+        .map(|line| line.parse().map_err(anyhow::Error::new))
+        .collect::<Result<Vec<u64>>>()?;
 
     if jolts.is_empty() {
-        return Err(err!("input was empty!"));
+        bail!("input was empty!");
     }
 
     // charging outlet can be added

@@ -1,12 +1,6 @@
 use std::env;
 
-pub type Error = Box<dyn std::error::Error>;
-pub type Result<T> = std::result::Result<T, Error>;
-
-#[macro_export]
-macro_rules! err {
-    ($($string:expr),+) => (Box::<dyn std::error::Error>::from(format!($($string),+)))
-}
+use anyhow::{Context, Result};
 
 pub type DayFunc = fn() -> Result<String>;
 
@@ -16,15 +10,15 @@ pub fn run(days: &[DayFunc]) -> Result<()> {
 
     match args.next() {
         Some(arg) => {
-            let day: usize = arg.parse().expect("Please provide a day number");
-            let res = days[day - 1]().map_err(|e| err!("error running day specified: {}", e))?;
+            let day: usize = arg.parse().context("couldn't parse day number")?;
+            let res = days[day - 1]().context("error running day specified")?;
             println!("{}", res);
         }
         None => {
             for (i, day) in days.iter().enumerate() {
                 let i = i + 1;
                 println!("day{}: ", i);
-                let res = day().map_err(|e| err!("error running day {}: {}", i, e))?;
+                let res = day().with_context(|| format!("error running day {}", i))?;
                 println!("{}", res);
             }
         }

@@ -1,11 +1,11 @@
 use std::collections::HashMap;
 use std::fmt::Write;
 
-use aoc::err;
+use anyhow::{anyhow, bail, Context, Result};
 
 const INPUT: &str = include_str!("../input/day14.txt");
 
-pub fn run() -> aoc::Result<String> {
+pub fn run() -> Result<String> {
     let mut res = String::with_capacity(128);
 
     writeln!(res, "part 1: {}", part1(INPUT)?)?;
@@ -14,7 +14,7 @@ pub fn run() -> aoc::Result<String> {
     Ok(res)
 }
 
-fn part1(input: &str) -> aoc::Result<u64> {
+fn part1(input: &str) -> Result<u64> {
     let mut program: Program = input.parse()?;
 
     program.run_part1()?;
@@ -22,7 +22,7 @@ fn part1(input: &str) -> aoc::Result<u64> {
     Ok(program.memory_sum())
 }
 
-fn part2(input: &str) -> aoc::Result<u64> {
+fn part2(input: &str) -> Result<u64> {
     let mut program: Program = input.parse()?;
 
     program.run_part2()?;
@@ -175,9 +175,9 @@ impl BitMask {
 }
 
 impl std::str::FromStr for BitMask {
-    type Err = aoc::Error;
+    type Err = anyhow::Error;
 
-    fn from_str(s: &str) -> aoc::Result<Self> {
+    fn from_str(s: &str) -> Result<Self> {
         let masks = s
             .chars()
             .rev()
@@ -187,10 +187,10 @@ impl std::str::FromStr for BitMask {
                     '1' => Ok(Mask::One),
                     '0' => Ok(Mask::Zero),
                     'X' => Ok(Mask::Floating),
-                    _ => Err(err!("unknown character in mask: `{}`", c)),
+                    _ => Err(anyhow!("unknown character in mask: `{}`", c)),
                 }
             })
-            .collect::<aoc::Result<_>>()?;
+            .collect::<Result<_>>()?;
 
         Ok(BitMask { masks })
     }
@@ -203,23 +203,17 @@ enum Instruction {
 }
 
 impl std::str::FromStr for Instruction {
-    type Err = aoc::Error;
+    type Err = anyhow::Error;
 
-    fn from_str(s: &str) -> aoc::Result<Self> {
+    fn from_str(s: &str) -> Result<Self> {
         let mut words = s.split(' ');
 
-        let first = words
-            .next()
-            .ok_or_else(|| err!("missing first word in instruction"))?;
-        let second = words
-            .next()
-            .ok_or_else(|| err!("missing second word in instruction"))?;
-        let third = words
-            .next()
-            .ok_or_else(|| err!("missing third word in instruction"))?;
+        let first = words.next().context("missing first word in instruction")?;
+        let second = words.next().context("missing second word in instruction")?;
+        let third = words.next().context("missing third word in instruction")?;
 
         if second != "=" {
-            return Err(err!("expected `=` as second word in instruction: `{}`", s));
+            bail!("expected `=` as second word in instruction: `{}`", s);
         }
 
         if first == "mask" {
@@ -227,18 +221,16 @@ impl std::str::FromStr for Instruction {
         } else {
             let left_bracket = first
                 .find('[')
-                .ok_or_else(|| err!("couldn't find bracket in memory instruction"))?;
+                .context("couldn't find bracket in memory instruction")?;
             let right_bracket = first
                 .find(']')
-                .ok_or_else(|| err!("couldn't find bracket in memory instruction"))?;
+                .context("couldn't find bracket in memory instruction")?;
 
             let offset = first[(left_bracket + 1)..right_bracket]
                 .parse()
-                .map_err(|e| err!("couldn't parse memory offset: `{}`", e))?;
+                .context("couldn't parse memory offset")?;
 
-            let value = third
-                .parse()
-                .map_err(|e| err!("couldn't parse memory offset: `{}`", e))?;
+            let value = third.parse().context("couldn't parse memory offset")?;
 
             Ok(Self::MemWrite { offset, value })
         }
@@ -252,7 +244,7 @@ struct Program {
 }
 
 impl Program {
-    fn run_part1(&mut self) -> aoc::Result<()> {
+    fn run_part1(&mut self) -> Result<()> {
         for inst in &self.instructions {
             match inst {
                 Instruction::ChangeMask(bitmask) => self.current_mask = Some(bitmask.clone()),
@@ -263,7 +255,7 @@ impl Program {
                             .insert(*offset, bitmask.apply_no_floating(*value));
                     }
                     None => {
-                        return Err(err!("tried to execute MemWrite but mask isn't initialized"))
+                        bail!("tried to execute MemWrite but mask isn't initialized")
                     }
                 },
             }
@@ -272,7 +264,7 @@ impl Program {
         Ok(())
     }
 
-    fn run_part2(&mut self) -> aoc::Result<()> {
+    fn run_part2(&mut self) -> Result<()> {
         for inst in &self.instructions {
             match inst {
                 Instruction::ChangeMask(bitmask) => self.current_mask = Some(bitmask.clone()),
@@ -284,7 +276,7 @@ impl Program {
                         }
                     }
                     None => {
-                        return Err(err!("tried to execute MemWrite but mask isn't initialized"))
+                        bail!("tried to execute MemWrite but mask isn't initialized")
                     }
                 },
             }
@@ -299,13 +291,10 @@ impl Program {
 }
 
 impl std::str::FromStr for Program {
-    type Err = aoc::Error;
+    type Err = anyhow::Error;
 
-    fn from_str(s: &str) -> aoc::Result<Self> {
-        let instructions = s
-            .lines()
-            .map(|line| line.parse())
-            .collect::<aoc::Result<_>>()?;
+    fn from_str(s: &str) -> Result<Self> {
+        let instructions = s.lines().map(|line| line.parse()).collect::<Result<_>>()?;
 
         Ok(Program {
             instructions,

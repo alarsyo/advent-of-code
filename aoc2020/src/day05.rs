@@ -1,11 +1,11 @@
 use std::fmt::Write;
 use std::str::FromStr;
 
-use aoc::err;
+use anyhow::{anyhow, bail, Context, Result};
 
 const INPUT: &str = include_str!("../input/day05.txt");
 
-pub fn run() -> aoc::Result<String> {
+pub fn run() -> Result<String> {
     let mut res = String::with_capacity(128);
 
     writeln!(res, "part 1: {}", part1(INPUT)?)?;
@@ -14,26 +14,24 @@ pub fn run() -> aoc::Result<String> {
     Ok(res)
 }
 
-fn part1(input: &str) -> aoc::Result<usize> {
+fn part1(input: &str) -> Result<usize> {
     let seats = input
         .lines()
         .map(|line| line.parse())
-        .collect::<aoc::Result<Vec<Seat>>>()
-        .map_err(|e| err!("{}", e))?;
+        .collect::<Result<Vec<Seat>>>()?;
 
     seats
         .iter()
         .map(|seat| seat.id())
         .max()
-        .ok_or_else(|| err!("0 seats processed"))
+        .context("0 seats processed")
 }
 
-fn part2(input: &str) -> aoc::Result<usize> {
+fn part2(input: &str) -> Result<usize> {
     let mut seats = input
         .lines()
         .map(|line| line.parse())
-        .collect::<aoc::Result<Vec<Seat>>>()
-        .map_err(|e| err!("{}", e))?;
+        .collect::<Result<Vec<Seat>>>()?;
 
     // Seats will be sorted by lexicographical order of fields thanks to `derive(PartialOrd, Ord)`,
     // which should produce the same result as a manual implementation of `Ord` and `PartialOrd`
@@ -49,7 +47,7 @@ fn part2(input: &str) -> aoc::Result<usize> {
         }
     }
 
-    Err(err!("didn't find missing seat"))
+    Err(anyhow!("didn't find missing seat"))
 }
 
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
@@ -65,11 +63,11 @@ impl Seat {
 }
 
 impl FromStr for Seat {
-    type Err = aoc::Error;
+    type Err = anyhow::Error;
 
-    fn from_str(s: &str) -> aoc::Result<Self> {
+    fn from_str(s: &str) -> Result<Self> {
         if s.len() != 10 {
-            return Err(err!("Seat encoding must be 10 chars long: {}", s));
+            bail!("Seat encoding must be 10 chars long: {}", s);
         }
 
         let (mut row_begin, mut row_end) = (0, 128);
@@ -90,7 +88,7 @@ impl FromStr for Seat {
                 'R' => {
                     col_begin += col_range;
                 }
-                _ => return Err(err!("Wrong char while decoding seat: `{}`", c)),
+                _ => bail!("Wrong char while decoding seat: `{}`", c),
             }
         }
 
