@@ -217,6 +217,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore]
     fn part1_real() {
         assert_eq!(part1(INPUT).unwrap(), 2427);
     }
@@ -227,6 +228,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore]
     fn part2_real() {
         assert_eq!(part2(INPUT).unwrap(), 2199);
     }
