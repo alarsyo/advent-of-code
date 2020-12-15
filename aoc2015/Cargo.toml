@@ -6,25 +6,14 @@ edition = "2018"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
-[dev-dependencies]
-
-criterion = "0.3"
-
 [dependencies]
-
 aoc = { path = "../aoc" }
 anyhow = "1.0"
 md-5 = "0.8"
 
 [lib]
 path = "src/lib.rs"
-bench = false
 
 [[bin]]
 name = "aoc2015"
 path = "src/main.rs"
-bench = false
-
-[[bench]]
-name = "bench"
-harness = false
