@@ -17,8 +17,8 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Lint
-      run: cargo clippy --verbose
+      run: cargo clippy --all
     - name: Build
-      run: cargo build --verbose
+      run: cargo build --all
     - name: Run tests
       run: make check-all
