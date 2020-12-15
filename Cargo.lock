@@ -19,8 +19,15 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "aoc",
- "criterion",
  "md-5",
+]
+
+[[package]]
+name = "aoc2015_bench"
+version = "0.1.0"
+dependencies = [
+ "aoc2015",
+ "criterion",
 ]
 
 [[package]]
@@ -29,6 +36,13 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "aoc",
+]
+
+[[package]]
+name = "aoc2018_bench"
+version = "0.1.0"
+dependencies = [
+ "aoc2018",
  "criterion",
 ]
 
@@ -38,6 +52,13 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "aoc",
+]
+
+[[package]]
+name = "aoc2019_bench"
+version = "0.1.0"
+dependencies = [
+ "aoc2019",
  "criterion",
 ]
 
@@ -47,6 +68,13 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "aoc",
+]
+
+[[package]]
+name = "aoc2020_bench"
+version = "0.1.0"
+dependencies = [
+ "aoc2020",
  "criterion",
 ]
 
