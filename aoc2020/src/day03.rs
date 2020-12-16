@@ -107,7 +107,7 @@ impl FromStr for Forest {
 mod tests {
     use super::*;
 
-    static PROVIDED: &'static str = include_str!("../input/day03_provided.txt");
+    const PROVIDED: &str = include_str!("../input/day03_provided.txt");
 
     #[test]
     fn part1_provided() {

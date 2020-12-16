@@ -196,9 +196,9 @@ fn is_number_in_range(s: &str, range: RangeInclusive<i64>) -> bool {
 mod tests {
     use super::*;
 
-    static PROVIDED1: &'static str = include_str!("../input/day04_provided1.txt");
-    static PROVIDED2: &'static str = include_str!("../input/day04_provided2.txt");
-    static PROVIDED3: &'static str = include_str!("../input/day04_provided3.txt");
+    const PROVIDED1: &str = include_str!("../input/day04_provided1.txt");
+    const PROVIDED2: &str = include_str!("../input/day04_provided2.txt");
+    const PROVIDED3: &str = include_str!("../input/day04_provided3.txt");
 
     #[test]
     fn part1_provided() {
