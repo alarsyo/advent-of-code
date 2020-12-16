@@ -117,9 +117,9 @@ fn part2(input: &str) -> Result<usize> {
 mod tests {
     use super::*;
 
-    static PROVIDED1: &'static str = "1-3 a: abcde";
-    static PROVIDED2: &'static str = "1-3 b: cdefg";
-    static PROVIDED3: &'static str = "2-9 c: ccccccccc";
+    const PROVIDED1: &str = "1-3 a: abcde";
+    const PROVIDED2: &str = "1-3 b: cdefg";
+    const PROVIDED3: &str = "2-9 c: ccccccccc";
 
     #[test]
     fn part1_provided() {

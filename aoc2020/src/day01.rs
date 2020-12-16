@@ -77,7 +77,7 @@ fn find_2020_3_sum(entries: &[i64]) -> Result<(i64, i64, i64)> {
 mod tests {
     use super::*;
 
-    static PROVIDED: &[i64] = &[1721, 979, 366, 299, 675, 1456];
+    const PROVIDED: &[i64] = &[1721, 979, 366, 299, 675, 1456];
 
     #[test]
     fn part1_provided() {

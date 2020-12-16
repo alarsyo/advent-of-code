@@ -81,7 +81,7 @@ impl Group {
 mod tests {
     use super::*;
 
-    static PROVIDED: &'static str = include_str!("../input/day06_provided.txt");
+    const PROVIDED: &str = include_str!("../input/day06_provided.txt");
 
     #[test]
     fn part1_provided() {

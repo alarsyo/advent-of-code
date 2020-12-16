@@ -161,8 +161,8 @@ impl FromStr for BagRule {
 mod tests {
     use super::*;
 
-    static PROVIDED1: &'static str = include_str!("../input/day07_provided1.txt");
-    static PROVIDED2: &'static str = include_str!("../input/day07_provided2.txt");
+    const PROVIDED1: &str = include_str!("../input/day07_provided1.txt");
+    const PROVIDED2: &str = include_str!("../input/day07_provided2.txt");
 
     #[test]
     fn part1_provided_parse() {
