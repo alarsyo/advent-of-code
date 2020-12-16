@@ -15,6 +15,7 @@ use aoc2020::day12;
 use aoc2020::day13;
 use aoc2020::day14;
 use aoc2020::day15;
+use aoc2020::day16;
 
 fn aoc2020_all(c: &mut Criterion) {
     c.bench_function("day01", |b| b.iter(|| day01::run().unwrap()));
@@ -32,6 +33,7 @@ fn aoc2020_all(c: &mut Criterion) {
     c.bench_function("day13", |b| b.iter(|| day13::run().unwrap()));
     c.bench_function("day14", |b| b.iter(|| day14::run().unwrap()));
     c.bench_function("day15", |b| b.iter(|| day15::run().unwrap()));
+    c.bench_function("day16", |b| b.iter(|| day16::run().unwrap()));
 }
 
 criterion_group! {
