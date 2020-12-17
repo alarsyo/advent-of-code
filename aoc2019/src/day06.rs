@@ -37,7 +37,7 @@ fn count_orbits(
 fn part1(input: &str) -> Result<u64> {
     let orbits = input
         .lines()
-        .map(|line| line.trim_end())
+        .map(str::trim_end)
         .map(|line| {
             let paren = line
                 .find(')')
@@ -56,7 +56,7 @@ fn part1(input: &str) -> Result<u64> {
 fn part2(input: &str) -> Result<usize> {
     let orbits = input
         .lines()
-        .map(|line| line.trim_end())
+        .map(str::trim_end)
         .map(|line| {
             let paren = line
                 .find(')')

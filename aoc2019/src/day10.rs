@@ -48,10 +48,10 @@ fn part1(input: &str) -> Result<usize> {
     }
 
     let mut best = None;
-    for a in asteroids.iter() {
+    for a in &asteroids {
         let mut set = HashSet::new();
 
-        for b in asteroids.iter() {
+        for b in &asteroids {
             if a == b {
                 continue;
             }

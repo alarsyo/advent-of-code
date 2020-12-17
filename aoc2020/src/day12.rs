@@ -14,10 +14,7 @@ pub fn run() -> Result<String> {
 }
 
 fn part1(input: &str) -> Result<i64> {
-    let actions: Vec<Action> = input
-        .lines()
-        .map(|line| line.parse())
-        .collect::<Result<_>>()?;
+    let actions: Vec<Action> = input.lines().map(str::parse).collect::<Result<_>>()?;
 
     let mut ship = Ship::new();
 
@@ -29,10 +26,7 @@ fn part1(input: &str) -> Result<i64> {
 }
 
 fn part2(input: &str) -> Result<i64> {
-    let actions: Vec<Action> = input
-        .lines()
-        .map(|line| line.parse())
-        .collect::<Result<_>>()?;
+    let actions: Vec<Action> = input.lines().map(str::parse).collect::<Result<_>>()?;
 
     let mut ship = Ship::new();
 
@@ -212,7 +206,7 @@ impl Ship {
             }
 
             ActionKind::Forward => {
-                for mv in self.waypoint.as_moves(action.arg).iter() {
+                for mv in &self.waypoint.as_moves(action.arg) {
                     self.process(mv);
                 }
             }

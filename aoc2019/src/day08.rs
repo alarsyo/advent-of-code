@@ -96,7 +96,7 @@ impl FromStr for Image {
         let mut result = vec![vec![2; IMG_WIDTH]; IMG_HEIGHT];
 
         // overlap layers
-        for layer in layers.iter() {
+        for layer in &layers {
             for (src_row, dst_row) in layer.pixels.iter().zip(result.iter_mut()) {
                 for (src_pixel, dst_pixel) in src_row.iter().zip(dst_row.iter_mut()) {
                     if let 2 = *dst_pixel {

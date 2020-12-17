@@ -61,8 +61,8 @@ impl FromStr for Date {
     type Err = anyhow::Error;
 
     fn from_str(s: &str) -> Result<Self> {
-        let lbracket = s.find('[').context("`[` not found")?;
-        let s = &s[(lbracket + 1)..];
+        let l_bracket = s.find('[').context("`[` not found")?;
+        let s = &s[(l_bracket + 1)..];
         let dash = s.find('-').context("`-` not found")?;
 
         let year = s[..dash].parse()?;
@@ -79,9 +79,9 @@ impl FromStr for Date {
 
         let hour = s[..colon].parse()?;
         let s = &s[(colon + 1)..];
-        let rbracket = s.find(']').context("`]` not found")?;
+        let r_bracket = s.find(']').context("`]` not found")?;
 
-        let minute = s[..rbracket].parse()?;
+        let minute = s[..r_bracket].parse()?;
 
         Ok(Date {
             year,

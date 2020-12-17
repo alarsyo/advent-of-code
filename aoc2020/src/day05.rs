@@ -17,12 +17,12 @@ pub fn run() -> Result<String> {
 fn part1(input: &str) -> Result<usize> {
     let seats = input
         .lines()
-        .map(|line| line.parse())
+        .map(str::parse)
         .collect::<Result<Vec<Seat>>>()?;
 
     seats
         .iter()
-        .map(|seat| seat.id())
+        .map(Seat::id)
         .max()
         .context("0 seats processed")
 }
@@ -30,7 +30,7 @@ fn part1(input: &str) -> Result<usize> {
 fn part2(input: &str) -> Result<usize> {
     let mut seats = input
         .lines()
-        .map(|line| line.parse())
+        .map(str::parse)
         .collect::<Result<Vec<Seat>>>()?;
 
     // Seats will be sorted by lexicographical order of fields thanks to `derive(PartialOrd, Ord)`,
@@ -39,7 +39,7 @@ fn part2(input: &str) -> Result<usize> {
     seats.sort_unstable();
 
     let mut prev_id = None;
-    for id in seats.iter().map(|s| s.id()) {
+    for id in seats.iter().map(Seat::id) {
         match prev_id {
             Some(pid) if pid == (id - 1) => prev_id = Some(id),
             Some(pid) => return Ok(pid + 1),

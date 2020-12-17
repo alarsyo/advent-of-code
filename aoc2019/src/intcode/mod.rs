@@ -203,10 +203,10 @@ impl Intcode {
                         bail!("dst must be a valid address: {}", dst);
                     }
 
-                    if val != 0 {
-                        self.ip = dst as usize;
-                    } else {
+                    if val == 0 {
                         self.ip += 3;
+                    } else {
+                        self.ip = dst as usize;
                     }
                 }
                 Opcode::JumpFalse(test, dst) => {

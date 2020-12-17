@@ -92,7 +92,7 @@ pub fn run() -> Result<String> {
 fn part1(input: &str) -> Result<usize> {
     let policies = input
         .lines()
-        .map(|line| line.parse::<PassPolicy>())
+        .map(str::parse::<PassPolicy>)
         .collect::<Result<Vec<PassPolicy>>>()?;
 
     Ok(policies
@@ -104,7 +104,7 @@ fn part1(input: &str) -> Result<usize> {
 fn part2(input: &str) -> Result<usize> {
     let policies = input
         .lines()
-        .map(|line| line.parse::<PassPolicy>())
+        .map(str::parse::<PassPolicy>)
         .collect::<Result<Vec<PassPolicy>>>()?;
 
     Ok(policies

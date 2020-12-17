@@ -120,13 +120,13 @@ fn parse_input(input: &str) -> Result<(HashMap<&str, Field>, Ticket, Vec<Ticket>
     let my_ticket = my_ticket_part
         .lines()
         .skip(1)
-        .map(|line| line.parse())
+        .map(str::parse)
         .next()
         .context("no second line for ticket")??;
     let tickets = tickets_part
         .lines()
         .skip(1)
-        .map(|line| line.parse())
+        .map(str::parse)
         .collect::<Result<_>>()
         .context("couldn't parse tickets")?;
 
@@ -184,16 +184,19 @@ impl std::str::FromStr for Field {
     fn from_str(s: &str) -> Result<Self> {
         let mut ranges = s.split(" or ");
 
-        let mut range1 = ranges.next().context("no first range found")?.split('-');
-        let range1_start = range1.next().context("no bound for range")?.parse()?;
-        let range1_end = range1.next().context("no bound for range")?.parse()?;
+        let mut first_range = ranges.next().context("no first range found")?.split('-');
+        let first_range_start = first_range.next().context("no bound for range")?.parse()?;
+        let first_range_end = first_range.next().context("no bound for range")?.parse()?;
 
-        let mut range2 = ranges.next().context("no second range found")?.split('-');
-        let range2_start = range2.next().context("no bound for range")?.parse()?;
-        let range2_end = range2.next().context("no bound for range")?.parse()?;
+        let mut second_range = ranges.next().context("no second range found")?.split('-');
+        let second_range_start = second_range.next().context("no bound for range")?.parse()?;
+        let second_range_end = second_range.next().context("no bound for range")?.parse()?;
 
         Ok(Field {
-            ranges: (range1_start..=range1_end, range2_start..=range2_end),
+            ranges: (
+                first_range_start..=first_range_end,
+                second_range_start..=second_range_end,
+            ),
         })
     }
 }

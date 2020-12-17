@@ -20,7 +20,7 @@ fn fuel_needed(module_weight: u64) -> u64 {
 fn part1(input: &str) -> Result<u64> {
     input
         .lines()
-        .map(|line| line.parse::<u64>())
+        .map(str::parse)
         .map(|w| w.map(fuel_needed).map_err(anyhow::Error::new))
         .sum()
 }
@@ -40,7 +40,7 @@ fn cumulated_fuel_needed(module_weight: u64) -> u64 {
 fn part2(input: &str) -> Result<u64> {
     input
         .lines()
-        .map(|line| line.parse::<u64>())
+        .map(str::parse)
         .map(|w| w.map(cumulated_fuel_needed).map_err(anyhow::Error::new))
         .sum()
 }
