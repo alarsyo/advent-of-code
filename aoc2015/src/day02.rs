@@ -8,10 +8,7 @@ const INPUT: &str = include_str!("../input/day02.txt");
 pub fn run() -> Result<String> {
     let mut res = String::with_capacity(128);
 
-    let presents: Vec<Present> = INPUT
-        .lines()
-        .map(|line| line.parse())
-        .collect::<Result<_>>()?;
+    let presents: Vec<Present> = INPUT.lines().map(str::parse).collect::<Result<_>>()?;
 
     writeln!(res, "part 1: {}", part1(&presents))?;
     writeln!(res, "part 2: {}", part2(&presents))?;
@@ -104,7 +101,7 @@ mod tests {
     fn part1_real() {
         let presents: Vec<Present> = INPUT
             .lines()
-            .map(|line| line.parse())
+            .map(str::parse)
             .collect::<Result<_>>()
             .unwrap();
 
@@ -121,7 +118,7 @@ mod tests {
     fn part2_real() {
         let presents: Vec<Present> = INPUT
             .lines()
-            .map(|line| line.parse())
+            .map(str::parse)
             .collect::<Result<_>>()
             .unwrap();
 

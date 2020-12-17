@@ -48,7 +48,7 @@ fn part1(input: &str) -> Result<i64> {
     let mut res = 0;
     for combination in combinations {
         let mut output = 0;
-        for phase in combination.iter() {
+        for phase in &combination {
             let mut intcode = Intcode::with_memory(memory.clone());
 
             intcode.add_input(*phase);
@@ -95,7 +95,7 @@ fn part2(input: &str) -> Result<i64> {
 
                 intcode.run_and_wait()?;
 
-                for out in intcode.output.iter() {
+                for out in &intcode.output {
                     next.add_input(*out);
                 }
                 intcode.output.clear();
@@ -116,7 +116,7 @@ fn part2(input: &str) -> Result<i64> {
                     None => bail!("last amplifier halted without output"),
                 };
             } else {
-                for out in last.output.iter() {
+                for out in &last.output {
                     first.add_input(*out);
                 }
                 last.output.clear();

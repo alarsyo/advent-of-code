@@ -33,9 +33,8 @@ fn part1(first_wire: &Wire, second_wire: &Wire) -> Result<u64> {
         })
         .filter_map(|(f, s)| match f.intersection(s) {
             Some(Point { x: 0, y: 0 }) | None => None,
-            Some(p) => Some(p),
+            Some(p) => Some(manhattan_distance(&p, &Point { x: 0, y: 0 })),
         })
-        .map(|inter| manhattan_distance(&inter, &Point { x: 0, y: 0 }))
         .min()
         .context("wire was empty")
 }
@@ -45,10 +44,10 @@ fn part2(first_wire: &Wire, second_wire: &Wire) -> Result<u64> {
 
     let mut first_length = 0;
 
-    for seg1 in first_wire.0.iter() {
+    for seg1 in &first_wire.0 {
         let mut second_length = 0;
 
-        for seg2 in second_wire.0.iter() {
+        for seg2 in &second_wire.0 {
             if let Some(inter) = seg1.intersection(&seg2) {
                 if inter.x == 0 && inter.y == 0 {
                     continue;

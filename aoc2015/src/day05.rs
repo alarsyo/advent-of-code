@@ -16,7 +16,7 @@ pub fn run() -> Result<String> {
 fn part1(input: &str) -> usize {
     input
         .lines()
-        .map(|line| line.trim_end())
+        .map(str::trim_end)
         .filter(|line| {
             let mut vowel_count = 0;
             for c in line.chars() {
@@ -51,7 +51,7 @@ fn part1(input: &str) -> usize {
 fn part2(input: &str) -> usize {
     input
         .lines()
-        .map(|line| line.trim_end())
+        .map(str::trim_end)
         .filter(|line| {
             for i in 0..(line.chars().count() - 3) {
                 let seq = &line[i..(i + 2)];

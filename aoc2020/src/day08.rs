@@ -17,7 +17,7 @@ pub fn run() -> Result<String> {
 fn part1(input: &str) -> Result<i64> {
     let instructions = input
         .lines()
-        .map(|line| line.parse())
+        .map(str::parse)
         .collect::<Result<Vec<Instruction>>>()?;
 
     let mut interpreter = Interpreter::new(instructions);
@@ -31,7 +31,7 @@ fn part1(input: &str) -> Result<i64> {
 fn part2(input: &str) -> Result<i64> {
     let instructions = input
         .lines()
-        .map(|line| line.parse())
+        .map(str::parse)
         .collect::<Result<Vec<Instruction>>>()?;
 
     for idx in 0..instructions.len() {

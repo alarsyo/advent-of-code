@@ -294,7 +294,7 @@ impl std::str::FromStr for Program {
     type Err = anyhow::Error;
 
     fn from_str(s: &str) -> Result<Self> {
-        let instructions = s.lines().map(|line| line.parse()).collect::<Result<_>>()?;
+        let instructions = s.lines().map(str::parse).collect::<Result<_>>()?;
 
         Ok(Program {
             instructions,

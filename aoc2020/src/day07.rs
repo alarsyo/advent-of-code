@@ -18,7 +18,7 @@ pub fn run() -> Result<String> {
 fn part1(input: &str) -> Result<usize> {
     let bag_rules = input
         .lines()
-        .map(|line| line.parse())
+        .map(str::parse)
         .collect::<Result<Vec<BagRule>>>()
         .unwrap();
 
@@ -42,7 +42,7 @@ fn part1(input: &str) -> Result<usize> {
 fn part2(input: &str) -> Result<usize> {
     let bag_rules = input
         .lines()
-        .map(|line| line.parse())
+        .map(str::parse)
         .collect::<Result<Vec<BagRule>>>()
         .unwrap();
 
@@ -168,7 +168,7 @@ mod tests {
     fn part1_provided_parse() {
         let bag_rules = PROVIDED1
             .lines()
-            .map(|line| line.parse())
+            .map(str::parse)
             .collect::<Result<Vec<BagRule>>>()
             .unwrap();
 

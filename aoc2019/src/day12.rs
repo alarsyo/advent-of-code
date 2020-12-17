@@ -40,7 +40,7 @@ fn generate_pairs(n: usize) -> Vec<(usize, usize)> {
 }
 
 fn parse_planets(input: &str) -> Result<Vec<Planet>> {
-    input.lines().map(|l| l.parse()).collect()
+    input.lines().map(str::parse).collect()
 }
 
 fn part1(mut planets: Vec<Planet>, steps: usize) -> Result<u64> {
@@ -91,12 +91,12 @@ fn part1(mut planets: Vec<Planet>, steps: usize) -> Result<u64> {
         }
 
         // update position
-        for planet in planets.iter_mut() {
+        for planet in &mut planets {
             planet.update_pos();
         }
     }
 
-    Ok(planets.iter().map(|p| p.total_energy()).sum())
+    Ok(planets.iter().map(Planet::total_energy).sum())
 }
 
 fn gcd(a: usize, b: usize) -> usize {
@@ -165,7 +165,7 @@ fn part2(mut planets: Vec<Planet>) -> Result<usize> {
         }
 
         // update position
-        for planet in planets.iter_mut() {
+        for planet in &mut planets {
             planet.update_pos();
         }
 

@@ -48,8 +48,8 @@ fn part2(input: &str) -> Result<usize> {
 
     Ok(passports
         .into_iter()
-        .filter_map(|p| p.complete())
-        .filter(|p| p.is_valid())
+        .filter_map(Passport::complete)
+        .filter(CompletePassport::is_valid)
         .count())
 }
 
