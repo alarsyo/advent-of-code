@@ -1,3 +1,5 @@
+#![warn(clippy::explicit_iter_loop, clippy::redundant_closure_for_method_calls)]
+
 use std::env;
 
 use anyhow::{Context, Result};
