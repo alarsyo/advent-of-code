@@ -9,6 +9,7 @@ edition = "2018"
 [dependencies]
 aoc = { path = "../aoc" }
 anyhow = "1.0"
+itertools = "0.9"
 
 [lib]
 path = "src/lib.rs"
