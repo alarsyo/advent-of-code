@@ -16,6 +16,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+    - name: Format
+      run: cargo fmt -- --check
     - name: Lint
       run: cargo clippy --all --all-targets --all-features -- -D warnings
     - name: Run tests
