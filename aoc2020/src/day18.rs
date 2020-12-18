@@ -18,6 +18,7 @@ pub fn run() -> Result<String> {
     let mut res = String::with_capacity(128);
 
     writeln!(res, "part 1: {}", part1(INPUT)?)?;
+    writeln!(res, "part 2: {}", part2(INPUT)?)?;
 
     Ok(res)
 }
@@ -25,7 +26,22 @@ pub fn run() -> Result<String> {
 fn part1(input: &str) -> Result<u64> {
     input
         .lines()
-        .map(|line| line.parse::<Expr>().map(|e| e.eval()))
+        .map(|line| {
+            terminated(expr, eof)(line)
+                .map_err(|_| anyhow!("couldn't parse expr"))
+                .map(|(_, e)| e.eval())
+        })
+        .sum()
+}
+
+fn part2(input: &str) -> Result<u64> {
+    input
+        .lines()
+        .map(|line| {
+            terminated(plus_priority, eof)(line)
+                .map_err(|_| anyhow!("couldn't parse expr"))
+                .map(|(_, e)| e.eval())
+        })
         .sum()
 }
 
@@ -73,28 +89,57 @@ fn operator_expr(input: &str) -> IResult<&str, Expr> {
     )(i)
 }
 
+fn plus(input: &str) -> IResult<&str, Expr> {
+    let (i, first_term) = term_plus_priority(input)?;
+
+    fold_many0(
+        pair(
+            delimited(char(' '), char('+'), char(' ')),
+            term_plus_priority,
+        ),
+        first_term,
+        |acc, (_, val)| Expr::Op(Box::new(acc), Operator::Addition, Box::new(val)),
+    )(i)
+}
+
+fn mul(input: &str) -> IResult<&str, Expr> {
+    let (i, first_factor) = plus(input)?;
+
+    fold_many0(
+        pair(delimited(char(' '), char('*'), char(' ')), plus),
+        first_factor,
+        |acc, (_, val)| Expr::Op(Box::new(acc), Operator::Multiplication, Box::new(val)),
+    )(i)
+}
+
 fn num(input: &str) -> IResult<&str, Expr> {
     map_res(take_while1(|c: char| c.is_digit(10)), |res: &str| {
         res.parse().map(Expr::Num)
     })(input)
 }
 
+fn paren(input: &str) -> IResult<&str, Expr> {
+    delimited(char('('), expr, char(')'))(input)
+}
+
+fn paren_plus_priority(input: &str) -> IResult<&str, Expr> {
+    delimited(char('('), plus_priority, char(')'))(input)
+}
+
 fn term(input: &str) -> IResult<&str, Expr> {
-    alt((delimited(char('('), expr, char(')')), num))(input)
+    alt((paren, num))(input)
+}
+
+fn term_plus_priority(input: &str) -> IResult<&str, Expr> {
+    alt((paren_plus_priority, num))(input)
 }
 
 fn expr(input: &str) -> IResult<&str, Expr> {
     alt((operator_expr, term))(input)
 }
 
-impl std::str::FromStr for Expr {
-    type Err = anyhow::Error;
-
-    fn from_str(s: &str) -> Result<Self> {
-        let (_, res) = terminated(expr, eof)(s).map_err(|_| anyhow!("couldn't parse expr"))?;
-
-        Ok(res)
-    }
+fn plus_priority(input: &str) -> IResult<&str, Expr> {
+    alt((mul, term_plus_priority))(input)
 }
 
 #[cfg(test)]
@@ -112,9 +157,36 @@ mod tests {
             ("((2 + 4 * 9) * (6 + 9 * 8 + 6) + 6) + 2 + 4 * 2", 13632),
         ];
 
-        for (expr, expected) in tests {
-            let expr: Expr = expr.parse().unwrap();
-            assert_eq!(expr.eval(), *expected);
+        for (exp, expected) in tests {
+            let (_, exp) = terminated(expr, eof)(exp).unwrap();
+            assert_eq!(exp.eval(), *expected);
         }
+    }
+
+    #[test]
+    fn part1_real() {
+        assert_eq!(part1(INPUT).unwrap(), 800602729153);
+    }
+
+    #[test]
+    fn part2_provided() {
+        let tests = &[
+            ("1 + 2 * 3 + 4 * 5 + 6", 231),
+            ("1 + (2 * 3) + (4 * (5 + 6))", 51),
+            ("2 * 3 + (4 * 5)", 46),
+            ("5 + (8 * 3 + 9 + 3 * 4 * 3)", 1445),
+            ("5 * 9 * (7 * 3 * 3 + 9 * 3 + (8 + 6 * 4))", 669060),
+            ("((2 + 4 * 9) * (6 + 9 * 8 + 6) + 6) + 2 + 4 * 2", 23340),
+        ];
+
+        for (exp, expected) in tests {
+            let (_, exp) = terminated(plus_priority, eof)(exp).unwrap();
+            assert_eq!(exp.eval(), *expected);
+        }
+    }
+
+    #[test]
+    fn part2_real() {
+        assert_eq!(part2(INPUT).unwrap(), 92173009047076);
     }
 }
