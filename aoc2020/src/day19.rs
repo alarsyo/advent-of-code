@@ -9,6 +9,7 @@ pub fn run() -> Result<String> {
     let mut res = String::with_capacity(128);
 
     writeln!(res, "part 1: {}", part1(INPUT)?)?;
+    writeln!(res, "part 2: {}", part2(INPUT)?)?;
 
     Ok(res)
 }
@@ -45,6 +46,32 @@ fn part1(input: &str) -> Result<usize> {
     Ok(lines.filter(|l| rules[&0].matches(&rules, l)).count())
 }
 
+fn part2(input: &str) -> Result<usize> {
+    let mut parts = input.split("\n\n");
+
+    let rules = parts.next().context("no rules before linebreak")?;
+    let mut rules = get_rules(rules)?;
+
+    let lines = parts.next().context("no lines after linebreak")?.lines();
+
+    rules.insert(
+        8,
+        Rule::Either(
+            Rule::Chain(vec![42]).into(),
+            Rule::Chain(vec![42, 8]).into(),
+        ),
+    );
+    rules.insert(
+        11,
+        Rule::Either(
+            Rule::Chain(vec![42, 31]).into(),
+            Rule::Chain(vec![42, 11, 31]).into(),
+        ),
+    );
+
+    Ok(lines.filter(|l| rules[&0].matches(&rules, l)).count())
+}
+
 #[derive(Debug)]
 enum Rule {
     Character(char),
@@ -53,48 +80,47 @@ enum Rule {
 }
 
 impl Rule {
-    fn matches_rec<'a>(&self, rules: &HashMap<usize, Rule>, mut s: &'a str) -> (bool, &'a str) {
+    fn matches_rec<'a>(&self, rules: &HashMap<usize, Rule>, s: &'a str) -> Vec<&'a str> {
+        if s.is_empty() {
+            return vec![];
+        }
+
         match self {
             Rule::Character(c) => {
-                if s.is_empty() {
-                    return (false, s);
+                let mut res = Vec::new();
+                if s.chars().next().unwrap() == *c {
+                    res.push(&s[1..]);
                 }
-
-                let res = s.chars().next().unwrap() == *c;
-
-                (res, &s[1..])
+                res
             }
 
             Rule::Chain(idxs) => {
+                let mut partial_matches = vec![s];
+
                 for idx in idxs {
                     let rule = &rules[idx];
-                    let (res, new_s) = rule.matches_rec(rules, s);
-                    if !res {
-                        return (false, s);
+                    let mut new_partial_matches = Vec::new();
+                    for partial_match in partial_matches {
+                        new_partial_matches.append(&mut rule.matches_rec(rules, partial_match));
                     }
-
-                    s = new_s;
+                    partial_matches = new_partial_matches;
                 }
 
-                (true, s)
+                partial_matches
             }
             Rule::Either(r1, r2) => {
-                let (res1, s1) = r1.matches_rec(rules, s);
-                if res1 {
-                    return (true, s1);
-                }
+                let mut res = r1.matches_rec(rules, s);
+                res.append(&mut r2.matches_rec(rules, s));
 
-                let (res2, s2) = r2.matches_rec(rules, s);
-
-                (res2, s2)
+                res
             }
         }
     }
 
     fn matches(&self, rules: &HashMap<usize, Rule>, s: &str) -> bool {
-        let (res, s_res) = self.matches_rec(rules, s);
+        let res = self.matches_rec(rules, s);
 
-        res && s_res.is_empty()
+        res.contains(&"")
     }
 }
 
@@ -135,11 +161,12 @@ impl std::str::FromStr for Rule {
 mod tests {
     use super::*;
 
-    const PROVIDED: &str = include_str!("../input/day19_provided.txt");
+    const PROVIDED1: &str = include_str!("../input/day19_provided1.txt");
+    const PROVIDED2: &str = include_str!("../input/day19_provided2.txt");
 
     #[test]
     fn part1_provided() {
-        let mut parts = PROVIDED.split("\n\n");
+        let mut parts = PROVIDED1.split("\n\n");
 
         let rules = get_rules(parts.next().unwrap()).unwrap();
 
@@ -164,5 +191,15 @@ mod tests {
     #[test]
     fn part1_real() {
         assert_eq!(part1(INPUT).unwrap(), 144);
+    }
+
+    #[test]
+    fn part2_provided() {
+        assert_eq!(part2(PROVIDED2).unwrap(), 12);
+    }
+
+    #[test]
+    fn part2_real() {
+        assert_eq!(part2(INPUT).unwrap(), 260);
     }
 }
