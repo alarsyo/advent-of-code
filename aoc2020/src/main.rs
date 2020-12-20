@@ -21,6 +21,7 @@ use aoc2020::day16;
 use aoc2020::day17;
 use aoc2020::day18;
 use aoc2020::day19;
+use aoc2020::day20;
 use aoc2020::day21;
 use aoc2020::day22;
 use aoc2020::day23;
@@ -47,6 +48,7 @@ fn main() -> Result<()> {
         day17::run,
         day18::run,
         day19::run,
+        day20::run,
         day21::run,
         day22::run,
         day23::run,
