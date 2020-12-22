@@ -1,6 +1,8 @@
 use std::cmp::Ordering;
+use std::collections::hash_map::DefaultHasher;
 use std::collections::{HashSet, VecDeque};
 use std::fmt::Write;
+use std::hash::{Hash, Hasher};
 
 use anyhow::{Context, Result};
 
@@ -48,9 +50,14 @@ fn play_recursive_game(mut deck_a: Deck, mut deck_b: Deck) -> (Deck, bool) {
         // exactly the same cards in the same order in the same players' decks, the game instantly
         // ends in a win for player 1. Previous rounds from other games are not considered. (This
         // prevents infinite games of Recursive Combat, which everyone agrees is a bad idea.)
-        let score_a = deck_score(&deck_a);
-        let score_b = deck_score(&deck_b);
-        let hash = score_a * 100_000 + score_b;
+
+        // we could use the score here, and it works on my input, but to be on the safe side let's
+        // just compute the hash manually (the goal is to avoid cloning entire Decks just to check
+        // their presence in the set)
+        let mut hasher = DefaultHasher::new();
+        deck_a.hash(&mut hasher);
+        deck_b.hash(&mut hasher);
+        let hash = hasher.finish();
         if seen.contains(&hash) {
             return (deck_a, true);
         } else {
