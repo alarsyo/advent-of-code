@@ -41,17 +41,20 @@ fn play_game(mut deck_a: Deck, mut deck_b: Deck) -> Deck {
 }
 
 fn play_recursive_game(mut deck_a: Deck, mut deck_b: Deck) -> (Deck, bool) {
-    let mut seen: HashSet<(Deck, Deck)> = HashSet::new();
+    let mut seen: HashSet<u64> = HashSet::new();
 
     while !(deck_a.0.is_empty() || deck_b.0.is_empty()) {
         // Before either player deals a card, if there was a previous round in this game that had
         // exactly the same cards in the same order in the same players' decks, the game instantly
         // ends in a win for player 1. Previous rounds from other games are not considered. (This
         // prevents infinite games of Recursive Combat, which everyone agrees is a bad idea.)
-        if seen.contains(&(deck_a.clone(), deck_b.clone())) {
+        let score_a = deck_score(&deck_a);
+        let score_b = deck_score(&deck_b);
+        let hash = score_a * 100_000 + score_b;
+        if seen.contains(&hash) {
             return (deck_a, true);
         } else {
-            seen.insert((deck_a.clone(), deck_b.clone()));
+            seen.insert(hash);
         }
 
         // Otherwise, this round's cards must be in a new configuration; the players begin the round
