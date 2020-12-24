@@ -33,8 +33,8 @@ fn part2(input: &str) -> Result<usize> {
         cup_circle.step();
     }
 
-    let first = cup_circle.get_next_cup(1);
-    let second = cup_circle.get_next_cup(first);
+    let first = *cup_circle.next_cup(1);
+    let second = *cup_circle.next_cup(first);
 
     Ok(first * second)
 }
@@ -165,21 +165,21 @@ struct FastCupCircle {
 }
 
 impl FastCupCircle {
-    fn get_next_cup(&self, cup: usize) -> usize {
-        self.cups[cup - 1]
+    fn next_cup(&self, cup: usize) -> &usize {
+        &self.cups[cup - 1]
     }
 
-    fn set_next_cup(&mut self, cup: usize, next: usize) {
-        self.cups[cup - 1] = next;
+    fn next_cup_mut(&mut self, cup: usize) -> &mut usize {
+        &mut self.cups[cup - 1]
     }
 
     fn remove_next_3(&mut self, cup: usize) -> [usize; 3] {
-        let first = self.get_next_cup(cup);
-        let second = self.get_next_cup(first);
-        let third = self.get_next_cup(second);
+        let first = *self.next_cup(cup);
+        let second = *self.next_cup(first);
+        let third = *self.next_cup(second);
 
         // shortcut the links to remove them from the loop temporarily
-        self.set_next_cup(cup, self.get_next_cup(third));
+        *self.next_cup_mut(cup) = *self.next_cup(third);
 
         [first, second, third]
     }
@@ -215,12 +215,12 @@ impl FastCupCircle {
         // The links from first to second and from second to third haven't changed, no need to
         // update them
         let [first, _, third] = removed_cups;
-        self.set_next_cup(third, self.get_next_cup(destination));
-        self.set_next_cup(destination, first);
+        *self.next_cup_mut(third) = *self.next_cup(destination);
+        *self.next_cup_mut(destination) = first;
 
         // The crab selects a new current cup: the cup which is immediately clockwise of the current
         // cup.
-        self.current = self.get_next_cup(self.current);
+        self.current = *self.next_cup(self.current);
     }
 }
 
