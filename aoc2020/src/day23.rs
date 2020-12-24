@@ -53,8 +53,7 @@ impl CupCircle {
     /// This doesn't change anything to the cup circle layout, except that the new first cup is
     /// considered the "current" cup at the end of a step in our implementation
     fn shift(&mut self) {
-        let front = self.0.pop_front().unwrap();
-        self.0.push_back(front);
+        self.0.rotate_left(1);
     }
 
     /// Executes one step of the game
