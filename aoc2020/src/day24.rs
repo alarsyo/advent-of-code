@@ -9,11 +9,12 @@ pub fn run() -> Result<String> {
     let mut res = String::with_capacity(128);
 
     writeln!(res, "part 1: {}", part1(INPUT)?)?;
+    writeln!(res, "part 2: {}", part2(INPUT)?)?;
 
     Ok(res)
 }
 
-fn part1(input: &str) -> Result<usize> {
+fn compute_pattern(input: &str) -> Result<HashSet<HexCoordinates>> {
     let mut black_tiles = HashSet::new();
 
     for line in input.lines() {
@@ -68,6 +69,62 @@ fn part1(input: &str) -> Result<usize> {
         }
     }
 
+    Ok(black_tiles)
+}
+
+fn part1(input: &str) -> Result<usize> {
+    let black_tiles = compute_pattern(input)?;
+    Ok(black_tiles.len())
+}
+
+fn part2(input: &str) -> Result<usize> {
+    let mut black_tiles = compute_pattern(input)?;
+
+    for _ in 0..100 {
+        let mut new_black_tiles = black_tiles.clone();
+
+        let mut seen = HashSet::new();
+        let mut todo: Vec<HexCoordinates> = black_tiles.iter().copied().collect();
+
+        while !todo.is_empty() {
+            let tile = todo.pop().unwrap();
+
+            if seen.contains(&tile) {
+                continue;
+            } else {
+                seen.insert(tile);
+            }
+
+            let neighbours = tile.neighbours();
+
+            let count = neighbours
+                .iter()
+                .filter(|tile| black_tiles.contains(&tile))
+                .count();
+            if black_tiles.contains(&tile) {
+                // Any black tile with zero or more than 2 black tiles immediately adjacent to it is
+                // flipped to white.
+                if count == 0 || count > 2 {
+                    new_black_tiles.remove(&tile);
+                }
+            } else {
+                // Any white tile with exactly 2 black tiles immediately adjacent to it is flipped
+                // to black.
+                if count == 2 {
+                    new_black_tiles.insert(tile);
+                }
+            }
+
+            if black_tiles.contains(&tile) {
+                for n in &neighbours {
+                    todo.push(*n);
+                }
+            }
+        }
+
+        black_tiles = new_black_tiles;
+    }
+
     Ok(black_tiles.len())
 }
 
@@ -118,6 +175,17 @@ impl HexCoordinates {
     fn south_west(self) -> Self {
         self.south_east().west()
     }
+
+    fn neighbours(self) -> [Self; 6] {
+        [
+            self.east(),
+            self.west(),
+            self.north_west(),
+            self.north_east(),
+            self.south_east(),
+            self.south_west(),
+        ]
+    }
 }
 
 impl Default for HexCoordinates {
@@ -140,5 +208,17 @@ mod tests {
     #[test]
     fn part1_real() {
         assert_eq!(part1(INPUT).unwrap(), 528);
+    }
+
+    #[test]
+    #[ignore]
+    fn part2_provided() {
+        assert_eq!(part2(PROVIDED).unwrap(), 2208);
+    }
+
+    #[test]
+    #[ignore]
+    fn part2_real() {
+        assert_eq!(part2(INPUT).unwrap(), 4200);
     }
 }
