@@ -48,10 +48,17 @@ fn part1(input: &str) -> Result<u64> {
         .parse()?;
 
     let card_loop_size = find_loop_size(card_pub_key);
+    let door_loop_size = find_loop_size(door_pub_key);
+
+    let (loop_size, pub_key) = if card_loop_size < door_loop_size {
+        (card_loop_size, door_pub_key)
+    } else {
+        (door_loop_size, card_pub_key)
+    };
 
     let mut encryption_key = 1;
-    for _ in 0..card_loop_size {
-        encryption_key = transform(encryption_key, door_pub_key);
+    for _ in 0..loop_size {
+        encryption_key = transform(encryption_key, pub_key);
     }
 
     Ok(encryption_key)
