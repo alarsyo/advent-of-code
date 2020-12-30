@@ -18,24 +18,7 @@ fn part1(input: &str) -> Result<u64> {
     Ok(tiles
         .iter()
         .filter_map(|tile| {
-            let mut count = 0;
-            for other in &tiles {
-                if tile == other {
-                    continue;
-                }
-
-                count += tile
-                    .edges
-                    .iter()
-                    .filter(|e| other.edges.contains(e))
-                    .count();
-
-                count += tile
-                    .reversed_edges
-                    .iter()
-                    .filter(|e| other.edges.contains(e))
-                    .count();
-            }
+            let count = tile.neighbours(&tiles).len();
 
             // corners have 2 edges in common
             if count == 2 {
@@ -47,11 +30,182 @@ fn part1(input: &str) -> Result<u64> {
         .product())
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
+enum Rotation {
+    R90,
+    R180,
+    R270,
+}
+
+/// Represents a transformation of a tile or image.
+///
+/// Note: we don't need a horizontal and a vertical flip, these result in the same output as a 180
+/// degree rotation when combined, so only one is necessary
+#[derive(Debug, Clone, Copy)]
+struct Transform {
+    flip: bool,
+    rotation: Option<Rotation>,
+}
+
+impl Transform {
+    fn new(flip: bool, rotation: Option<Rotation>) -> Self {
+        Self { flip, rotation }
+    }
+
+    fn all() -> Vec<Transform> {
+        vec![
+            Transform::new(false, None),
+            Transform::new(false, Some(Rotation::R90)),
+            Transform::new(false, Some(Rotation::R180)),
+            Transform::new(false, Some(Rotation::R270)),
+            Transform::new(true, None),
+            Transform::new(true, Some(Rotation::R90)),
+            Transform::new(true, Some(Rotation::R180)),
+            Transform::new(true, Some(Rotation::R270)),
+        ]
+    }
+}
+
+impl Default for Transform {
+    fn default() -> Self {
+        Self {
+            flip: false,
+            rotation: None,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
+enum Position {
+    Down,
+    Left,
+    Right,
+    Up,
+}
+
+impl Position {
+    fn opposite(&self) -> Self {
+        match self {
+            Self::Down => Self::Up,
+            Self::Left => Self::Right,
+            Self::Right => Self::Left,
+            Self::Up => Self::Down,
+        }
+    }
+
+    fn ordered() -> [Self; 4] {
+        [Self::Down, Self::Left, Self::Right, Self::Up]
+    }
+}
+
+const TILE_WIDTH: usize = 10;
+const TILE_HEIGHT: usize = 10;
+
+#[derive(Debug, Clone)]
 struct Tile {
     id: u64,
-    edges: [Vec<bool>; 4],
-    reversed_edges: [Vec<bool>; 4],
+    cells: [[bool; TILE_WIDTH]; TILE_HEIGHT],
+    transform: Transform,
+}
+
+type Borders = [Vec<bool>; 4];
+
+impl Tile {
+    fn with_transform(&self, transform: Transform) -> Self {
+        let mut res = self.clone();
+        res.transform = transform;
+        res
+    }
+
+    /// Returns the tile's 4 borders, according to its current transformation.
+    ///
+    /// See [`Self::borders_with_transform()`] for more details
+    fn borders(&self) -> Borders {
+        self.borders_with_transform(self.transform)
+    }
+
+    /// Returns the tile's 4 borders, according to the provided transformation.
+    ///
+    /// Each border is associated with its position on the tile
+    fn borders_with_transform(&self, transform: Transform) -> Borders {
+        let mut up = Vec::new();
+        let mut down = Vec::new();
+        for k in 0..TILE_WIDTH {
+            up.push(self.get_with_transform(0, k, transform));
+            down.push(self.get_with_transform(TILE_HEIGHT - 1, k, transform));
+        }
+
+        let mut left = Vec::new();
+        let mut right = Vec::new();
+        for k in 0..TILE_HEIGHT {
+            left.push(self.get_with_transform(k, 0, transform));
+            right.push(self.get_with_transform(k, TILE_WIDTH - 1, transform));
+        }
+
+        // NOTE: the ordering is important, must use the enum's integer representations as indices
+        [down, left, right, up]
+    }
+
+    /// Returns the pixel at indices (i, j) in the tile.
+    ///
+    /// Uses the tile's current `self.transform`.
+    fn get(&self, i: usize, j: usize) -> bool {
+        self.get_with_transform(i, j, self.transform)
+    }
+
+    /// Returns the pixel at indices (i, j) in the tile, using the provided transform.
+    fn get_with_transform(&self, mut i: usize, mut j: usize, transform: Transform) -> bool {
+        if let Some(rotation) = transform.rotation {
+            match rotation {
+                Rotation::R90 => {
+                    let prev_i = i;
+                    i = j;
+                    j = (TILE_WIDTH - 1) - prev_i;
+                }
+                Rotation::R180 => {
+                    i = (TILE_HEIGHT - 1) - i;
+                    j = (TILE_WIDTH - 1) - j;
+                }
+                Rotation::R270 => {
+                    let prev_j = j;
+                    j = i;
+                    i = (TILE_HEIGHT - 1) - prev_j;
+                }
+            }
+        }
+
+        if transform.flip {
+            i = (TILE_HEIGHT - 1) - i;
+        }
+
+        self.cells[i][j]
+    }
+
+    /// Returns a list of neighbour tiles, along with the offset where they'd fit compared to the
+    /// current tile (depending on which borders match)
+    fn neighbours(&self, tiles: &[Tile]) -> Vec<(Position, Tile)> {
+        let borders = &self.borders();
+
+        tiles
+            .iter()
+            .filter(|other| *other != self)
+            .flat_map(|other| {
+                Transform::all().into_iter().filter_map(move |transform| {
+                    let other_borders = other.borders_with_transform(transform);
+
+                    for (bord, pos) in other_borders.iter().zip(Position::ordered().iter()) {
+                        let opposite = pos.opposite();
+
+                        if bord == &borders[opposite as usize] {
+                            return Some((opposite, other.with_transform(transform)));
+                        }
+                    }
+
+                    None
+                })
+            })
+            .collect()
+    }
 }
 
 impl std::cmp::PartialEq for Tile {
@@ -64,8 +218,6 @@ impl std::str::FromStr for Tile {
     type Err = anyhow::Error;
 
     fn from_str(s: &str) -> Result<Self> {
-        const LINE_LENGTH: usize = 10;
-
         let mut lines = s.lines();
 
         let title = lines.next().context("couldn't find line with tile ID")?;
@@ -73,7 +225,7 @@ impl std::str::FromStr for Tile {
         let colon = title.find(':').unwrap();
         let id = title[(space + 1)..colon].parse()?;
 
-        let mut edges = [vec![], vec![], vec![], vec![]];
+        let mut cells = [[false; TILE_WIDTH]; TILE_HEIGHT];
 
         lines
             .enumerate()
@@ -85,18 +237,7 @@ impl std::str::FromStr for Tile {
                         _ => return Err(anyhow!("unknown char `{}` while parsing tile", c)),
                     };
 
-                    if i == 0 {
-                        edges[0].push(c);
-                    }
-                    if j == 0 {
-                        edges[1].push(c);
-                    }
-                    if i == (LINE_LENGTH - 1) {
-                        edges[2].push(c);
-                    }
-                    if j == (LINE_LENGTH - 1) {
-                        edges[3].push(c);
-                    }
+                    cells[i][j] = c;
 
                     Ok(())
                 })?;
@@ -104,15 +245,10 @@ impl std::str::FromStr for Tile {
                 Ok(())
             })?;
 
-        let mut reversed_edges = [vec![], vec![], vec![], vec![]];
-        for (i, edge) in edges.iter().enumerate() {
-            reversed_edges[i] = edge.iter().copied().rev().collect();
-        }
-
         Ok(Tile {
             id,
-            edges,
-            reversed_edges,
+            cells,
+            transform: Transform::default(),
         })
     }
 }
