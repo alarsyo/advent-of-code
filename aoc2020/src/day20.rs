@@ -5,11 +5,13 @@ use anyhow::{anyhow, Context, Result};
 
 const INPUT: &str = include_str!("../input/day20.txt");
 
+const SNAKE: &str = include_str!("../input/day20_snake.txt");
+
 pub fn run() -> Result<String> {
     let mut res = String::with_capacity(128);
 
     writeln!(res, "part 1: {}", part1(INPUT)?)?;
-    writeln!(res, "part 2:\n{}", part2(INPUT)?)?;
+    writeln!(res, "part 2: {}", part2(INPUT)?)?;
 
     Ok(res)
 }
@@ -32,12 +34,18 @@ fn part1(input: &str) -> Result<u64> {
         .product())
 }
 
-fn part2(input: &str) -> Result<String> {
+fn part2(input: &str) -> Result<usize> {
     let tiles: Vec<Tile> = input.split("\n\n").map(str::parse).collect::<Result<_>>()?;
 
     let image = Image::from_tiles(&tiles);
+    let snake: Pattern = SNAKE.parse()?;
 
-    Ok(format!("{}", image))
+    let snake_number = image.count_pattern(&snake);
+    let snake_pixels = snake.offsets.len() * snake_number;
+
+    let pixels_number = image.count_pixels();
+
+    Ok(pixels_number - snake_pixels)
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -73,6 +81,39 @@ impl Transform {
             Transform::new(true, Some(Rotation::R180)),
             Transform::new(true, Some(Rotation::R270)),
         ]
+    }
+
+    fn apply(
+        &self,
+        mut i: usize,
+        mut j: usize,
+        max_width: usize,
+        max_height: usize,
+    ) -> (usize, usize) {
+        if let Some(rotation) = self.rotation {
+            match rotation {
+                Rotation::R90 => {
+                    let prev_i = i;
+                    i = j;
+                    j = (max_width - 1) - prev_i;
+                }
+                Rotation::R180 => {
+                    i = (max_height - 1) - i;
+                    j = (max_width - 1) - j;
+                }
+                Rotation::R270 => {
+                    let prev_j = j;
+                    j = i;
+                    i = (max_height - 1) - prev_j;
+                }
+            }
+        }
+
+        if self.flip {
+            i = (max_height - 1) - i;
+        }
+
+        (i, j)
     }
 }
 
@@ -177,30 +218,8 @@ impl Tile {
     }
 
     /// Returns the pixel at indices (i, j) in the tile, using the provided transform.
-    fn get_with_transform(&self, mut i: usize, mut j: usize, transform: Transform) -> bool {
-        if let Some(rotation) = transform.rotation {
-            match rotation {
-                Rotation::R90 => {
-                    let prev_i = i;
-                    i = j;
-                    j = (TILE_WIDTH - 1) - prev_i;
-                }
-                Rotation::R180 => {
-                    i = (TILE_HEIGHT - 1) - i;
-                    j = (TILE_WIDTH - 1) - j;
-                }
-                Rotation::R270 => {
-                    let prev_j = j;
-                    j = i;
-                    i = (TILE_HEIGHT - 1) - prev_j;
-                }
-            }
-        }
-
-        if transform.flip {
-            i = (TILE_HEIGHT - 1) - i;
-        }
-
+    fn get_with_transform(&self, i: usize, j: usize, transform: Transform) -> bool {
+        let (i, j) = transform.apply(i, j, TILE_WIDTH, TILE_HEIGHT);
         self.cells[i][j]
     }
 
@@ -351,6 +370,46 @@ impl Image {
             pixels,
         }
     }
+
+    fn get_with_transform(&self, i: usize, j: usize, transform: &Transform) -> bool {
+        let (i, j) = transform.apply(i, j, self.width, self.height);
+        self.pixels[i][j]
+    }
+
+    fn count_pixels(&self) -> usize {
+        self.pixels
+            .iter()
+            .flat_map(|line| {
+                line.iter()
+                    .filter_map(|pix| if *pix { Some(()) } else { None })
+            })
+            .count()
+    }
+
+    fn has_pattern_at(&self, i: usize, j: usize, transform: &Transform, pattern: &Pattern) -> bool {
+        pattern
+            .offsets
+            .iter()
+            .all(|(di, dj)| self.get_with_transform(i + di, j + dj, transform))
+    }
+
+    fn count_pattern(&self, pattern: &Pattern) -> usize {
+        Transform::all()
+            .into_iter()
+            .map(|transform| {
+                let mut count = 0;
+                for i in 0..(self.height - pattern.height) {
+                    for j in 0..(self.width - pattern.width) {
+                        if self.has_pattern_at(i, j, &transform, pattern) {
+                            count += 1;
+                        }
+                    }
+                }
+                count
+            })
+            .max()
+            .unwrap()
+    }
 }
 
 impl std::fmt::Display for Image {
@@ -364,6 +423,45 @@ impl std::fmt::Display for Image {
         }
 
         Ok(())
+    }
+}
+
+struct Pattern {
+    height: usize,
+    width: usize,
+    offsets: Vec<(usize, usize)>,
+}
+
+impl Pattern {
+    fn from_offsets(offsets: Vec<(usize, usize)>) -> Self {
+        let height = *offsets.iter().map(|(x, _)| x).max().unwrap_or(&0);
+        let width = *offsets.iter().map(|(_, y)| y).max().unwrap_or(&0);
+
+        Self {
+            height,
+            width,
+            offsets,
+        }
+    }
+}
+
+impl std::str::FromStr for Pattern {
+    type Err = anyhow::Error;
+
+    fn from_str(s: &str) -> Result<Self> {
+        let offsets = s
+            .lines()
+            .enumerate()
+            .flat_map(|(i, line)| {
+                line.chars().enumerate().filter_map(move |(j, c)| match c {
+                    '#' => Some(Ok((i, j))),
+                    ' ' => None,
+                    _ => Some(Err(anyhow!("unexpected character in Pattern: `{}`", c))),
+                })
+            })
+            .collect::<Result<_>>()?;
+
+        Ok(Self::from_offsets(offsets))
     }
 }
 
@@ -381,5 +479,15 @@ mod tests {
     #[test]
     fn part1_real() {
         assert_eq!(part1(INPUT).unwrap(), 5_775_714_912_743);
+    }
+
+    #[test]
+    fn part2_provided() {
+        assert_eq!(part2(PROVIDED).unwrap(), 273);
+    }
+
+    #[test]
+    fn part2_real() {
+        assert_eq!(part2(INPUT).unwrap(), 1836);
     }
 }
