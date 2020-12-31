@@ -83,6 +83,10 @@ impl Transform {
         ]
     }
 
+    /// Applies the transform to coordinates
+    ///
+    /// The returned coordinates can be used to access a 2D array, acting as if the array was
+    /// transformed
     fn apply(
         &self,
         mut i: usize,
@@ -148,6 +152,7 @@ impl Position {
         [Self::Down, Self::Left, Self::Right, Self::Up]
     }
 
+    /// Applies the position to coordinates, shifting in the corresponding direction
     fn apply(&self, (i, j): (i64, i64)) -> (i64, i64) {
         let (mut di, mut dj) = (0, 0);
 
@@ -175,6 +180,7 @@ struct Tile {
 type Borders = [Vec<bool>; 4];
 
 impl Tile {
+    /// Clones the tile and returns a new one, identical but with a different transform
     fn with_transform(&self, transform: Transform) -> Self {
         let mut res = self.clone();
         res.transform = transform;
@@ -302,6 +308,8 @@ struct Image {
 }
 
 impl Image {
+    /// From a list of [`Tile`], tries to match each tile to its neighbours, and reconstruct the
+    /// image
     fn from_tiles(tiles: &[Tile]) -> Self {
         let mut todo: Vec<(i64, i64)> = vec![(0, 0)];
         let mut image_positions = HashMap::new();
@@ -371,11 +379,13 @@ impl Image {
         }
     }
 
+    /// Access pixel at provided coordinates, simulating the transformation on the image first
     fn get_with_transform(&self, i: usize, j: usize, transform: &Transform) -> bool {
         let (i, j) = transform.apply(i, j, self.width, self.height);
         self.pixels[i][j]
     }
 
+    /// Get number of "set" pixels
     fn count_pixels(&self) -> usize {
         self.pixels
             .iter()
@@ -386,6 +396,7 @@ impl Image {
             .count()
     }
 
+    /// Check if pattern is present at a specific location
     fn has_pattern_at(&self, i: usize, j: usize, transform: &Transform, pattern: &Pattern) -> bool {
         pattern
             .offsets
@@ -393,6 +404,8 @@ impl Image {
             .all(|(di, dj)| self.get_with_transform(i + di, j + dj, transform))
     }
 
+    /// Count occurrences of a pattern in the image, trying every transformation possible and
+    /// returning the maximum number of patterns found in any transformation
     fn count_pattern(&self, pattern: &Pattern) -> usize {
         Transform::all()
             .into_iter()
