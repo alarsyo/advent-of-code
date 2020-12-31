@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::fmt::Write;
 
 use anyhow::{anyhow, Context, Result};
@@ -8,6 +9,7 @@ pub fn run() -> Result<String> {
     let mut res = String::with_capacity(128);
 
     writeln!(res, "part 1: {}", part1(INPUT)?)?;
+    writeln!(res, "part 2:\n{}", part2(INPUT)?)?;
 
     Ok(res)
 }
@@ -28,6 +30,14 @@ fn part1(input: &str) -> Result<u64> {
             }
         })
         .product())
+}
+
+fn part2(input: &str) -> Result<String> {
+    let tiles: Vec<Tile> = input.split("\n\n").map(str::parse).collect::<Result<_>>()?;
+
+    let image = Image::from_tiles(&tiles);
+
+    Ok(format!("{}", image))
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -95,6 +105,19 @@ impl Position {
 
     fn ordered() -> [Self; 4] {
         [Self::Down, Self::Left, Self::Right, Self::Up]
+    }
+
+    fn apply(&self, (i, j): (i64, i64)) -> (i64, i64) {
+        let (mut di, mut dj) = (0, 0);
+
+        match self {
+            Self::Down => di = 1,
+            Self::Left => dj = -1,
+            Self::Right => dj = 1,
+            Self::Up => di = -1,
+        }
+
+        (i + di, j + dj)
     }
 }
 
@@ -250,6 +273,97 @@ impl std::str::FromStr for Tile {
             cells,
             transform: Transform::default(),
         })
+    }
+}
+
+struct Image {
+    width: usize,
+    height: usize,
+    pixels: Vec<Vec<bool>>,
+}
+
+impl Image {
+    fn from_tiles(tiles: &[Tile]) -> Self {
+        let mut todo: Vec<(i64, i64)> = vec![(0, 0)];
+        let mut image_positions = HashMap::new();
+        image_positions.insert((0, 0), tiles[0].clone());
+
+        // compute each image position depending on its neighbours
+        while !todo.is_empty() {
+            let pos = todo.pop().unwrap();
+            let tile = &image_positions[&pos];
+
+            for (direction, other_tile) in tile.neighbours(tiles) {
+                let new_pos = direction.apply(pos);
+                #[allow(clippy::map_entry)]
+                if !image_positions.contains_key(&new_pos) {
+                    image_positions.insert(new_pos, other_tile);
+                    todo.push(new_pos);
+                }
+            }
+        }
+
+        let image_positions = image_positions.into_iter().collect::<Vec<_>>();
+
+        let i_min = *image_positions.iter().map(|((i, _), _)| i).min().unwrap();
+        let j_min = *image_positions.iter().map(|((_, j), _)| j).min().unwrap();
+
+        let image_positions = image_positions
+            .into_iter()
+            .map(|((i, j), tile)| {
+                (
+                    ((i + i_min.abs()) as usize, (j + j_min.abs()) as usize),
+                    tile,
+                )
+            })
+            .collect::<Vec<((usize, usize), Tile)>>();
+
+        const IMAGE_TILE_HEIGHT: usize = TILE_HEIGHT - 2;
+        const IMAGE_TILE_WIDTH: usize = TILE_WIDTH - 2;
+
+        let height = *image_positions.iter().map(|((i, _), _)| i).max().unwrap() as usize + 1;
+        let height = height * IMAGE_TILE_HEIGHT;
+        let width = *image_positions.iter().map(|((_, j), _)| j).max().unwrap() as usize + 1;
+        let width = width * IMAGE_TILE_HEIGHT;
+
+        let mut pixels = Vec::new();
+        for _ in 0..height {
+            let mut line: Vec<bool> = Vec::new();
+            line.resize_with(width, Default::default);
+            pixels.push(line);
+        }
+
+        for (pos, tile) in image_positions {
+            let begin_i = IMAGE_TILE_HEIGHT * pos.0 as usize;
+            let begin_j = IMAGE_TILE_WIDTH * pos.1 as usize;
+
+            for i in 0..IMAGE_TILE_HEIGHT {
+                for j in 0..IMAGE_TILE_WIDTH {
+                    // + 1 in the tile to skip the border
+                    pixels[begin_i + i][begin_j + j] = tile.get(i + 1, j + 1);
+                }
+            }
+        }
+
+        Self {
+            width,
+            height,
+            pixels,
+        }
+    }
+}
+
+impl std::fmt::Display for Image {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        for i in 0..self.height {
+            for j in 0..self.width {
+                let c = if self.pixels[i][j] { '#' } else { '.' };
+                write!(f, "{}", c)?;
+            }
+            writeln!(f)?;
+        }
+
+        Ok(())
     }
 }
 
