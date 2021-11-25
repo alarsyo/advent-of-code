@@ -1,0 +1,26 @@
+{
+  inputs = {
+    nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
+    rust-overlay.url = "github:oxalica/rust-overlay";
+    flake-utils.url = "github:numtide/flake-utils";
+  };
+
+  outputs = { self, nixpkgs, rust-overlay, flake-utils, ... }:
+    flake-utils.lib.eachDefaultSystem (system:
+      let
+        overlays = [ (import rust-overlay) ];
+        pkgs = import nixpkgs { inherit system overlays; };
+        myRust = pkgs.rust-bin.stable.latest.default;
+      in
+        {
+          devShell = pkgs.mkShell {
+            buildInputs = with pkgs; [
+              nixpkgs-fmt
+              rust-analyzer
+              myRust
+            ];
+
+            RUST_SRC_PATH = "${pkgs.rust-bin.stable.latest.rust-src}/lib/rustlib/src/rust/library";
+          };
+        });
+}
