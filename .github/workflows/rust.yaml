@@ -17,8 +17,8 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Format
-      run: cargo fmt -- --check
+      run: cargo fmt --all -- --check
     - name: Lint
-      run: cargo clippy --all --all-targets --all-features -- -D warnings
+      run: cargo clippy --workspace --all-targets --all-features -- -D warnings
     - name: Run tests
       run: make check-all
