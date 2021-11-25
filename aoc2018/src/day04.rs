@@ -31,11 +31,11 @@ impl FromStr for Event {
     type Err = anyhow::Error;
 
     fn from_str(s: &str) -> Result<Self> {
-        if s.find("wakes up").is_some() {
+        if s.contains("wakes up") {
             Ok(Event::WakeUp)
-        } else if s.find("falls asleep").is_some() {
+        } else if s.contains("falls asleep") {
             Ok(Event::FallAsleep)
-        } else if s.find("begins shift").is_some() {
+        } else if s.contains("begins shift") {
             let pound = s.find('#').context("`#` not found")?;
             let s = &s[(pound + 1)..];
             let space = s.find(' ').context("` ` not found after `#`")?;

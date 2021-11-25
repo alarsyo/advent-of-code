@@ -154,16 +154,16 @@ impl CompletePassport {
 
     fn hgt_valid(&self) -> bool {
         if let Some(num) = self.hgt.strip_suffix("in") {
-            is_number_in_range(&num, 59..=76)
+            is_number_in_range(num, 59..=76)
         } else if let Some(num) = self.hgt.strip_suffix("cm") {
-            is_number_in_range(&num, 150..=193)
+            is_number_in_range(num, 150..=193)
         } else {
             false
         }
     }
 
     fn hcl_valid(&self) -> bool {
-        if let Some(rest) = self.hcl.strip_prefix("#") {
+        if let Some(rest) = self.hcl.strip_prefix('#') {
             rest.chars().filter(|c| !c.is_ascii_hexdigit()).count() == 0
         } else {
             false

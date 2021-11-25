@@ -49,7 +49,7 @@ fn part1(input: &str) -> Result<u64> {
     let mut cache = HashMap::new();
     Ok(orbits
         .keys()
-        .map(|k| count_orbits(&k, &orbits, &mut cache))
+        .map(|k| count_orbits(k, &orbits, &mut cache))
         .sum())
 }
 

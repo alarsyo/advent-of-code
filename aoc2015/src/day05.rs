@@ -41,10 +41,10 @@ fn part1(input: &str) -> usize {
 
             false
         })
-        .filter(|line| line.find("ab").is_none())
-        .filter(|line| line.find("cd").is_none())
-        .filter(|line| line.find("pq").is_none())
-        .filter(|line| line.find("xy").is_none())
+        .filter(|line| !line.contains("ab"))
+        .filter(|line| !line.contains("cd"))
+        .filter(|line| !line.contains("pq"))
+        .filter(|line| !line.contains("xy"))
         .count()
 }
 
@@ -56,7 +56,7 @@ fn part2(input: &str) -> usize {
             for i in 0..(line.chars().count() - 3) {
                 let seq = &line[i..(i + 2)];
                 let line = &line[(i + 2)..];
-                if line.find(seq).is_some() {
+                if line.contains(seq) {
                     return true;
                 }
             }

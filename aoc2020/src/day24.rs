@@ -99,7 +99,7 @@ fn part2(input: &str) -> Result<usize> {
 
             let count = neighbours
                 .iter()
-                .filter(|tile| black_tiles.contains(&tile))
+                .filter(|tile| black_tiles.contains(tile))
                 .count();
             if black_tiles.contains(&tile) {
                 // Any black tile with zero or more than 2 black tiles immediately adjacent to it is

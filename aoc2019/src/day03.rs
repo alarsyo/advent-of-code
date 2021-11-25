@@ -48,7 +48,7 @@ fn part2(first_wire: &Wire, second_wire: &Wire) -> Result<u64> {
         let mut second_length = 0;
 
         for seg2 in &second_wire.0 {
-            if let Some(inter) = seg1.intersection(&seg2) {
+            if let Some(inter) = seg1.intersection(seg2) {
                 if inter.x == 0 && inter.y == 0 {
                     continue;
                 }

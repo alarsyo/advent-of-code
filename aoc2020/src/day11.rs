@@ -64,13 +64,13 @@ impl Layout {
 
                 match cell {
                     Cell::EmptySeat => {
-                        if adj_count(&self, i, j, Cell::OccupiedSeat) == 0 {
+                        if adj_count(self, i, j, Cell::OccupiedSeat) == 0 {
                             new[i][j] = Cell::OccupiedSeat;
                             changed = true;
                         }
                     }
                     Cell::OccupiedSeat => {
-                        if adj_count(&self, i, j, Cell::OccupiedSeat) >= occupied_threshold {
+                        if adj_count(self, i, j, Cell::OccupiedSeat) >= occupied_threshold {
                             new[i][j] = Cell::EmptySeat;
                             changed = true;
                         }
