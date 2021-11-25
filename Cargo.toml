@@ -1,7 +1,7 @@
 [workspace]
 members = ["aoc*", "aoc*/aoc*_bench"]
 
-default-members = ["aoc2020"]
+default-members = ["aoc2021"]
 
 [profile.release]
 debug = true
