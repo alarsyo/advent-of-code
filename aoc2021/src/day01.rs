@@ -43,3 +43,30 @@ fn part2(input: &str) -> Result<usize> {
 
     Ok(increases)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    const PROVIDED: &str = include_str!("../input/day01_provided.txt");
+
+    #[test]
+    fn part1_provided() {
+        assert_eq!(part1(PROVIDED).unwrap(), 7);
+    }
+
+    #[test]
+    fn part1_real() {
+        assert_eq!(part1(INPUT).unwrap(), 1502);
+    }
+
+    #[test]
+    fn part2_provided() {
+        assert_eq!(part2(PROVIDED).unwrap(), 5);
+    }
+
+    #[test]
+    fn part2_real() {
+        assert_eq!(part2(INPUT).unwrap(), 1538);
+    }
+}
