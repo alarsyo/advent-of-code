@@ -19,7 +19,19 @@ fn part1(input: &str) -> Result<usize> {
         .map(|line| line.parse::<u64>().map_err(anyhow::Error::new))
         .collect::<Result<Vec<_>>>()?;
 
-    Ok(measurements.windows(2).filter(|w| w[0] < w[1]).count())
+    Ok(count_increases(measurements.iter()))
+}
+
+fn count_increases<I, C>(numbers: I) -> usize
+where
+    C: std::cmp::PartialOrd,
+    I: Iterator<Item = C> + Clone,
+{
+    numbers
+        .clone()
+        .zip(numbers.skip(1))
+        .filter(|(a, b)| a < b)
+        .count()
 }
 
 fn part2(input: &str) -> Result<usize> {
@@ -28,20 +40,9 @@ fn part2(input: &str) -> Result<usize> {
         .map(|line| line.parse::<u64>().map_err(anyhow::Error::new))
         .collect::<Result<Vec<_>>>()?;
 
-    let mut increases = 0;
-    let mut prev: Option<u64> = None;
-
-    for window in measurements.windows(3) {
-        let sum = window.iter().sum();
-        if let Some(prev) = prev {
-            if prev < sum {
-                increases += 1;
-            }
-        }
-        prev = Some(sum);
-    }
-
-    Ok(increases)
+    Ok(count_increases(
+        measurements.windows(3).map(|w| w.iter().sum::<u64>()),
+    ))
 }
 
 #[cfg(test)]
