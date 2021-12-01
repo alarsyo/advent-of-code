@@ -1,9 +1,9 @@
 use criterion::{criterion_group, criterion_main, Criterion};
 
-use aoc2021::day00;
+use aoc2021::day01;
 
 fn aoc2021_all(c: &mut Criterion) {
-    c.bench_function("day00", |b| b.iter(|| day00::run().unwrap()));
+    c.bench_function("day01", |b| b.iter(|| day01::run().unwrap()));
 }
 
 criterion_group! {
