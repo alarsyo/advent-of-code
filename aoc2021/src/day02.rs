@@ -84,3 +84,30 @@ impl std::str::FromStr for Command {
         })
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    const PROVIDED: &str = include_str!("../input/day02_provided.txt");
+
+    #[test]
+    fn part1_provided() {
+        assert_eq!(part1(PROVIDED).unwrap(), 150);
+    }
+
+    #[test]
+    fn part1_real() {
+        assert_eq!(part1(INPUT).unwrap(), 1962940);
+    }
+
+    #[test]
+    fn part2_provided() {
+        assert_eq!(part2(PROVIDED).unwrap(), 900);
+    }
+
+    #[test]
+    fn part2_real() {
+        assert_eq!(part2(INPUT).unwrap(), 1813664422);
+    }
+}
