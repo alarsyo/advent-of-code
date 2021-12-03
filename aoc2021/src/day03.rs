@@ -73,12 +73,10 @@ fn part2(input: &str) -> Result<u64> {
     Ok(oxygen_generator_rating * co2_scrubber_rating)
 }
 
-enum FilterStrategy {
-    MostCommon,
-    LeastCommon,
-}
-
-fn filter_by_strat(binary_numbers: &[&str], size: usize, strat: FilterStrategy) -> Result<u64> {
+fn filter_by_strat<Strat>(binary_numbers: &[&str], size: usize, strat: Strat) -> Result<u64>
+where
+    Strat: Fn(bool) -> char,
+{
     let mut numbers = binary_numbers.to_vec();
 
     for pos in 0..size {
@@ -87,19 +85,8 @@ fn filter_by_strat(binary_numbers: &[&str], size: usize, strat: FilterStrategy) 
             break;
         }
 
-        let digit_of_interest = if count_ones(&numbers, pos) >= ((numbers.len() + 1) / 2) {
-            // majority of ones, or equality
-            match strat {
-                FilterStrategy::MostCommon => '1',
-                FilterStrategy::LeastCommon => '0',
-            }
-        } else {
-            // majority of zeroes
-            match strat {
-                FilterStrategy::MostCommon => '0',
-                FilterStrategy::LeastCommon => '1',
-            }
-        };
+        let one_is_more_common = count_ones(&numbers, pos) >= ((numbers.len() + 1) / 2);
+        let digit_of_interest = strat(one_is_more_common);
 
         // TODO: use drain_filter when stable
         let mut i = 0;
@@ -121,14 +108,26 @@ fn filter_by_strat(binary_numbers: &[&str], size: usize, strat: FilterStrategy) 
 /// position, and keep only numbers with that bit in that position. If 0 and 1 are equally common,
 /// keep values with a 1 in the position being considered.
 fn compute_oxygen_generator_rating(binary_numbers: &[&str], size: usize) -> Result<u64> {
-    filter_by_strat(binary_numbers, size, FilterStrategy::MostCommon)
+    filter_by_strat(binary_numbers, size, |one_is_more_common| {
+        if one_is_more_common {
+            '1'
+        } else {
+            '0'
+        }
+    })
 }
 
 /// To find CO2 scrubber rating, determine the least common value (0 or 1) in the current bit
 /// position, and keep only numbers with that bit in that position. If 0 and 1 are equally
 /// common, keep values with a 0 in the position being considered.
 fn compute_co2_scrubber_rating(binary_numbers: &[&str], size: usize) -> Result<u64> {
-    filter_by_strat(binary_numbers, size, FilterStrategy::LeastCommon)
+    filter_by_strat(binary_numbers, size, |one_is_more_common| {
+        if one_is_more_common {
+            '0'
+        } else {
+            '1'
+        }
+    })
 }
 
 #[cfg(test)]
