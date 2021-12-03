@@ -64,8 +64,13 @@ fn compute_epsilon(gamma: u64, size: usize) -> u64 {
 
 fn part2(input: &str) -> Result<u64> {
     let binary_numbers: Vec<&str> = input.lines().collect();
+
     // all binary numbers should have the same length
     let size = binary_numbers[0].len();
+    #[cfg(debug_assertions)]
+    binary_numbers.iter().for_each(|num| {
+        debug_assert_eq!(num.len(), size);
+    });
 
     let oxygen_generator_rating = compute_oxygen_generator_rating(&binary_numbers, size)?;
     let co2_scrubber_rating = compute_co2_scrubber_rating(&binary_numbers, size)?;
