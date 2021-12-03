@@ -1,6 +1,6 @@
 use std::fmt::Write;
 
-use anyhow::{bail, Result};
+use anyhow::{bail, Context, Result};
 
 const INPUT: &str = include_str!("../input/day02.txt");
 
@@ -71,8 +71,8 @@ impl std::str::FromStr for Command {
     fn from_str(s: &str) -> Result<Self> {
         let mut split = s.split(' ');
 
-        let word = split.next().unwrap();
-        let number = split.next().unwrap();
+        let word = split.next().context("couldn't find word in command")?;
+        let number = split.next().context("couldn't find number in command")?;
 
         let number = number.parse()?;
 
