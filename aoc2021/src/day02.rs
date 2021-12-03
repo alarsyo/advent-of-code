@@ -69,10 +69,7 @@ impl std::str::FromStr for Command {
     type Err = anyhow::Error;
 
     fn from_str(s: &str) -> Result<Self> {
-        let mut split = s.split(' ');
-
-        let word = split.next().context("couldn't find word in command")?;
-        let number = split.next().context("couldn't find number in command")?;
+        let (word, number) = s.split_once(' ').context("couldn't split command")?;
 
         let number = number.parse()?;
 
