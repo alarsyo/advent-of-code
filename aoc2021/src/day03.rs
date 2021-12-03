@@ -73,10 +73,12 @@ fn part2(input: &str) -> Result<u64> {
     Ok(oxygen_generator_rating * co2_scrubber_rating)
 }
 
-/// To find oxygen generator rating, determine the most common value (0 or 1) in the current bit
-/// position, and keep only numbers with that bit in that position. If 0 and 1 are equally common,
-/// keep values with a 1 in the position being considered.
-fn compute_oxygen_generator_rating(binary_numbers: &[&str], size: usize) -> Result<u64> {
+enum FilterStrategy {
+    MostCommon,
+    LeastCommon,
+}
+
+fn filter_by_strat(binary_numbers: &[&str], size: usize, strat: FilterStrategy) -> Result<u64> {
     let mut numbers = binary_numbers.to_vec();
 
     for pos in 0..size {
@@ -85,18 +87,24 @@ fn compute_oxygen_generator_rating(binary_numbers: &[&str], size: usize) -> Resu
             break;
         }
 
-        let most_common = if count_ones(&numbers, pos) >= ((numbers.len() + 1) / 2) {
+        let digit_of_interest = if count_ones(&numbers, pos) >= ((numbers.len() + 1) / 2) {
             // majority of ones, or equality
-            '1'
+            match strat {
+                FilterStrategy::MostCommon => '1',
+                FilterStrategy::LeastCommon => '0',
+            }
         } else {
             // majority of zeroes
-            '0'
+            match strat {
+                FilterStrategy::MostCommon => '0',
+                FilterStrategy::LeastCommon => '1',
+            }
         };
 
         // TODO: use drain_filter when stable
         let mut i = 0;
         while i < numbers.len() {
-            if numbers[i].chars().nth(pos).unwrap() != most_common {
+            if numbers[i].chars().nth(pos).unwrap() != digit_of_interest {
                 numbers.remove(i);
             } else {
                 i += 1;
@@ -109,40 +117,18 @@ fn compute_oxygen_generator_rating(binary_numbers: &[&str], size: usize) -> Resu
     u64::from_str_radix(numbers[0], 2).context("couldn't parse binary number")
 }
 
+/// To find oxygen generator rating, determine the most common value (0 or 1) in the current bit
+/// position, and keep only numbers with that bit in that position. If 0 and 1 are equally common,
+/// keep values with a 1 in the position being considered.
+fn compute_oxygen_generator_rating(binary_numbers: &[&str], size: usize) -> Result<u64> {
+    filter_by_strat(binary_numbers, size, FilterStrategy::MostCommon)
+}
+
 /// To find CO2 scrubber rating, determine the least common value (0 or 1) in the current bit
 /// position, and keep only numbers with that bit in that position. If 0 and 1 are equally
 /// common, keep values with a 0 in the position being considered.
 fn compute_co2_scrubber_rating(binary_numbers: &[&str], size: usize) -> Result<u64> {
-    let mut numbers = binary_numbers.to_vec();
-
-    for pos in 0..size {
-        if numbers.len() == 1 {
-            // only one number left, we're done!
-            break;
-        }
-
-        let least_common = if count_ones(&numbers, pos) < ((numbers.len() + 1) / 2) {
-            // majority of ones
-            '1'
-        } else {
-            // majority of zeroes, or equality
-            '0'
-        };
-
-        // TODO: use drain_filter when stable
-        let mut i = 0;
-        while i < numbers.len() {
-            if numbers[i].chars().nth(pos).unwrap() != least_common {
-                numbers.remove(i);
-            } else {
-                i += 1;
-            }
-        }
-    }
-
-    debug_assert_eq!(numbers.len(), 1);
-
-    u64::from_str_radix(numbers[0], 2).context("couldn't parse binary number")
+    filter_by_strat(binary_numbers, size, FilterStrategy::LeastCommon)
 }
 
 #[cfg(test)]
