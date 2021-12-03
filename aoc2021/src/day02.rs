@@ -47,12 +47,8 @@ fn part2(input: &str) -> Result<u64> {
                 horizontal_pos += dx;
                 depth += aim * dx;
             }
-            Command::Up(dz) => {
-                aim -= dz;
-            }
-            Command::Down(dz) => {
-                aim += dz;
-            }
+            Command::Up(dz) => aim -= dz,
+            Command::Down(dz) => aim += dz,
         }
     }
 
