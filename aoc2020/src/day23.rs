@@ -71,8 +71,6 @@ impl CupCircle {
         // keep subtracting one until it finds a cup that wasn't just picked up. If at any point in
         // this process the value goes below the lowest value on any cup's label, it wraps around to
         // the highest value on any cup's label instead.
-        //
-        // TODO: use std::cmp::Ord::clamp when stabilized (Rust 1.50)
         let mut destination = if current > 1 { current - 1 } else { self.max() };
         while removed_cups.contains(&destination) {
             destination = if destination > 1 {
@@ -193,8 +191,6 @@ impl FastCupCircle {
         // keep subtracting one until it finds a cup that wasn't just picked up. If at any point in
         // this process the value goes below the lowest value on any cup's label, it wraps around to
         // the highest value on any cup's label instead.
-        //
-        // TODO: use std::cmp::Ord::clamp when stabilized (Rust 1.50)
         let mut destination = if self.current > 1 {
             self.current - 1
         } else {
