@@ -46,7 +46,7 @@ fn part1(input: &str) -> Result<u64> {
 
     match (wdraw, wgrid) {
         (Some(draw), Some(grid)) => {
-            Ok(draw as u64 * grid.unmarked_numbers().map(|n| *n as u64).sum::<u64>())
+            Ok(draw as u64 * grid.unmarked_numbers().map(|n| n as u64).sum::<u64>())
         }
         _ => Err(anyhow!("couldn't find a winning grid!")),
     }
@@ -89,7 +89,7 @@ fn part2(input: &str) -> Result<u64> {
 
     for draw in draws {
         if last_grid.mark(draw) {
-            return Ok(draw as u64 * last_grid.unmarked_numbers().map(|n| *n as u64).sum::<u64>());
+            return Ok(draw as u64 * last_grid.unmarked_numbers().map(|n| n as u64).sum::<u64>());
         }
     }
 
@@ -120,10 +120,10 @@ impl Grid {
         }
     }
 
-    fn unmarked_numbers(&self) -> impl Iterator<Item = &u8> {
+    fn unmarked_numbers(&self) -> impl Iterator<Item = u8> + '_ {
         self.number_to_pos
             .iter()
-            .filter_map(|(num, &(x, y))| (!self.access_grid(x, y)).then(|| num))
+            .filter_map(|(num, &(x, y))| (!self.access_grid(x, y)).then(|| *num))
     }
 
     fn access_grid(&self, x: usize, y: usize) -> bool {
