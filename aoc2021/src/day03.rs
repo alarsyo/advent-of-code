@@ -93,15 +93,7 @@ where
         let one_is_more_common = count_ones(&numbers, pos) >= ((numbers.len() + 1) / 2);
         let digit_of_interest = strat(one_is_more_common);
 
-        // TODO: use drain_filter when stable
-        let mut i = 0;
-        while i < numbers.len() {
-            if numbers[i].chars().nth(pos).unwrap() != digit_of_interest {
-                numbers.remove(i);
-            } else {
-                i += 1;
-            }
-        }
+        numbers.retain(|number| number.chars().nth(pos).unwrap() == digit_of_interest);
     }
 
     debug_assert_eq!(numbers.len(), 1);
