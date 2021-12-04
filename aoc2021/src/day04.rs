@@ -36,7 +36,7 @@ fn part1(input: &str) -> Result<u64> {
 
     'draw_loop: for draw in draws {
         for grid in &mut grids {
-            if grid.mark(draw) && grid.is_winning() {
+            if grid.mark(draw) {
                 wgrid = Some(grid.clone());
                 wdraw = Some(draw);
                 break 'draw_loop;
@@ -77,7 +77,7 @@ fn part2(input: &str) -> Result<u64> {
         let mut i = 0;
         while i < grids.len() {
             let grid = &mut grids[i];
-            if grid.mark(draw) && grid.is_winning() {
+            if grid.mark(draw) {
                 grids.remove(i);
             } else {
                 i += 1;
@@ -88,7 +88,7 @@ fn part2(input: &str) -> Result<u64> {
     let last_grid = &mut grids[0];
 
     for draw in draws {
-        if last_grid.mark(draw) && last_grid.is_winning() {
+        if last_grid.mark(draw) {
             return Ok(draw as u64 * last_grid.unmarked_numbers().map(|n| *n as u64).sum::<u64>());
         }
     }
@@ -101,6 +101,8 @@ struct Grid {
     number_to_pos: HashMap<u8, (usize, usize)>,
     pos_to_number: HashMap<(usize, usize), u8>,
     grid: [bool; GRID_SIZE],
+    rows: [u8; GRID_HEIGHT],
+    cols: [u8; GRID_WIDTH],
 }
 
 impl Grid {
@@ -108,30 +110,14 @@ impl Grid {
         match self.number_to_pos.get(&draw) {
             Some(&(x, y)) => {
                 *self.access_grid_mut(x, y) = true;
-                true
+
+                self.rows[y] += 1;
+                self.cols[x] += 1;
+
+                self.rows[y] as usize == GRID_WIDTH || self.cols[x] as usize == GRID_HEIGHT
             }
             None => false,
         }
-    }
-
-    fn is_winning(&self) -> bool {
-        let mut rows = [0u8; GRID_HEIGHT];
-        let mut cols = [0u8; GRID_WIDTH];
-
-        for (y, row) in rows.iter_mut().enumerate() {
-            for (x, col) in cols.iter_mut().enumerate() {
-                if self.access_grid(x, y) {
-                    *row += 1;
-                    *col += 1;
-
-                    if *row as usize == GRID_WIDTH || *col as usize == GRID_HEIGHT {
-                        return true;
-                    }
-                }
-            }
-        }
-
-        false
     }
 
     fn unmarked_numbers(&self) -> impl Iterator<Item = &u8> {
@@ -173,6 +159,8 @@ impl std::str::FromStr for Grid {
             number_to_pos,
             pos_to_number,
             grid: [false; GRID_SIZE],
+            rows: [0; GRID_HEIGHT],
+            cols: [0; GRID_WIDTH],
         })
     }
 }
