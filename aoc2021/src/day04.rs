@@ -99,7 +99,6 @@ fn part2(input: &str) -> Result<u64> {
 #[derive(Debug, Clone)]
 struct Grid {
     number_to_pos: HashMap<u8, (usize, usize)>,
-    pos_to_number: HashMap<(usize, usize), u8>,
     grid: [bool; GRID_SIZE],
     rows: [u8; GRID_HEIGHT],
     cols: [u8; GRID_WIDTH],
@@ -141,7 +140,6 @@ impl std::str::FromStr for Grid {
     fn from_str(s: &str) -> Result<Self> {
         let mut numbers = s.split_whitespace().map(str::parse);
         let mut number_to_pos = HashMap::new();
-        let mut pos_to_number = HashMap::new();
 
         for y in 0..GRID_HEIGHT {
             for x in 0..GRID_WIDTH {
@@ -151,13 +149,11 @@ impl std::str::FromStr for Grid {
                     .context("not enough numbers for grid")?
                     .context("couldn't parse number:")?;
                 number_to_pos.insert(number, pos);
-                pos_to_number.insert(pos, number);
             }
         }
 
         Ok(Grid {
             number_to_pos,
-            pos_to_number,
             grid: [false; GRID_SIZE],
             rows: [0; GRID_HEIGHT],
             cols: [0; GRID_WIDTH],
