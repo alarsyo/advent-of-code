@@ -49,9 +49,9 @@ impl FromStr for Event {
 
 #[derive(Debug)]
 struct Date {
-    year: u32,
-    month: u8,
-    day: u8,
+    _year: u32,
+    _month: u8,
+    _day: u8,
 
     hour: u8,
     minute: u8,
@@ -84,9 +84,9 @@ impl FromStr for Date {
         let minute = s[..r_bracket].parse()?;
 
         Ok(Date {
-            year,
-            month,
-            day,
+            _year: year,
+            _month: month,
+            _day: day,
             hour,
             minute,
         })
