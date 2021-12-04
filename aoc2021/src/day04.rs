@@ -13,6 +13,7 @@ pub fn run() -> Result<String> {
     let mut res = String::with_capacity(128);
 
     writeln!(res, "part 1: {}", part1(INPUT)?)?;
+    writeln!(res, "part 2: {}", part2(INPUT)?)?;
 
     Ok(res)
 }
@@ -49,6 +50,50 @@ fn part1(input: &str) -> Result<u64> {
         }
         _ => Err(anyhow!("couldn't find a winning grid!")),
     }
+}
+
+fn part2(input: &str) -> Result<u64> {
+    let (draws, grids) = input
+        .split_once("\n\n")
+        .context("couldn't split draws from grids")?;
+
+    let draws = draws
+        .split(',')
+        .map(|num| num.parse::<u8>().context("couldn't parse drawn number:"))
+        .collect::<Result<Vec<_>>>()?;
+    let mut grids = grids
+        .split("\n\n")
+        .map(str::parse::<Grid>)
+        .collect::<Result<Vec<_>>>()?;
+
+    let mut draws = draws.into_iter();
+
+    while grids.len() > 1 {
+        let draw = draws
+            .next()
+            .context("no draws available, didn't find last grid")?;
+
+        // TODO: replace with drain_filter when stabilized
+        let mut i = 0;
+        while i < grids.len() {
+            let grid = &mut grids[i];
+            if grid.mark(draw) && grid.is_winning() {
+                grids.remove(i);
+            } else {
+                i += 1;
+            }
+        }
+    }
+
+    let last_grid = &mut grids[0];
+
+    for draw in draws {
+        if last_grid.mark(draw) && last_grid.is_winning() {
+            return Ok(draw as u64 * last_grid.unmarked_numbers().map(|n| *n as u64).sum::<u64>());
+        }
+    }
+
+    Err(anyhow!("last grid never wins, this is not expected"))
 }
 
 #[derive(Debug, Clone)]
@@ -146,5 +191,15 @@ mod tests {
     #[test]
     fn part1_real() {
         assert_eq!(part1(INPUT).unwrap(), 45031);
+    }
+
+    #[test]
+    fn part2_provided() {
+        assert_eq!(part2(PROVIDED).unwrap(), 1924);
+    }
+
+    #[test]
+    fn part2_real() {
+        assert_eq!(part2(INPUT).unwrap(), 2568);
     }
 }
