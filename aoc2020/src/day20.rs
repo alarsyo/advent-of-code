@@ -59,7 +59,7 @@ enum Rotation {
 ///
 /// Note: we don't need a horizontal and a vertical flip, these result in the same output as a 180
 /// degree rotation when combined, so only one is necessary
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Default, Clone, Copy)]
 struct Transform {
     flip: bool,
     rotation: Option<Rotation>,
@@ -118,15 +118,6 @@ impl Transform {
         }
 
         (i, j)
-    }
-}
-
-impl Default for Transform {
-    fn default() -> Self {
-        Self {
-            flip: false,
-            rotation: None,
-        }
     }
 }
 

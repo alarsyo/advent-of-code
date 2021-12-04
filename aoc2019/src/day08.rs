@@ -84,12 +84,12 @@ impl FromStr for Image {
 
         let lines = digits
             .chunks(IMG_WIDTH)
-            .map(|chunk| chunk.to_vec())
+            .map(<[_]>::to_vec)
             .collect::<Vec<Vec<u8>>>();
 
         let layers = lines
             .chunks(IMG_HEIGHT)
-            .map(|chunk| chunk.to_vec())
+            .map(<[_]>::to_vec)
             .map(|pixels| Layer { pixels })
             .collect::<Vec<Layer>>();
 

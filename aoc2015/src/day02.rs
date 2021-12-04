@@ -29,7 +29,7 @@ fn wrapping_paper(present: &Present) -> u64 {
 }
 
 fn part1(presents: &[Present]) -> u64 {
-    presents.iter().map(|p| wrapping_paper(p)).sum()
+    presents.iter().map(wrapping_paper).sum()
 }
 
 fn ribbon_bow_length(present: &Present) -> u64 {
@@ -49,7 +49,7 @@ fn ribbon_needed(present: &Present) -> u64 {
 }
 
 fn part2(presents: &[Present]) -> u64 {
-    presents.iter().map(|p| ribbon_needed(p)).sum()
+    presents.iter().map(ribbon_needed).sum()
 }
 
 struct Present {

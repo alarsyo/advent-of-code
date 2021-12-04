@@ -133,7 +133,7 @@ fn part2(input: &str) -> Result<usize> {
 /// These use the axial coordinates described here:
 ///
 /// https://www.redblobgames.com/grids/hexagons/#coordinates-axial
-#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
+#[derive(Debug, Default, Clone, Copy, Hash, PartialEq, Eq)]
 struct HexCoordinates {
     q: i64,
     r: i64,
@@ -185,12 +185,6 @@ impl HexCoordinates {
             self.south_east(),
             self.south_west(),
         ]
-    }
-}
-
-impl Default for HexCoordinates {
-    fn default() -> Self {
-        Self { q: 0, r: 0 }
     }
 }
 
