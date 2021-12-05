@@ -10,6 +10,7 @@ pub fn run() -> Result<String> {
     let mut res = String::with_capacity(128);
 
     writeln!(res, "part 1: {}", part1(INPUT)?)?;
+    writeln!(res, "part 2: {}", part2(INPUT)?)?;
 
     Ok(res)
 }
@@ -34,6 +35,23 @@ fn part1(input: &str) -> Result<usize> {
     Ok(grid.into_values().filter(|c| *c > 1).count())
 }
 
+fn part2(input: &str) -> Result<usize> {
+    let lines = input
+        .lines()
+        .map(str::parse::<Line>)
+        .collect::<Result<Vec<_>>>()?;
+
+    let mut grid = HashMap::new();
+
+    lines.iter().for_each(|l| {
+        for cell in l.cells() {
+            *grid.entry(cell).or_insert(0) += 1;
+        }
+    });
+
+    Ok(grid.into_values().filter(|c| *c > 1).count())
+}
+
 #[derive(Debug)]
 struct Line {
     from: (usize, usize),
@@ -50,16 +68,32 @@ impl Line {
     }
 
     fn cells(&self) -> Box<dyn Iterator<Item = (usize, usize)>> {
+        let min_x = self.from.0.min(self.to.0);
+        let max_x = self.from.0.max(self.to.0);
+
+        let min_y = self.from.1.min(self.to.1);
+        let max_y = self.from.1.max(self.to.1);
+
         if self.is_horizontal() {
-            let min = self.from.0.min(self.to.0);
-            let max = self.from.0.max(self.to.0);
-            Box::new((min..=max).zip(iter::repeat(self.from.1)))
-                as Box<dyn Iterator<Item = (usize, usize)>>
+            Box::new((min_x..=max_x).zip(iter::repeat(self.from.1))) as Box<dyn Iterator<Item = _>>
+        } else if self.is_vertical() {
+            Box::new(iter::repeat(self.from.0).zip(min_y..=max_y))
         } else {
-            let min = self.from.1.min(self.to.1);
-            let max = self.from.1.max(self.to.1);
-            Box::new(iter::repeat(self.from.0).zip(min..=max))
-                as Box<dyn Iterator<Item = (usize, usize)>>
+            let x_range = min_x..=max_x;
+            let x_range = if self.from.0 < self.to.0 {
+                Box::new(x_range) as Box<dyn Iterator<Item = _>>
+            } else {
+                Box::new(x_range.rev())
+            };
+
+            let y_range = min_y..=max_y;
+            let y_range = if self.from.1 < self.to.1 {
+                Box::new(y_range) as Box<dyn Iterator<Item = _>>
+            } else {
+                Box::new(y_range.rev())
+            };
+
+            Box::new(x_range.zip(y_range))
         }
     }
 }
@@ -82,7 +116,7 @@ impl std::str::FromStr for Line {
         let to = {
             let (x, y) = to
                 .split_once(',')
-                .context("couldn't parse line origin: missing `,`")?;
+                .context("couldn't parse line end: missing `,`")?;
             (x.parse()?, y.parse()?)
         };
 
@@ -104,5 +138,15 @@ mod tests {
     #[test]
     fn part1_real() {
         assert_eq!(part1(INPUT).unwrap(), 4745);
+    }
+
+    #[test]
+    fn part2_provided() {
+        assert_eq!(part2(PROVIDED).unwrap(), 12);
+    }
+
+    #[test]
+    fn part2_real() {
+        assert_eq!(part2(INPUT).unwrap(), 18442);
     }
 }
