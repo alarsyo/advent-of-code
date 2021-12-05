@@ -68,31 +68,25 @@ impl Line {
     }
 
     fn cells(&self) -> Box<dyn Iterator<Item = (usize, usize)>> {
-        let min_x = self.from.0.min(self.to.0);
-        let max_x = self.from.0.max(self.to.0);
-
-        let min_y = self.from.1.min(self.to.1);
-        let max_y = self.from.1.max(self.to.1);
+        fn inclusive_range_any_order(a: usize, b: usize) -> Box<dyn Iterator<Item = usize>> {
+            if a < b {
+                Box::new(a..=b) as Box<dyn Iterator<Item = _>>
+            } else {
+                Box::new((b..=a).rev())
+            }
+        }
 
         if self.is_horizontal() {
-            Box::new((min_x..=max_x).zip(iter::repeat(self.from.1))) as Box<dyn Iterator<Item = _>>
+            Box::new(
+                inclusive_range_any_order(self.from.0, self.to.0).zip(iter::repeat(self.from.1)),
+            ) as Box<dyn Iterator<Item = _>>
         } else if self.is_vertical() {
-            Box::new(iter::repeat(self.from.0).zip(min_y..=max_y))
+            Box::new(
+                iter::repeat(self.from.0).zip(inclusive_range_any_order(self.from.1, self.to.1)),
+            )
         } else {
-            let x_range = min_x..=max_x;
-            let x_range = if self.from.0 < self.to.0 {
-                Box::new(x_range) as Box<dyn Iterator<Item = _>>
-            } else {
-                Box::new(x_range.rev())
-            };
-
-            let y_range = min_y..=max_y;
-            let y_range = if self.from.1 < self.to.1 {
-                Box::new(y_range) as Box<dyn Iterator<Item = _>>
-            } else {
-                Box::new(y_range.rev())
-            };
-
+            let x_range = inclusive_range_any_order(self.from.0, self.to.0);
+            let y_range = inclusive_range_any_order(self.from.1, self.to.1);
             Box::new(x_range.zip(y_range))
         }
     }
