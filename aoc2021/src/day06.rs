@@ -123,4 +123,28 @@ impl std::str::FromStr for LanternFish {
 }
 
 #[cfg(test)]
-mod tests {}
+mod tests {
+    use super::*;
+
+    const PROVIDED: &str = include_str!("../input/day06_provided.txt");
+
+    #[test]
+    fn part1_provided() {
+        assert_eq!(part1(PROVIDED).unwrap(), 5934);
+    }
+
+    #[test]
+    fn part1_real() {
+        assert_eq!(part1(INPUT).unwrap(), 350149);
+    }
+
+    #[test]
+    fn part2_provided() {
+        assert_eq!(part2(PROVIDED).unwrap(), 26984457539);
+    }
+
+    #[test]
+    fn part2_real() {
+        assert_eq!(part2(INPUT).unwrap(), 1590327954513);
+    }
+}
