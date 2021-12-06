@@ -25,7 +25,7 @@ end
 # automatically set day if we're in December, otherwise require a value
 set --local flag_day
 if set --query _flag_day
-    set flag_day _flag_day
+    set flag_day $_flag_day
 else
     set --local month (date +%-m)
     if [ $month -eq 12 ]
