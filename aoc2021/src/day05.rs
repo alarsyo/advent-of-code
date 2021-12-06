@@ -1,6 +1,6 @@
+use std::cmp::Ordering;
 use std::collections::HashMap;
 use std::fmt::Write;
-use std::iter;
 
 use anyhow::{Context, Result};
 
@@ -52,6 +52,57 @@ fn part2(input: &str) -> Result<usize> {
     Ok(grid.into_values().filter(|c| *c > 1).count())
 }
 
+struct PointIterator {
+    current: (usize, usize),
+    to: (usize, usize),
+    dx: Ordering,
+    dy: Ordering,
+    done: bool,
+}
+
+impl PointIterator {
+    fn new(from: (usize, usize), to: (usize, usize)) -> Self {
+        Self {
+            current: from,
+            to,
+            dx: from.0.cmp(&to.0),
+            dy: from.1.cmp(&to.1),
+            done: false,
+        }
+    }
+}
+
+impl Iterator for PointIterator {
+    type Item = (usize, usize);
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.done {
+            return None;
+        }
+
+        let (x, y) = self.current;
+
+        if x == self.to.0 && y == self.to.1 {
+            self.done = true;
+            return Some((x, y));
+        }
+
+        match self.dx {
+            Ordering::Less => self.current.0 += 1,
+            Ordering::Greater => self.current.0 -= 1,
+            Ordering::Equal => {}
+        }
+
+        match self.dy {
+            Ordering::Less => self.current.1 += 1,
+            Ordering::Greater => self.current.1 -= 1,
+            Ordering::Equal => {}
+        }
+
+        Some((x, y))
+    }
+}
+
 #[derive(Debug)]
 struct Line {
     from: (usize, usize),
@@ -67,28 +118,8 @@ impl Line {
         self.to.0 == self.from.0
     }
 
-    fn cells(&self) -> Box<dyn Iterator<Item = (usize, usize)>> {
-        fn inclusive_range_any_order(a: usize, b: usize) -> Box<dyn Iterator<Item = usize>> {
-            if a < b {
-                Box::new(a..=b) as Box<dyn Iterator<Item = _>>
-            } else {
-                Box::new((b..=a).rev())
-            }
-        }
-
-        if self.is_horizontal() {
-            Box::new(
-                inclusive_range_any_order(self.from.0, self.to.0).zip(iter::repeat(self.from.1)),
-            ) as Box<dyn Iterator<Item = _>>
-        } else if self.is_vertical() {
-            Box::new(
-                iter::repeat(self.from.0).zip(inclusive_range_any_order(self.from.1, self.to.1)),
-            )
-        } else {
-            let x_range = inclusive_range_any_order(self.from.0, self.to.0);
-            let y_range = inclusive_range_any_order(self.from.1, self.to.1);
-            Box::new(x_range.zip(y_range))
-        }
+    fn cells(&self) -> impl Iterator<Item = (usize, usize)> {
+        PointIterator::new(self.from, self.to)
     }
 }
 
