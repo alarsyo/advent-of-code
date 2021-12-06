@@ -1,5 +1,5 @@
 [workspace]
-members = ["aoc*", "aoc*/aoc*_bench"]
+members = ["aoc20*", "aoc20*/aoc20*_bench"]
 
 default-members = ["aoc2021"]
 
