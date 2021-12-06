@@ -1,5 +1,6 @@
 { lib
 , curl
+, fish
 , makeWrapper
 , stdenvNoCC }:
 stdenvNoCC.mkDerivation rec {
@@ -10,6 +11,7 @@ stdenvNoCC.mkDerivation rec {
 
   buildInputs = [
     makeWrapper
+    fish
   ];
 
   dontUnpack = true;
