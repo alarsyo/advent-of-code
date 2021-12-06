@@ -38,12 +38,9 @@ impl School {
     fn next_turn(&mut self) {
         let newly_spawned = self.fish_timers[0];
 
-        for i in 1..self.fish_timers.len() {
-            self.fish_timers[i - 1] = self.fish_timers[i];
-        }
+        self.fish_timers.rotate_left(1);
 
         self.fish_timers[SPAWNING_DELAY - 1] += newly_spawned;
-        *self.fish_timers.last_mut().unwrap() = newly_spawned;
     }
 
     fn size(&self) -> usize {
