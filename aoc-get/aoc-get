@@ -15,25 +15,37 @@ set --append options (fish_opt --short y --long year --required-val)"!_validate_
 
 argparse $options -- $argv
 
-set --query _flag_year; or set --local _flag_year (date +%Y)
-
 if set --query _flag_help
     usage
     exit 0
 end
 
-if not set --query _flag_day
-    echo "Please provide a day to fetch"
-    exit 1
+# automatically set day if we're in December, otherwise require a value
+set --local flag_day
+if set --query _flag_day
+    set flag_day _flag_day
+else
+    set --local month (date +%-m)
+    if [ $month -eq 12 ]
+        set flag_day (date +%-d)
+    else
+        echo "Please provide a day to fetch"
+        exit 1
+    end
 end
+
+set --query _flag_year; or set --local _flag_year (date +%Y)
 
 if not set --query AOC_SESSION
     echo "Please provide a session cookie via the AOC_SESSION environment variable"
     exit 1
 end
 
-set --local padded_day (string pad --width 2 --char 0 $_flag_day)
+set --local padded_day (string pad --width 2 --char 0 {$flag_day})
+set --local outpath aoc{$_flag_year}/input/day{$padded_day}.txt
 
-curl https://adventofcode.com/{$_flag_year}/day/{$_flag_day}/input \
+echo "Saving input to" {$outpath} "..."
+
+curl https://adventofcode.com/{$_flag_year}/day/{$flag_day}/input \
     --cookie "session="{$AOC_SESSION} \
-    --output aoc{$_flag_year}/input/day{$padded_day}.txt
+    --output {$outpath}
