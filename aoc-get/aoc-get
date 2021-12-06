@@ -13,7 +13,9 @@ set --append options (fish_opt --short h --long help)
 set --append options (fish_opt --short d --long day --required-val)"!_validate_int --min 1 --max 25"
 set --append options (fish_opt --short y --long year --required-val)"!_validate_int --min 2015"
 
-argparse $options -- $argv
+if not argparse $options -- $argv
+    exit 1
+end
 
 if set --query _flag_help
     usage
