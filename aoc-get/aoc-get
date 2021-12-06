@@ -1,0 +1,39 @@
+#!/usr/bin/env fish
+
+function usage
+    printf "Usage: %s [OPTIONS]\n\n" (status -f)
+    printf "Options:\n"
+    printf "  -h/--help       Prints help and exits\n"
+    printf "  -d/--day=NUM    Day (minimum 1, maximum 25)\n"
+    printf "  -y/--year=NUM   Year (minimum 2015, default current year)\n"
+end
+
+set --local options
+set --append options (fish_opt --short h --long help)
+set --append options (fish_opt --short d --long day --required-val)"!_validate_int --min 1 --max 25"
+set --append options (fish_opt --short y --long year --required-val)"!_validate_int --min 2015"
+
+argparse $options -- $argv
+
+set --query _flag_year; or set --local _flag_year (date +%Y)
+
+if set --query _flag_help
+    usage
+    exit 0
+end
+
+if not set --query _flag_day
+    echo "Please provide a day to fetch"
+    exit 1
+end
+
+if not set --query AOC_SESSION
+    echo "Please provide a session cookie via the AOC_SESSION environment variable"
+    exit 1
+end
+
+set --local padded_day (string pad --width 2 --char 0 $_flag_day)
+
+curl https://adventofcode.com/{$_flag_year}/day/{$_flag_day}/input \
+    --cookie "session="{$AOC_SESSION} \
+    --output aoc{$_flag_year}/input/day{$padded_day}.txt

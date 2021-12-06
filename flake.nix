@@ -18,9 +18,15 @@
               nixpkgs-fmt
               rust-analyzer
               myRust
+
+              self.packages.${system}.aoc-get
             ];
 
             RUST_SRC_PATH = "${pkgs.rust-bin.stable.latest.rust-src}/lib/rustlib/src/rust/library";
+          };
+
+          packages = {
+            aoc-get = pkgs.callPackage ./aoc-get {};
           };
         });
 }
