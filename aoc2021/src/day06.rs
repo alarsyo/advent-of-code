@@ -1,3 +1,4 @@
+use std::collections::VecDeque;
 use std::fmt::Write;
 use std::str;
 
@@ -31,7 +32,7 @@ fn part2(input: &str) -> Result<usize> {
 }
 
 struct School {
-    fish_timers: [usize; SPAWNING_DELAY as usize + 2],
+    fish_timers: VecDeque<usize>,
 }
 
 impl School {
@@ -66,7 +67,9 @@ impl std::str::FromStr for School {
             fish_timers[fish?] += 1;
         }
 
-        Ok(School { fish_timers })
+        Ok(School {
+            fish_timers: fish_timers.into(),
+        })
     }
 }
 
