@@ -87,28 +87,47 @@ fn part2(input: &str) -> Result<u64> {
     let min = *horizontal_positions.iter().min().unwrap();
     let max = *horizontal_positions.iter().max().unwrap();
 
-    let minimum_fuel = (min..=max)
-        .map(|pos| {
-            horizontal_positions
-                .iter()
-                .map(|n| part2_distance(*n, pos))
-                .sum::<f64>()
-                .floor() as u64
-        })
-        .min()
-        .unwrap();
+    let optimal_distance = minimize_binary_search(&horizontal_positions, min, max, part2_distance);
+    let minimum_fuel = horizontal_positions
+        .iter()
+        .map(|n| part2_distance(*n, optimal_distance))
+        .sum::<u64>();
 
     Ok(minimum_fuel)
+}
+
+fn minimize_binary_search<F>(positions: &[u64], min: u64, max: u64, distance: F) -> u64
+where
+    F: Fn(u64, u64) -> u64,
+{
+    if min == max {
+        return min;
+    }
+
+    let mid1 = min + (max - min) / 2;
+    let mid2 = mid1 + 1;
+
+    let (cost1, cost2) = positions
+        .iter()
+        .map(|n| (distance(*n, mid1), distance(*n, mid2)))
+        .reduce(|(sum1, sum2), (x1, x2)| (sum1 + x1, sum2 + x2))
+        .unwrap();
+
+    if cost1 < cost2 {
+        minimize_binary_search(positions, min, mid1, distance)
+    } else {
+        minimize_binary_search(positions, mid2, max, distance)
+    }
 }
 
 fn abs_diff(a: u64, b: u64) -> u64 {
     a.max(b) - a.min(b)
 }
 
-fn part2_distance(a: u64, b: u64) -> f64 {
-    let distance = abs_diff(a, b) as f64;
+fn part2_distance(a: u64, b: u64) -> u64 {
+    let distance = abs_diff(a, b);
 
-    distance * (distance + 1.0) / 2.0
+    distance * (distance + 1) / 2
 }
 
 #[cfg(test)]
