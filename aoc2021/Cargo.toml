@@ -9,6 +9,7 @@ edition = "2021"
 [dependencies]
 aoc = { path = "../aoc" }
 anyhow = "1.0"
+rand = "0.8"
 
 [lib]
 path = "src/lib.rs"

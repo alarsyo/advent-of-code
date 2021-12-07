@@ -1,6 +1,7 @@
 use std::fmt::Write;
 
 use anyhow::{Context, Result};
+use rand::Rng;
 
 const INPUT: &str = include_str!("../input/day07.txt");
 
@@ -20,15 +21,60 @@ fn part1(input: &str) -> Result<u64> {
         .map(|n| n.parse::<u64>().context("couldn't parse position"))
         .collect::<Result<Vec<_>>>()?;
 
-    // TODO: try linear selection algorithm
-    horizontal_positions.sort_unstable();
-    let median = horizontal_positions[horizontal_positions.len() / 2];
+    let median_rank = horizontal_positions.len() / 2;
+    let median = selection(&mut horizontal_positions, median_rank);
 
     Ok(horizontal_positions
         .iter()
         // TODO: use abs_diff when stabilized
         .map(|n| abs_diff(*n, median))
         .sum())
+}
+
+fn selection<T>(data: &mut [T], i: usize) -> T
+where
+    T: Copy + Ord,
+{
+    if data.len() == 1 {
+        return data[0];
+    }
+
+    let mid = random_partition(data);
+
+    if i < mid {
+        selection(&mut data[..mid], i)
+    } else {
+        selection(&mut data[mid..], i - mid)
+    }
+}
+
+fn random_partition<T>(data: &mut [T]) -> usize
+where
+    T: Copy + Ord,
+{
+    let pivot_index = rand::thread_rng().gen_range(0..data.len());
+    let pivot = data[pivot_index];
+
+    let mut i = 0;
+    let mut j = data.len() - 1;
+
+    loop {
+        while data[i] < pivot {
+            i += 1;
+        }
+
+        while data[j] > pivot {
+            j -= 1;
+        }
+
+        if i >= j {
+            return usize::max(i, 1);
+        }
+
+        data.swap(i, j);
+        i += 1;
+        j -= 1;
+    }
 }
 
 fn part2(input: &str) -> Result<u64> {
@@ -89,5 +135,16 @@ mod tests {
     #[test]
     fn part2_real() {
         assert_eq!(part2(INPUT).unwrap(), 96592275);
+    }
+
+    #[test]
+    fn test_selection() {
+        for _ in 0..4200 {
+            for i in 0..=9 {
+                let mut data = vec![9, 2, 7, 3, 5, 4, 6, 1, 8, 0];
+                let res = selection(&mut data, i);
+                assert_eq!(res, i);
+            }
+        }
     }
 }
