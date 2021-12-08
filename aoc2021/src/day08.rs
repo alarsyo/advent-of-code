@@ -65,21 +65,20 @@ impl<'a> Entry<'a> {
         let mut mapping = Vec::new();
 
         // first, let's get the easy digits
-        self.unique_signals
+        let easy_digits: Vec<(&str, u64)> = self
+            .unique_signals
             .iter()
-            .filter_map(|signal| Self::translate_easy_digit(signal).zip(Some(signal)))
-            .for_each(|(translation, &signal)| {
-                mapping.push((signal, translation));
-            });
+            .filter_map(|signal| Some(*signal).zip(Self::translate_easy_digit(signal)))
+            .collect();
 
         // now we can get `9` for free: it's the signal that uses 6 segments and has 4 in common
         // with the digit `4` (`6` and `0` also use 6 segments, but only have 3 segments in common
         // with `4`).
-        let (four, _) = *mapping
+        let (four, _) = *easy_digits
             .iter()
             .find(|(_, translation)| *translation == 4)
             .context("no signal found for the digit 4!")?;
-        let nine = self
+        let nine = *self
             .unique_signals
             .iter()
             .filter(|signal| signal.len() == 6)
@@ -88,32 +87,32 @@ impl<'a> Entry<'a> {
         mapping.push((nine, 9));
 
         // `0` has 2 segments in common with `1`, while `6` only has 1.
-        let (one, _) = *mapping
+        let (one, _) = *easy_digits
             .iter()
             .find(|(_, translation)| *translation == 1)
             .context("no signal found for the digit 1!")?;
-        let zero = self
+        let zero = *self
             .unique_signals
             .iter()
-            .filter(|signal| signal.len() == 6)
-            .filter(|signal| *signal != nine)
+            .filter(|&signal| signal.len() == 6)
+            .filter(|&signal| *signal != nine)
             .find(|signal| one.chars().all(|c| signal.contains(c)))
             .context("couldn't identify any signal corresponding to the digit 0!")?;
         mapping.push((zero, 0));
 
         // `6` is an easy one now, the only other signal with 6 segments, that isn't nine or zero.
-        let six = self
+        let six = *self
             .unique_signals
             .iter()
             .filter(|signal| signal.len() == 6)
-            .find(|signal| *signal != nine && *signal != zero)
+            .find(|&signal| *signal != nine && *signal != zero)
             .context("couldn't identify any signal corresponding to the digit 6!")?;
         mapping.push((six, 6));
 
         // `2`, `3` and `5` have 5 segments each.
         //
         // `3` has 2 segments in common with `1`.
-        let three = self
+        let three = *self
             .unique_signals
             .iter()
             .filter(|signal| signal.len() == 5)
@@ -122,7 +121,7 @@ impl<'a> Entry<'a> {
         mapping.push((three, 3));
 
         // `5` has all its segments used in `6`, `2` doesn't.
-        let five = self
+        let five = *self
             .unique_signals
             .iter()
             .filter(|signal| signal.len() == 5)
@@ -135,11 +134,11 @@ impl<'a> Entry<'a> {
             .unique_signals
             .iter()
             .filter(|signal| signal.len() == 5)
-            .find(|signal| *signal != five && *signal != three)
+            .find(|&signal| *signal != five && *signal != three)
             .context("couldn't identify any signal corresponding to the digit 2!")?;
         mapping.push((two, 2));
 
-        debug_assert_eq!(mapping.len(), 10);
+        debug_assert_eq!(mapping.len(), 6);
 
         Ok(mapping)
     }
@@ -149,16 +148,21 @@ impl<'a> Entry<'a> {
         for digit in &self.four_digits_output {
             // search is kind of ugly, but having to sort everything is probably time consuming as
             // well.
-            let digit = digit_mapping
-                .iter()
-                .find_map(|(signal, translation)| {
-                    if digit.len() == signal.len() && digit.chars().all(|c| signal.contains(c)) {
-                        Some(translation)
-                    } else {
-                        None
-                    }
-                })
-                .with_context(|| format!("couldn't translate digit `{}`", digit))?;
+            let digit = if let Some(translation) = Self::translate_easy_digit(digit) {
+                translation
+            } else {
+                *digit_mapping
+                    .iter()
+                    .find_map(|(signal, translation)| {
+                        if digit.len() == signal.len() && digit.chars().all(|c| signal.contains(c))
+                        {
+                            Some(translation)
+                        } else {
+                            None
+                        }
+                    })
+                    .with_context(|| format!("couldn't translate digit `{}`", digit))?
+            };
 
             res = (res * 10) + digit;
         }
