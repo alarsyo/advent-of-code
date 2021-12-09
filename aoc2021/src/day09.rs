@@ -1,3 +1,4 @@
+use std::collections::HashSet;
 use std::fmt::Write;
 
 use anyhow::{Context, Result};
@@ -8,6 +9,7 @@ pub fn run() -> Result<String> {
     let mut res = String::with_capacity(128);
 
     writeln!(res, "part 1: {}", part1(INPUT)?)?;
+    writeln!(res, "part 2: {}", part2(INPUT)?)?;
 
     Ok(res)
 }
@@ -19,6 +21,25 @@ fn part1(input: &str) -> Result<u64> {
         .low_points()
         .map(|(x, y)| height_map.risk_level(x, y))
         .sum())
+}
+
+fn part2(input: &str) -> Result<u64> {
+    let mut height_map: HeightMap = input.parse()?;
+
+    let low_points: Vec<_> = height_map.low_points().collect();
+
+    let mut bassin_sizes: Vec<_> = low_points
+        .iter()
+        .map(|&(x, y)| height_map.fill_basin(x, y))
+        .collect();
+    bassin_sizes.sort_unstable();
+
+    bassin_sizes
+        .iter()
+        .copied()
+        .skip(bassin_sizes.len() - 3)
+        .reduce(|acc, elem| acc * elem)
+        .context("couldn't find 3 bassins")
 }
 
 #[derive(Clone, Copy)]
@@ -53,9 +74,28 @@ struct HeightMap {
     heights: Vec<u8>,
     width: usize,
     height: usize,
+    filled_points: HashSet<(usize, usize)>,
 }
 
 impl HeightMap {
+    fn fill_basin(&mut self, x: usize, y: usize) -> u64 {
+        if self.get(x, y) == 9 {
+            return 0;
+        }
+
+        if self.filled_points.contains(&(x, y)) {
+            return 0;
+        }
+        self.filled_points.insert((x, y));
+
+        let neighbours: Vec<_> = self.neighbours(x, y).collect();
+        neighbours
+            .iter()
+            .map(|&(nx, ny)| self.fill_basin(nx, ny))
+            .sum::<u64>()
+            + 1
+    }
+
     fn low_points(&self) -> impl Iterator<Item = (usize, usize)> + '_ {
         (0..self.height)
             .flat_map(|y| (0..self.width).map(move |x| (x, y)))
@@ -111,6 +151,7 @@ impl std::str::FromStr for HeightMap {
             heights,
             width: width.context("0 lines parsed, width never computed")?,
             height,
+            filled_points: HashSet::new(),
         })
     }
 }
@@ -129,5 +170,15 @@ mod tests {
     #[test]
     fn part1_real() {
         assert_eq!(part1(INPUT).unwrap(), 522);
+    }
+
+    #[test]
+    fn part2_provided() {
+        assert_eq!(part2(PROVIDED).unwrap(), 1134);
+    }
+
+    #[test]
+    fn part2_real() {
+        assert_eq!(part2(INPUT).unwrap(), 916688);
     }
 }
