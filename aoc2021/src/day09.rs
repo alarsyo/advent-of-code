@@ -88,10 +88,8 @@ impl HeightMap {
         }
         self.filled_points.insert((x, y));
 
-        let neighbours: Vec<_> = self.neighbours(x, y).collect();
-        neighbours
-            .iter()
-            .map(|&(nx, ny)| self.fill_basin(nx, ny))
+        self.neighbours(x, y)
+            .map(|(nx, ny)| self.fill_basin(nx, ny))
             .sum::<u64>()
             + 1
     }
@@ -105,11 +103,13 @@ impl HeightMap {
             })
     }
 
-    fn neighbours(&self, x: usize, y: usize) -> impl Iterator<Item = (usize, usize)> + '_ {
+    fn neighbours(&self, x: usize, y: usize) -> impl Iterator<Item = (usize, usize)> + 'static {
+        let width = self.width;
+        let height = self.height;
         Neighbour::ALL
             .iter()
             .copied()
-            .filter_map(move |neighbour| neighbour.apply(x, y, self.width, self.height))
+            .filter_map(move |neighbour| neighbour.apply(x, y, width, height))
     }
 
     fn risk_level(&self, x: usize, y: usize) -> u64 {
