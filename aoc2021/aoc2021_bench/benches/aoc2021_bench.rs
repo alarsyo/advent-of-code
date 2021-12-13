@@ -11,6 +11,7 @@ use aoc2021::day08;
 use aoc2021::day09;
 use aoc2021::day10;
 use aoc2021::day11;
+use aoc2021::day12;
 use aoc2021::day13;
 
 fn aoc2021_all(c: &mut Criterion) {
@@ -25,6 +26,7 @@ fn aoc2021_all(c: &mut Criterion) {
     c.bench_function("day09", |b| b.iter(|| day09::run().unwrap()));
     c.bench_function("day10", |b| b.iter(|| day10::run().unwrap()));
     c.bench_function("day11", |b| b.iter(|| day11::run().unwrap()));
+    c.bench_function("day12", |b| b.iter(|| day12::run().unwrap()));
     c.bench_function("day13", |b| b.iter(|| day13::run().unwrap()));
 }
 
