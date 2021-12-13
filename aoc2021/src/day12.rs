@@ -9,6 +9,7 @@ pub fn run() -> Result<String> {
     let mut res = String::with_capacity(128);
 
     writeln!(res, "part 1: {}", part1(INPUT)?)?;
+    writeln!(res, "part 2: {}", part2(INPUT)?)?;
 
     Ok(res)
 }
@@ -17,6 +18,12 @@ fn part1(input: &str) -> Result<usize> {
     let cave_map: CaveMap = input.try_into()?;
 
     cave_map.count_paths()
+}
+
+fn part2(input: &str) -> Result<usize> {
+    let cave_map: CaveMap = input.try_into()?;
+
+    cave_map.count_paths_twice()
 }
 
 #[derive(Clone, Copy)]
@@ -94,6 +101,46 @@ impl<'a> CaveMap<'a> {
 
         paths
     }
+
+    fn count_paths_twice(&self) -> Result<usize> {
+        let start = *self
+            .connections
+            .keys()
+            .find(|cave| cave.is_start())
+            .context("couldn't find starting cave")?;
+        Ok(self.count_paths_twice_rec(start, HashSet::new(), false))
+    }
+
+    fn count_paths_twice_rec(
+        &self,
+        from: Cave<'a>,
+        mut small_seen: HashSet<Cave<'a>>,
+        visited_twice: bool,
+    ) -> usize {
+        if from.is_end() {
+            return 1;
+        }
+
+        if from.is_small() {
+            small_seen.insert(from);
+        }
+
+        let mut paths = 0;
+        for dst in &self.connections[&from] {
+            let will_visit_twice = small_seen.contains(dst) && dst.is_small();
+            if will_visit_twice && (visited_twice || dst.is_start()) {
+                continue;
+            }
+
+            paths += self.count_paths_twice_rec(
+                *dst,
+                small_seen.clone(),
+                visited_twice || will_visit_twice,
+            );
+        }
+
+        paths
+    }
 }
 
 impl<'a> TryFrom<&'a str> for CaveMap<'a> {
@@ -136,5 +183,17 @@ mod tests {
     #[test]
     fn part1_real() {
         assert_eq!(part1(INPUT).unwrap(), 5252);
+    }
+
+    #[test]
+    fn part2_provided() {
+        assert_eq!(part2(PROVIDED1).unwrap(), 36);
+        assert_eq!(part2(PROVIDED2).unwrap(), 103);
+        assert_eq!(part2(PROVIDED3).unwrap(), 3509);
+    }
+
+    #[test]
+    fn part2_real() {
+        assert_eq!(part2(INPUT).unwrap(), 147784);
     }
 }
