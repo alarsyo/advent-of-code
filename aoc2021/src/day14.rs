@@ -119,27 +119,41 @@ impl std::str::FromStr for Polymer {
 }
 
 fn insert_pairs(
-    mut molecules: LinkedList<char>,
+    molecules: LinkedList<char>,
     rules: &HashMap<(char, char), char>,
 ) -> Result<LinkedList<char>> {
     if molecules.len() <= 1 {
         return Ok(molecules);
     }
 
-    // List length is at least 2
-    let mut iter = molecules.iter();
-    let (left, right) = (*iter.next().unwrap(), *iter.next().unwrap());
+    let mut head = molecules;
+    let mut tail = head.split_off(0);
 
-    let to_insert = *rules
-        .get(&(left, right))
-        .with_context(|| format!("couldn't find rule for pair ({}, {})", left, right))?;
+    while tail.len() > 1 {
+        // List length is at least 2
+        let mut iter = tail.iter();
+        let (left, right) = (*iter.next().unwrap(), *iter.next().unwrap());
 
-    let mut tail = insert_pairs(molecules.split_off(1), rules)?;
+        let to_insert = *rules
+            .get(&(left, right))
+            .with_context(|| format!("couldn't find rule for pair ({}, {})", left, right))?;
 
-    molecules.push_back(to_insert);
-    molecules.append(&mut tail);
+        // tail = left
+        // new_tail = right -> rest
+        let new_tail = tail.split_off(1);
 
-    Ok(molecules)
+        // head = head -> left
+        head.append(&mut tail);
+        // head = head -> left -> to_insert
+        head.push_back(to_insert);
+
+        // tail = right -> rest
+        tail = new_tail;
+    }
+
+    head.append(&mut tail);
+
+    Ok(head)
 }
 
 #[cfg(test)]
