@@ -1,4 +1,4 @@
-use std::collections::{HashMap, HashSet, LinkedList};
+use std::collections::HashMap;
 use std::fmt::Write;
 
 use anyhow::{Context, Result};
@@ -9,6 +9,7 @@ pub fn run() -> Result<String> {
     let mut res = String::with_capacity(128);
 
     writeln!(res, "part 1: {}", part1(INPUT)?)?;
+    writeln!(res, "part 2: {}", part2(INPUT)?)?;
 
     Ok(res)
 }
@@ -18,30 +19,48 @@ fn part1(input: &str) -> Result<usize> {
     let mut polymer: Polymer = polymer.parse()?;
     let rules: Rules = rules.parse()?;
 
-    let mut molecule_set = polymer.molecule_set();
-    rules.0.values().for_each(|v| {
-        molecule_set.insert(*v);
-    });
-
     for _ in 0..10 {
         polymer.insert_pairs(&rules.0)?;
     }
 
-    let occurrences = polymer.compute_occurrences(&molecule_set);
+    let occurrences = polymer.compute_occurrences();
 
     let (_, least_common_occurrences) = occurrences
         .iter()
-        .min_by_key(|(_, occurrences)| occurrences)
+        .min_by_key(|&(_, occurrences)| occurrences)
         .unwrap();
     let (_, most_common_occurrences) = occurrences
         .iter()
-        .max_by_key(|(_, occurrences)| occurrences)
+        .max_by_key(|&(_, occurrences)| occurrences)
         .unwrap();
 
     Ok(most_common_occurrences - least_common_occurrences)
 }
 
-struct Rules(HashMap<(char, char), char>);
+fn part2(input: &str) -> Result<usize> {
+    let (polymer, rules) = input.split_once("\n\n").context("couldn't split input")?;
+    let mut polymer: Polymer = polymer.parse()?;
+    let rules: Rules = rules.parse()?;
+
+    for _ in 0..40 {
+        polymer.insert_pairs(&rules.0)?;
+    }
+
+    let occurrences = polymer.compute_occurrences();
+
+    let (_, least_common_occurrences) = occurrences
+        .iter()
+        .min_by_key(|&(_, occurrences)| occurrences)
+        .unwrap();
+    let (_, most_common_occurrences) = occurrences
+        .iter()
+        .max_by_key(|&(_, occurrences)| occurrences)
+        .unwrap();
+
+    Ok(most_common_occurrences - least_common_occurrences)
+}
+
+struct Rules(HashMap<(u8, u8), u8>);
 
 impl std::str::FromStr for Rules {
     type Err = anyhow::Error;
@@ -54,10 +73,10 @@ impl std::str::FromStr for Rules {
                     let (pair, res) = l.split_once(" -> ").context("couldn't parse rule")?;
                     Ok((
                         (
-                            pair.chars().next().context("")?,
-                            pair.chars().nth(1).context("")?,
+                            *pair.as_bytes().get(0).context("couldn't parse rule")?,
+                            *pair.as_bytes().get(1).context("couldn't parse rule")?,
                         ),
-                        res.chars().next().context("couldn't parse rule")?,
+                        res.bytes().next().context("couldn't parse rule")?,
                     ))
                 })
                 .collect::<Result<_>>()?,
@@ -67,42 +86,45 @@ impl std::str::FromStr for Rules {
 
 #[derive(Debug)]
 struct Polymer {
-    molecules: Option<LinkedList<char>>,
+    molecules: HashMap<(u8, u8), usize>,
+    first: u8,
+    last: u8,
 }
 
 impl Polymer {
-    fn insert_pairs(&mut self, rules: &HashMap<(char, char), char>) -> Result<()> {
-        debug_assert!(self.molecules.is_some());
+    fn insert_pairs(&mut self, rules: &HashMap<(u8, u8), u8>) -> Result<()> {
+        let mut new_molecules = HashMap::new();
 
-        self.molecules = Some(insert_pairs(
-            std::mem::replace(&mut self.molecules, None).unwrap(),
-            rules,
-        )?);
+        for (&(a, b), &count) in &self.molecules {
+            let middle = *rules
+                .get(&(a, b))
+                .with_context(|| format!("couldn't find rule for pair ({}, {})", a, b))?;
+
+            *new_molecules.entry((a, middle)).or_insert(0) += count;
+            *new_molecules.entry((middle, b)).or_insert(0) += count;
+        }
+
+        self.molecules = new_molecules;
+
         Ok(())
     }
 
-    fn compute_occurrences(&self, molecule_set: &HashSet<char>) -> Vec<(char, usize)> {
-        debug_assert!(self.molecules.is_some());
+    fn compute_occurrences(&self) -> Vec<(u8, usize)> {
+        let mut counts = HashMap::new();
 
-        let mut res = Vec::new();
-        for molecule in molecule_set {
-            let count = self
-                .molecules
-                .as_ref()
-                .unwrap() // we always have a Some, Option only used for std::mem::replace
-                .iter()
-                .filter(|&m| m == molecule)
-                .count();
-            res.push((*molecule, count));
+        for (&(a, b), &count) in &self.molecules {
+            *counts.entry(a).or_insert(0) += count;
+            *counts.entry(b).or_insert(0) += count;
         }
 
-        res
-    }
+        // the first and last molecule are only counted once, all other molecules are counted twice
+        *counts.entry(self.first).or_insert(0) += 1;
+        *counts.entry(self.last).or_insert(0) += 1;
 
-    fn molecule_set(&self) -> HashSet<char> {
-        debug_assert!(self.molecules.is_some());
-
-        self.molecules.as_ref().unwrap().iter().copied().collect()
+        counts
+            .into_iter()
+            .map(|(m, count)| (m, count / 2))
+            .collect()
     }
 }
 
@@ -110,50 +132,17 @@ impl std::str::FromStr for Polymer {
     type Err = anyhow::Error;
 
     fn from_str(s: &str) -> Result<Self> {
-        let molecules = s.trim().chars().collect();
+        let mut molecules = HashMap::new();
+        s.as_bytes()
+            .windows(2)
+            .for_each(|w| *molecules.entry((w[0], w[1])).or_insert(0) += 1);
 
         Ok(Polymer {
-            molecules: Some(molecules),
+            molecules,
+            first: *s.as_bytes().first().context("polymer was empty")?,
+            last: *s.as_bytes().last().context("polymer was empty")?,
         })
     }
-}
-
-fn insert_pairs(
-    molecules: LinkedList<char>,
-    rules: &HashMap<(char, char), char>,
-) -> Result<LinkedList<char>> {
-    if molecules.len() <= 1 {
-        return Ok(molecules);
-    }
-
-    let mut head = molecules;
-    let mut tail = head.split_off(0);
-
-    while tail.len() > 1 {
-        // List length is at least 2
-        let mut iter = tail.iter();
-        let (left, right) = (*iter.next().unwrap(), *iter.next().unwrap());
-
-        let to_insert = *rules
-            .get(&(left, right))
-            .with_context(|| format!("couldn't find rule for pair ({}, {})", left, right))?;
-
-        // tail = left
-        // new_tail = right -> rest
-        let new_tail = tail.split_off(1);
-
-        // head = head -> left
-        head.append(&mut tail);
-        // head = head -> left -> to_insert
-        head.push_back(to_insert);
-
-        // tail = right -> rest
-        tail = new_tail;
-    }
-
-    head.append(&mut tail);
-
-    Ok(head)
 }
 
 #[cfg(test)]
@@ -170,5 +159,15 @@ mod tests {
     #[test]
     fn part1_real() {
         assert_eq!(part1(INPUT).unwrap(), 3247);
+    }
+
+    #[test]
+    fn part2_provided() {
+        assert_eq!(part2(PROVIDED).unwrap(), 2188189693529);
+    }
+
+    #[test]
+    fn part2_real() {
+        assert_eq!(part2(INPUT).unwrap(), 4110568157153);
     }
 }
