@@ -10,6 +10,7 @@ edition = "2021"
 aoc = { path = "../aoc" }
 anyhow = "1.0"
 rand = "0.8"
+bitvec = "0.22"
 
 [lib]
 path = "src/lib.rs"
