@@ -1,7 +1,7 @@
 use std::fmt::Write;
 use std::ops::Range;
 
-use anyhow::{Context, Result};
+use anyhow::{bail, Context, Result};
 use bitvec::prelude::*;
 
 const INPUT: &str = include_str!("../input/day16.txt");
@@ -10,6 +10,7 @@ pub fn run() -> Result<String> {
     let mut res = String::with_capacity(128);
 
     writeln!(res, "part 1: {}", part1(INPUT)?)?;
+    writeln!(res, "part 2: {}", part2(INPUT)?)?;
 
     Ok(res)
 }
@@ -18,6 +19,12 @@ fn part1(input: &str) -> Result<u64> {
     let packet: Packet = input.parse()?;
 
     Ok(packet.version_sum())
+}
+
+fn part2(input: &str) -> Result<u64> {
+    let packet: Packet = input.parse()?;
+
+    Ok(packet.value())
 }
 
 #[derive(PartialEq, Eq, Debug)]
@@ -44,6 +51,48 @@ impl Packet {
             }
         }
     }
+
+    fn value(&self) -> u64 {
+        match &self.packet {
+            PacketType::Litteral(lit) => lit.value,
+            PacketType::Operator(op) => match op.op_type {
+                OperatorType::Sum => op.sub_packets.iter().map(Packet::value).sum(),
+                OperatorType::Product => op.sub_packets.iter().map(Packet::value).product(),
+                OperatorType::Minimum => op.sub_packets.iter().map(Packet::value).min().unwrap(),
+                OperatorType::Maximum => op.sub_packets.iter().map(Packet::value).max().unwrap(),
+                OperatorType::GreaterThan => {
+                    debug_assert_eq!(op.sub_packets.len(), 2);
+                    let pack1 = &op.sub_packets[0];
+                    let pack2 = &op.sub_packets[1];
+                    if pack1.value() > pack2.value() {
+                        1
+                    } else {
+                        0
+                    }
+                }
+                OperatorType::LessThan => {
+                    debug_assert_eq!(op.sub_packets.len(), 2);
+                    let pack1 = &op.sub_packets[0];
+                    let pack2 = &op.sub_packets[1];
+                    if pack1.value() < pack2.value() {
+                        1
+                    } else {
+                        0
+                    }
+                }
+                OperatorType::EqualTo => {
+                    debug_assert_eq!(op.sub_packets.len(), 2);
+                    let pack1 = &op.sub_packets[0];
+                    let pack2 = &op.sub_packets[1];
+                    if pack1.value() == pack2.value() {
+                        1
+                    } else {
+                        0
+                    }
+                }
+            },
+        }
+    }
 }
 
 #[derive(PartialEq, Eq, Debug)]
@@ -52,8 +101,20 @@ struct LitteralPacket {
 }
 
 #[derive(PartialEq, Eq, Debug)]
+enum OperatorType {
+    Sum,
+    Product,
+    Minimum,
+    Maximum,
+    GreaterThan,
+    LessThan,
+    EqualTo,
+}
+
+#[derive(PartialEq, Eq, Debug)]
 struct OperatorPacket {
     sub_packets: Vec<Packet>,
+    op_type: OperatorType,
 }
 
 impl std::str::FromStr for Packet {
@@ -148,11 +209,26 @@ where
                     SUBPACKET_START_INDEX_TLID0 + length
                 };
 
+                let op_type = match type_id {
+                    0 => OperatorType::Sum,
+                    1 => OperatorType::Product,
+                    2 => OperatorType::Minimum,
+                    3 => OperatorType::Maximum,
+                    4 => unreachable!("impossible, would parse as a litteral packet"),
+                    5 => OperatorType::GreaterThan,
+                    6 => OperatorType::LessThan,
+                    7 => OperatorType::EqualTo,
+                    _ => bail!("unknown type id: {}", type_id),
+                };
+
                 Ok(Packet {
                     version,
                     type_id,
                     bits_used: len,
-                    packet: PacketType::Operator(OperatorPacket { sub_packets }),
+                    packet: PacketType::Operator(OperatorPacket {
+                        sub_packets,
+                        op_type,
+                    }),
                 })
             }
         }
@@ -163,19 +239,19 @@ where
 mod tests {
     use super::*;
 
-    const PROVIDED1: &str = "D2FE28";
-    const PROVIDED2: &str = "38006F45291200";
-    const PROVIDED3: &str = "EE00D40C823060";
+    const PART1_PROVIDED1: &str = "D2FE28";
+    const PART1_PROVIDED2: &str = "38006F45291200";
+    const PART1_PROVIDED3: &str = "EE00D40C823060";
 
-    const PROVIDED4: &str = "8A004A801A8002F478";
-    const PROVIDED5: &str = "620080001611562C8802118E34";
-    const PROVIDED6: &str = "C0015000016115A2E0802F182340";
-    const PROVIDED7: &str = "A0016C880162017C3686B18A3D4780";
+    const PART1_PROVIDED4: &str = "8A004A801A8002F478";
+    const PART1_PROVIDED5: &str = "620080001611562C8802118E34";
+    const PART1_PROVIDED6: &str = "C0015000016115A2E0802F182340";
+    const PART1_PROVIDED7: &str = "A0016C880162017C3686B18A3D4780";
 
     #[test]
     fn part1_provided() {
         assert_eq!(
-            PROVIDED1.parse::<Packet>().unwrap(),
+            PART1_PROVIDED1.parse::<Packet>().unwrap(),
             Packet {
                 version: 6,
                 type_id: 4,
@@ -185,7 +261,7 @@ mod tests {
         );
 
         assert_eq!(
-            PROVIDED2.parse::<Packet>().unwrap(),
+            PART1_PROVIDED2.parse::<Packet>().unwrap(),
             Packet {
                 version: 1,
                 type_id: 6,
@@ -205,12 +281,13 @@ mod tests {
                             packet: PacketType::Litteral(LitteralPacket { value: 20 })
                         },
                     ],
+                    op_type: OperatorType::LessThan,
                 }),
             }
         );
 
         assert_eq!(
-            PROVIDED3.parse::<Packet>().unwrap(),
+            PART1_PROVIDED3.parse::<Packet>().unwrap(),
             Packet {
                 version: 7,
                 type_id: 3,
@@ -236,18 +313,45 @@ mod tests {
                             packet: PacketType::Litteral(LitteralPacket { value: 3 })
                         },
                     ],
+                    op_type: OperatorType::Maximum,
                 }),
             }
         );
 
-        assert_eq!(PROVIDED4.parse::<Packet>().unwrap().version_sum(), 16);
-        assert_eq!(PROVIDED5.parse::<Packet>().unwrap().version_sum(), 12);
-        assert_eq!(PROVIDED6.parse::<Packet>().unwrap().version_sum(), 23);
-        assert_eq!(PROVIDED7.parse::<Packet>().unwrap().version_sum(), 31);
+        assert_eq!(PART1_PROVIDED4.parse::<Packet>().unwrap().version_sum(), 16);
+        assert_eq!(PART1_PROVIDED5.parse::<Packet>().unwrap().version_sum(), 12);
+        assert_eq!(PART1_PROVIDED6.parse::<Packet>().unwrap().version_sum(), 23);
+        assert_eq!(PART1_PROVIDED7.parse::<Packet>().unwrap().version_sum(), 31);
     }
 
     #[test]
     fn part1_real() {
         assert_eq!(part1(INPUT).unwrap(), 925);
+    }
+
+    const PART2_PROVIDED1: &str = "C200B40A82";
+    const PART2_PROVIDED2: &str = "04005AC33890";
+    const PART2_PROVIDED3: &str = "880086C3E88112";
+    const PART2_PROVIDED4: &str = "CE00C43D881120";
+    const PART2_PROVIDED5: &str = "D8005AC2A8F0";
+    const PART2_PROVIDED6: &str = "F600BC2D8F";
+    const PART2_PROVIDED7: &str = "9C005AC2F8F0";
+    const PART2_PROVIDED8: &str = "9C0141080250320F1802104A08";
+
+    #[test]
+    fn part2_provided() {
+        assert_eq!(part2(PART2_PROVIDED1).unwrap(), 3);
+        assert_eq!(part2(PART2_PROVIDED2).unwrap(), 54);
+        assert_eq!(part2(PART2_PROVIDED3).unwrap(), 7);
+        assert_eq!(part2(PART2_PROVIDED4).unwrap(), 9);
+        assert_eq!(part2(PART2_PROVIDED5).unwrap(), 1);
+        assert_eq!(part2(PART2_PROVIDED6).unwrap(), 0);
+        assert_eq!(part2(PART2_PROVIDED7).unwrap(), 0);
+        assert_eq!(part2(PART2_PROVIDED8).unwrap(), 1);
+    }
+
+    #[test]
+    fn part2_real() {
+        assert_eq!(part2(INPUT).unwrap(), 342997120375);
     }
 }
