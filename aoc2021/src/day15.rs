@@ -10,6 +10,7 @@ pub fn run() -> Result<String> {
     let mut res = String::with_capacity(128);
 
     writeln!(res, "part 1: {}", part1(INPUT)?)?;
+    writeln!(res, "part 2: {}", part2(INPUT)?)?;
 
     Ok(res)
 }
@@ -22,6 +23,16 @@ fn part1(input: &str) -> Result<u64> {
     Ok(lowest_risk)
 }
 
+fn part2(input: &str) -> Result<u64> {
+    let cavern: CavernMap = input.parse()?;
+    let cavern = cavern.bigger();
+
+    let lowest_risk = cavern.lowest_risk_path();
+
+    Ok(lowest_risk)
+}
+
+#[derive(Debug)]
 struct CavernMap {
     height: usize,
     width: usize,
@@ -83,6 +94,38 @@ impl CavernMap {
 
     fn index(&self, x: usize, y: usize) -> usize {
         y * self.width + x
+    }
+
+    fn bigger(self) -> Self {
+        let width = self.width * 5;
+        let height = self.height * 5;
+        let mut risk = self.risk.clone();
+        risk.resize(width * height, 0);
+
+        for shift_y in 0..5 {
+            for shift_x in 0..5 {
+                for y in 0..self.height {
+                    for x in 0..self.width {
+                        let new_y = shift_y * self.height + y;
+                        let new_x = shift_x * self.width + x;
+                        let new_index = new_y * width + new_x;
+
+                        let old_risk = self.risk[self.index(x, y)];
+                        let mut new_risk = old_risk + shift_x as u64 + shift_y as u64;
+                        if new_risk > 9 {
+                            new_risk -= 9;
+                        }
+                        risk[new_index] = new_risk;
+                    }
+                }
+            }
+        }
+
+        Self {
+            height,
+            width,
+            risk,
+        }
     }
 }
 
@@ -161,5 +204,15 @@ mod tests {
     #[test]
     fn part1_real() {
         assert_eq!(part1(INPUT).unwrap(), 562);
+    }
+
+    #[test]
+    fn part2_provided() {
+        assert_eq!(part2(PROVIDED).unwrap(), 315);
+    }
+
+    #[test]
+    fn part2_real() {
+        assert_eq!(part2(INPUT).unwrap(), 2874);
     }
 }
