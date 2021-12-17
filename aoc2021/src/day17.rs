@@ -10,6 +10,7 @@ pub fn run() -> Result<String> {
     let mut res = String::with_capacity(128);
 
     writeln!(res, "part 1: {}", part1(INPUT)?)?;
+    writeln!(res, "part 2: {}", part2(INPUT)?)?;
 
     Ok(res)
 }
@@ -49,6 +50,42 @@ fn part1(input: &str) -> Result<isize> {
         .filter_map(|(x_vel, y_vel)| throw(x_vel, y_vel, &area))
         .max()
         .context("couldn't find any trajectory")
+}
+
+fn part2(input: &str) -> Result<usize> {
+    let area: TargetArea = input
+        .parse()
+        .context("couldn't parse input to target area")?;
+
+    let min_x_vel = if area.min_x() > 0 {
+        (0..).find(|x| ((x * (x + 1)) / 2) >= area.min_x()).unwrap()
+    } else if area.max_x() < 0 {
+        -(0..)
+            .find(|x| ((x * (x + 1)) / 2) >= area.max_x().abs())
+            .unwrap()
+    } else {
+        0
+    };
+
+    let max_x_vel = if area.min_x() > 0 {
+        area.max_x()
+    } else if area.max_x() < 0 {
+        area.min_x()
+    } else {
+        0
+    };
+
+    // Rust ranges can only be increasing, so swap values around if negative
+    let (min_x_vel, max_x_vel) = (min_x_vel.min(max_x_vel), min_x_vel.max(max_x_vel));
+
+    // let's assume that the area is always lower than (0, 0)
+    let min_y_vel = area.min_y();
+    let max_y_vel = area.min_y().abs();
+
+    Ok((min_x_vel..=max_x_vel)
+        .flat_map(|x_vel| (min_y_vel..=max_y_vel).map(move |y_vel| (x_vel, y_vel)))
+        .filter_map(|(x_vel, y_vel)| throw(x_vel, y_vel, &area))
+        .count())
 }
 
 fn throw(mut xvel: isize, mut yvel: isize, area: &TargetArea) -> Option<isize> {
@@ -155,5 +192,15 @@ mod tests {
     #[test]
     fn part1_real() {
         assert_eq!(part1(INPUT).unwrap(), 4186);
+    }
+
+    #[test]
+    fn part2_provided() {
+        assert_eq!(part2(PROVIDED).unwrap(), 112);
+    }
+
+    #[test]
+    fn part2_real() {
+        assert_eq!(part2(INPUT).unwrap(), 2709);
     }
 }
