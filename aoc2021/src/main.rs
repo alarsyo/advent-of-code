@@ -18,6 +18,7 @@ use aoc2021::day13;
 use aoc2021::day14;
 use aoc2021::day15;
 use aoc2021::day16;
+use aoc2021::day17;
 
 fn main() -> Result<()> {
     let days: &[DayFunc] = &[
@@ -37,6 +38,7 @@ fn main() -> Result<()> {
         day14::run,
         day15::run,
         day16::run,
+        day17::run,
     ];
 
     aoc::run(days)
