@@ -1,3 +1,10 @@
+//! Improvement ideas:
+//!
+//! X and Y coordinates are independant, so we can compute them separately, and keep track of which
+//! values of X and Y can ever reach the target area, and if so, keep the step numbers where they
+//! match. Some cross referencing can then isolate the valid trajectories.
+//!
+//! This already runs in 1ms though so... maybe later
 use std::cmp::Ordering;
 use std::fmt::Write;
 use std::ops::RangeInclusive;
