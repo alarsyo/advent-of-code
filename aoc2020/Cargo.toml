@@ -10,7 +10,7 @@ edition = "2021"
 aoc = { path = "../aoc" }
 anyhow = "1.0"
 itertools = "0.9"
-nom = "6.0"
+nom = "7.0"
 
 [lib]
 path = "src/lib.rs"

@@ -84,7 +84,7 @@ fn operator_expr(input: &str) -> IResult<&str, Expr> {
 
     fold_many0(
         pair(delimited(char(' '), operator, char(' ')), term),
-        first_term,
+        move || first_term.clone(),
         |acc, (op, val)| Expr::Op(Box::new(acc), op, Box::new(val)),
     )(i)
 }
@@ -97,7 +97,7 @@ fn plus(input: &str) -> IResult<&str, Expr> {
             delimited(char(' '), char('+'), char(' ')),
             term_plus_priority,
         ),
-        first_term,
+        move || first_term.clone(),
         |acc, (_, val)| Expr::Op(Box::new(acc), Operator::Addition, Box::new(val)),
     )(i)
 }
@@ -107,7 +107,7 @@ fn mul(input: &str) -> IResult<&str, Expr> {
 
     fold_many0(
         pair(delimited(char(' '), char('*'), char(' ')), plus),
-        first_factor,
+        move || first_factor.clone(),
         |acc, (_, val)| Expr::Op(Box::new(acc), Operator::Multiplication, Box::new(val)),
     )(i)
 }
