@@ -42,8 +42,8 @@ fn part1(input: &str) -> Result<isize> {
     let (min_x_vel, max_x_vel) = (min_x_vel.min(max_x_vel), min_x_vel.max(max_x_vel));
 
     // we could launch the prob downward, but in that case max Y reached would always be 0
-    let min_y_vel = 0;
-    let max_y_vel = 5000; // idk
+    let min_y_vel = 1;
+    let max_y_vel = area.min_y().abs();
 
     (min_x_vel..=max_x_vel)
         .flat_map(|x_vel| (min_y_vel..=max_y_vel).map(move |y_vel| (x_vel, y_vel)))
