@@ -101,6 +101,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "aoc2022"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "aoc",
+]
+
+[[package]]
+name = "aoc2022_bench"
+version = "0.1.0"
+dependencies = [
+ "aoc2022",
+ "criterion",
+]
+
+[[package]]
 name = "atty"
 version = "0.2.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
