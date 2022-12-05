@@ -122,7 +122,7 @@ impl std::str::FromStr for Packet {
 
     fn from_str(s: &str) -> Result<Self> {
         let s = s.trim();
-        let mut bits = BitVec::<Msb0, usize>::new();
+        let mut bits = BitVec::<usize, Msb0>::new();
         bits.resize(4 * s.len(), false);
 
         for (i, c) in s.chars().enumerate() {
@@ -149,13 +149,13 @@ const TLID1_SUBPACKET_NUMBER_BITS: usize = 11;
 const SUBPACKET_START_INDEX_TLID1: usize = LENGTH_INDEX + TLID1_SUBPACKET_NUMBER_BITS;
 const SUBPACKETS_NUMBER_RANGE: Range<usize> = LENGTH_INDEX..SUBPACKET_START_INDEX_TLID1;
 
-impl<'bits, Store> TryFrom<&'bits BitSlice<Msb0, Store>> for Packet
+impl<'bits, Store> TryFrom<&'bits BitSlice<Store, Msb0>> for Packet
 where
     Store: BitStore,
 {
     type Error = anyhow::Error;
 
-    fn try_from(bits: &'bits BitSlice<Msb0, Store>) -> Result<Self> {
+    fn try_from(bits: &'bits BitSlice<Store, Msb0>) -> Result<Self> {
         let version: u8 = bits[VERSION_RANGE].load_be();
         let type_id: u8 = bits[TYPE_ID_RANGE].load_be();
 
