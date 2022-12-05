@@ -1,3 +1,4 @@
+use std::collections::BinaryHeap;
 use std::fmt::Write;
 
 use anyhow::{Context, Result};
@@ -8,6 +9,7 @@ pub fn run() -> Result<String> {
     let mut res = String::with_capacity(128);
 
     writeln!(res, "part 1: {}", part1(INPUT)?)?;
+    writeln!(res, "part 2: {}", part2(INPUT)?)?;
 
     Ok(res)
 }
@@ -25,6 +27,16 @@ fn part1(input: &str) -> Result<u64> {
         .context("inventory list was empty")
 }
 
+fn part2(input: &str) -> Result<u64> {
+    let inventories = input
+        .split("\n\n")
+        .map(|line| line.parse::<Inventory>().map(|inv| inv.total_calories()))
+        .collect::<Result<BinaryHeap<_>>>()?;
+
+    Ok(inventories.iter().take(3).sum())
+}
+
+#[derive(Debug)]
 struct Inventory(Vec<u64>);
 
 impl std::str::FromStr for Inventory {
@@ -59,5 +71,15 @@ mod tests {
     #[test]
     fn part1_real() {
         assert_eq!(part1(INPUT).unwrap(), 68923);
+    }
+
+    #[test]
+    fn part2_provided() {
+        assert_eq!(part2(PROVIDED).unwrap(), 45000);
+    }
+
+    #[test]
+    fn part2_real() {
+        assert_eq!(part2(INPUT).unwrap(), 200044);
     }
 }
