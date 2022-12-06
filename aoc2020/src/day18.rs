@@ -113,7 +113,7 @@ fn mul(input: &str) -> IResult<&str, Expr> {
 }
 
 fn num(input: &str) -> IResult<&str, Expr> {
-    map_res(take_while1(|c: char| c.is_digit(10)), |res: &str| {
+    map_res(take_while1(|c: char| c.is_ascii_digit()), |res: &str| {
         res.parse().map(Expr::Num)
     })(input)
 }

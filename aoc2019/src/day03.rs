@@ -18,7 +18,7 @@ pub fn run() -> Result<String> {
 }
 
 fn manhattan_distance(a: &Point, b: &Point) -> u64 {
-    (a.x - b.x).abs() as u64 + (a.y - b.y).abs() as u64
+    (a.x - b.x).unsigned_abs() + (a.y - b.y).unsigned_abs()
 }
 
 fn part1(first_wire: &Wire, second_wire: &Wire) -> Result<u64> {

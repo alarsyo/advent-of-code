@@ -111,9 +111,8 @@ impl Layout {
             count += self
                 .grid
                 .get(i)
-                .map(|line| line.get(j))
-                .flatten()
-                .map(|&cell| if cell == value { 1 } else { 0 })
+                .and_then(|line| line.get(j))
+                .map(|&cell| u8::from(cell == value))
                 .unwrap_or(0);
         }
 
@@ -131,7 +130,7 @@ impl Layout {
 
                 let (i, j) = (i.wrapping_add(di as usize), j.wrapping_add(dj as usize));
 
-                let cell = self.grid.get(i).map(|line| line.get(j)).flatten();
+                let cell = self.grid.get(i).and_then(|line| line.get(j));
 
                 match cell {
                     // keep going, the next seat is farther away

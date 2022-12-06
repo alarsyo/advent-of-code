@@ -30,13 +30,7 @@ fn compute_gamma(binary_numbers: &[&str], size: usize) -> u64 {
     let mut gamma = 0;
 
     for pos in 0..size {
-        let digit = if count_ones(binary_numbers, pos) > (binary_numbers.len() / 2) {
-            // majority of ones
-            1
-        } else {
-            // majority of zeroes
-            0
-        };
+        let digit = u64::from(count_ones(binary_numbers, pos) > (binary_numbers.len() / 2));
         gamma = (gamma << 1) | digit;
     }
 

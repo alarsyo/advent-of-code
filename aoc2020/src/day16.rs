@@ -22,8 +22,7 @@ fn part1(input: &str) -> Result<u64> {
 
     Ok(tickets
         .iter()
-        .map(|t| t.invalid_values(&fields_vec))
-        .flatten()
+        .flat_map(|t| t.invalid_values(&fields_vec))
         .sum())
 }
 
@@ -224,7 +223,7 @@ mod tests {
 
         let matches = assign_field_positions(fields, tickets);
 
-        let expected = (&["row", "class", "seat"])
+        let expected = ["row", "class", "seat"]
             .iter()
             .copied()
             .enumerate()

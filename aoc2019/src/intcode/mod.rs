@@ -226,7 +226,7 @@ impl Intcode {
                     let val1 = op1.get(&mut self.memory, self.relative_base)?;
                     let val2 = op2.get(&mut self.memory, self.relative_base)?;
 
-                    let res = if val1 < val2 { 1 } else { 0 };
+                    let res = i64::from(val1 < val2);
                     dst.set(res, &mut self.memory, self.relative_base)?;
 
                     self.ip += 4;
@@ -235,7 +235,7 @@ impl Intcode {
                     let val1 = op1.get(&mut self.memory, self.relative_base)?;
                     let val2 = op2.get(&mut self.memory, self.relative_base)?;
 
-                    let res = if val1 == val2 { 1 } else { 0 };
+                    let res = i64::from(val1 == val2);
                     dst.set(res, &mut self.memory, self.relative_base)?;
 
                     self.ip += 4;
@@ -263,7 +263,7 @@ impl Intcode {
     }
 
     pub fn get_day02_output(&self) -> Option<i64> {
-        self.memory.get(0).copied()
+        self.memory.first().copied()
     }
 
     pub fn get_last_output(&self) -> Option<i64> {

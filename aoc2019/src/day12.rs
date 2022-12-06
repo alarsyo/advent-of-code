@@ -233,12 +233,12 @@ impl Planet {
 
     fn potential_energy(&self) -> u64 {
         let pos = &self.position;
-        pos.x.abs() as u64 + pos.y.abs() as u64 + pos.z.abs() as u64
+        pos.x.unsigned_abs() + pos.y.unsigned_abs() + pos.z.unsigned_abs()
     }
 
     fn kinetic_energy(&self) -> u64 {
         let vel = &self.velocity;
-        vel.x.abs() as u64 + vel.y.abs() as u64 + vel.z.abs() as u64
+        vel.x.unsigned_abs() + vel.y.unsigned_abs() + vel.z.unsigned_abs()
     }
 
     fn total_energy(&self) -> u64 {

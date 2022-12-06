@@ -73,7 +73,7 @@ impl std::str::FromStr for Rules {
                     let (pair, res) = l.split_once(" -> ").context("couldn't parse rule")?;
                     Ok((
                         (
-                            *pair.as_bytes().get(0).context("couldn't parse rule")?,
+                            *pair.as_bytes().first().context("couldn't parse rule")?,
                             *pair.as_bytes().get(1).context("couldn't parse rule")?,
                         ),
                         res.bytes().next().context("couldn't parse rule")?,

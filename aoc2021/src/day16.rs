@@ -64,31 +64,19 @@ impl Packet {
                     debug_assert_eq!(op.sub_packets.len(), 2);
                     let pack1 = &op.sub_packets[0];
                     let pack2 = &op.sub_packets[1];
-                    if pack1.value() > pack2.value() {
-                        1
-                    } else {
-                        0
-                    }
+                    u64::from(pack1.value() > pack2.value())
                 }
                 OperatorType::LessThan => {
                     debug_assert_eq!(op.sub_packets.len(), 2);
                     let pack1 = &op.sub_packets[0];
                     let pack2 = &op.sub_packets[1];
-                    if pack1.value() < pack2.value() {
-                        1
-                    } else {
-                        0
-                    }
+                    u64::from(pack1.value() < pack2.value())
                 }
                 OperatorType::EqualTo => {
                     debug_assert_eq!(op.sub_packets.len(), 2);
                     let pack1 = &op.sub_packets[0];
                     let pack2 = &op.sub_packets[1];
-                    if pack1.value() == pack2.value() {
-                        1
-                    } else {
-                        0
-                    }
+                    u64::from(pack1.value() == pack2.value())
                 }
             },
         }

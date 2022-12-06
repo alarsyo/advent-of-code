@@ -10,7 +10,9 @@
       let
         overlays = [ (import rust-overlay) ];
         pkgs = import nixpkgs { inherit system overlays; };
-        myRust = pkgs.rust-bin.stable.latest.default;
+        myRust = pkgs.rust-bin.stable.latest.default.override {
+          extensions = ["rust-src" "rust-analysis"];
+        };
       in
         {
           devShell = pkgs.mkShell {

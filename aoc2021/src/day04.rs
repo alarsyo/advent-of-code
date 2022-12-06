@@ -120,7 +120,7 @@ impl Grid {
     fn unmarked_numbers(&self) -> impl Iterator<Item = u8> + '_ {
         self.number_to_pos
             .iter()
-            .filter_map(|(num, &(x, y))| (!self.access_grid(x, y)).then(|| *num))
+            .filter_map(|(num, &(x, y))| (!self.access_grid(x, y)).then_some(*num))
     }
 
     fn access_grid(&self, x: usize, y: usize) -> bool {
