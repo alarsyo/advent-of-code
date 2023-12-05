@@ -86,9 +86,7 @@ fn part2(input: &str) -> Result<usize> {
         let mut seen = HashSet::new();
         let mut todo: Vec<HexCoordinates> = black_tiles.iter().copied().collect();
 
-        while !todo.is_empty() {
-            let tile = todo.pop().unwrap();
-
+        while let Some(tile) = todo.pop() {
             if seen.contains(&tile) {
                 continue;
             } else {

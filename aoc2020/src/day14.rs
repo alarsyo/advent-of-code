@@ -286,7 +286,7 @@ impl Program {
     }
 
     fn memory_sum(&self) -> u64 {
-        self.memory.iter().map(|(_, value)| value).sum()
+        self.memory.values().sum()
     }
 }
 

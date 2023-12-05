@@ -44,7 +44,6 @@ fn assign_field_positions(
         .iter()
         .map(|(&name, field)| {
             let possibilities = (0..num_values)
-                .into_iter()
                 .filter(|i| tickets.iter().all(|t| t.valid_field(field, *i)))
                 .collect();
 

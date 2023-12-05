@@ -307,8 +307,7 @@ impl Image {
         image_positions.insert((0, 0), tiles[0].clone());
 
         // compute each image position depending on its neighbours
-        while !todo.is_empty() {
-            let pos = todo.pop().unwrap();
+        while let Some(pos) = todo.pop() {
             let tile = &image_positions[&pos];
 
             for (direction, other_tile) in tile.neighbours(tiles) {
@@ -339,9 +338,9 @@ impl Image {
         const IMAGE_TILE_HEIGHT: usize = TILE_HEIGHT - 2;
         const IMAGE_TILE_WIDTH: usize = TILE_WIDTH - 2;
 
-        let height = *image_positions.iter().map(|((i, _), _)| i).max().unwrap() as usize + 1;
+        let height = *image_positions.iter().map(|((i, _), _)| i).max().unwrap() + 1;
         let height = height * IMAGE_TILE_HEIGHT;
-        let width = *image_positions.iter().map(|((_, j), _)| j).max().unwrap() as usize + 1;
+        let width = *image_positions.iter().map(|((_, j), _)| j).max().unwrap() + 1;
         let width = width * IMAGE_TILE_HEIGHT;
 
         let mut pixels = Vec::new();
@@ -352,8 +351,8 @@ impl Image {
         }
 
         for (pos, tile) in image_positions {
-            let begin_i = IMAGE_TILE_HEIGHT * pos.0 as usize;
-            let begin_j = IMAGE_TILE_WIDTH * pos.1 as usize;
+            let begin_i = IMAGE_TILE_HEIGHT * pos.0;
+            let begin_j = IMAGE_TILE_WIDTH * pos.1;
 
             for i in 0..IMAGE_TILE_HEIGHT {
                 for j in 0..IMAGE_TILE_WIDTH {
