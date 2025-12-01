@@ -1,0 +1,16 @@
+[package]
+name = "aoc2025"
+version = "0.1.0"
+authors = ["Antoine Martin <antoine@alarsyo.net>"]
+edition = "2024"
+
+[dependencies]
+aoc = { path = "../aoc" }
+anyhow = "1.0"
+
+[lib]
+path = "src/lib.rs"
+
+[[bin]]
+name = "aoc2025"
+path = "src/main.rs"

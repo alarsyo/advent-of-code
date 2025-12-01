@@ -1,7 +1,7 @@
 [workspace]
 members = ["aoc20*", "aoc20*/aoc20*_bench"]
 
-default-members = ["aoc2023"]
+default-members = ["aoc2025"]
 
 resolver = "2"
 
