@@ -84,7 +84,7 @@ impl std::str::FromStr for RucksackSplit {
     type Err = anyhow::Error;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        if s.len() % 2 != 0 {
+        if !s.len().is_multiple_of(2) {
             bail!(
                 "rucksack should contain an even number of items, this one contained {}",
                 s.len()

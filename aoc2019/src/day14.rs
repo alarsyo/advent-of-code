@@ -78,7 +78,7 @@ fn get_ore_cost(
             .with_context(|| format!("couldn't find recipe for {}", material))?;
 
         let needed = quantity - in_stock;
-        let num_reactions = (needed + recipe.produced - 1) / recipe.produced;
+        let num_reactions = needed.div_ceil(recipe.produced);
         for elem in &recipe.elems {
             total += get_ore_cost(
                 elem.name.clone(),

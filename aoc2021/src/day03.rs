@@ -84,7 +84,7 @@ where
             break;
         }
 
-        let one_is_more_common = count_ones(&numbers, pos) >= ((numbers.len() + 1) / 2);
+        let one_is_more_common = count_ones(&numbers, pos) >= numbers.len().div_ceil(2);
         let digit_of_interest = strat(one_is_more_common);
 
         numbers.retain(|number| number.chars().nth(pos).unwrap() == digit_of_interest);

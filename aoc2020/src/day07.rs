@@ -70,7 +70,7 @@ impl BagRule {
         all_bags: &HashMap<String, BagRule>,
         memoized: &mut HashMap<String, bool>,
     ) -> bool {
-        return match memoized.get(&self.color) {
+        match memoized.get(&self.color) {
             Some(value) => *value,
             None => {
                 let value = self.contains.iter().any(|(_, c)| c == color)
@@ -85,7 +85,7 @@ impl BagRule {
 
                 value
             }
-        };
+        }
     }
 
     fn num_inner_bags(&self, all_bags: &HashMap<String, BagRule>) -> usize {

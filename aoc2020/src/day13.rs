@@ -91,7 +91,7 @@ fn find_timestamp(input: &str) -> Result<u64> {
 }
 
 fn satisfies_constraint(solution: u64, (remainder, divisor): (u64, u64)) -> bool {
-    ((solution + remainder) % divisor) == 0
+    (solution + remainder).is_multiple_of(divisor)
 }
 
 #[cfg(test)]

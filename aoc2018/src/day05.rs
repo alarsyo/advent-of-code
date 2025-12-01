@@ -14,12 +14,11 @@ pub fn run() -> Result<String> {
     Ok(res)
 }
 
-fn same_type(a: char, b: char) -> bool {
-    a.to_ascii_lowercase() == b.to_ascii_lowercase()
-}
-
 fn remove_type(input: &str, c: char) -> String {
-    input.chars().filter(|ch| !same_type(c, *ch)).collect()
+    input
+        .chars()
+        .filter(|ch| !c.eq_ignore_ascii_case(ch))
+        .collect()
 }
 
 fn collapse(input: &str) -> String {
@@ -32,7 +31,7 @@ fn collapse(input: &str) -> String {
         match last {
             Some(elem) => {
                 // if same type but different polarity
-                if same_type(elem, next) && elem != next {
+                if elem.eq_ignore_ascii_case(&next) && elem != next {
                     // drop both elem and next
                     last = res.pop();
                 } else {

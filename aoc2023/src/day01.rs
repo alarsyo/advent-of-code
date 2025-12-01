@@ -28,7 +28,7 @@ fn part1(input: &str) -> Result<u64> {
         .sum())
 }
 
-fn part2(input: &str) -> Result<u64> {
+fn part2(_input: &str) -> Result<u64> {
     todo!()
 }
 
