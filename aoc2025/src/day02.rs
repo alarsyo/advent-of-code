@@ -41,13 +41,7 @@ impl Iterator for IdRange {
 }
 
 fn get_num_digits(num: &u64) -> usize {
-    let mut digits = 0;
-    let mut num = *num;
-    while num != 0 {
-        num /= 10;
-        digits += 1;
-    }
-    digits
+    num.ilog10() as usize + 1
 }
 
 fn is_repeated_twice(num: &u64) -> bool {
