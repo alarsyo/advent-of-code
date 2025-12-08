@@ -5,9 +5,10 @@ use aoc::DayFunc;
 use aoc2025::day01;
 use aoc2025::day02;
 use aoc2025::day03;
+use aoc2025::day04;
 
 fn main() -> Result<()> {
-    let days: &[DayFunc] = &[day01::run, day02::run, day03::run];
+    let days: &[DayFunc] = &[day01::run, day02::run, day03::run, day04::run];
 
     aoc::run(days)
 }
