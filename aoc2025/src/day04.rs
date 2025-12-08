@@ -7,6 +7,7 @@ const INPUT: &str = include_str!("../input/day04.txt");
 pub fn run() -> Result<String> {
     let mut res = String::with_capacity(128);
     writeln!(res, "part 1: {}", part1(INPUT)?)?;
+    writeln!(res, "part 2: {}", part2(INPUT)?)?;
     Ok(res)
 }
 
@@ -84,12 +85,42 @@ impl PaperRollsMap {
         }
         count <= 4
     }
+
+    fn count_removable_rolls(&mut self) -> usize {
+        let mut count = 0;
+        loop {
+            let mut cur_loop_count = 0;
+            let mut copy = PaperRollsMap(self.0.clone());
+            for y in 0..self.len() {
+                for x in 0..self.width() {
+                    if self.0[y][x] && self.roll_is_accessible(x, y) {
+                        copy.0[y][x] = false;
+                        cur_loop_count += 1;
+                    }
+                }
+            }
+
+            if cur_loop_count == 0 {
+                break;
+            }
+
+            *self = copy;
+            count += cur_loop_count;
+        }
+        count
+    }
 }
 
 fn part1(input: &str) -> Result<usize> {
     let grid: PaperRollsMap = input.parse()?;
 
     Ok(grid.count_accessible_rolls())
+}
+
+fn part2(input: &str) -> Result<usize> {
+    let mut grid: PaperRollsMap = input.parse()?;
+
+    Ok(grid.count_removable_rolls())
 }
 
 #[cfg(test)]
@@ -108,13 +139,13 @@ mod tests {
         assert_eq!(part1(INPUT).unwrap(), 1393);
     }
 
-    //#[test]
-    //fn part2_provided() {
-    //    assert_eq!(part2(PROVIDED).unwrap(), 3121910778619);
-    //}
+    #[test]
+    fn part2_provided() {
+        assert_eq!(part2(PROVIDED).unwrap(), 43);
+    }
 
-    //#[test]
-    //fn part2_real() {
-    //    assert_eq!(part2(INPUT).unwrap(), 168798209663590);
-    //}
+    #[test]
+    fn part2_real() {
+        assert_eq!(part2(INPUT).unwrap(), 8643);
+    }
 }
