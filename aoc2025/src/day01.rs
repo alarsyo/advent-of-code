@@ -1,6 +1,6 @@
 use std::{fmt::Write, str::FromStr};
 
-use anyhow::{bail, Result};
+use anyhow::{Result, bail};
 
 const INPUT: &str = include_str!("../input/day01.txt");
 const DIAL_SIZE: u16 = 100;

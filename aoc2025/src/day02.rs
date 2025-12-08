@@ -1,4 +1,4 @@
-use anyhow::{anyhow, Context, Result};
+use anyhow::{Context, Result, anyhow};
 use std::{fmt::Write, ops::RangeInclusive, str::FromStr};
 
 const INPUT: &str = include_str!("../input/day02.txt");
