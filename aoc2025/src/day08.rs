@@ -6,6 +6,7 @@ const INPUT: &str = include_str!("../input/day08.txt");
 pub fn run() -> Result<String> {
     let mut res = String::with_capacity(128);
     writeln!(res, "part 1: {}", part1(INPUT, 1000)?)?;
+    writeln!(res, "part 2: {}", part2(INPUT)?)?;
     Ok(res)
 }
 
@@ -66,6 +67,10 @@ impl<T: Sized + Hash + Eq> UnionFind<T> {
             size: (0..members.len()).map(|_| 1).collect(),
             members_to_keys: members.into_iter().zip(keys).collect(),
         }
+    }
+
+    fn size(&self) -> usize {
+        self.parent.len()
     }
 
     fn get_key(&self, member: &T) -> Result<UnionFindKey> {
@@ -160,6 +165,43 @@ fn part1(input: &str, connections: usize) -> Result<usize> {
     Ok(sizes[0] * sizes[1] * sizes[2])
 }
 
+fn part2(input: &str) -> Result<usize> {
+    let points = input
+        .lines()
+        .map(JunctionBox::from_str)
+        .collect::<Result<Vec<_>>>()?;
+
+    let mut distances = Vec::new();
+    for (i, &pi) in points.iter().enumerate() {
+        for &pj in points.iter().skip(i + 1) {
+            distances.push((pi.distance_to(&pj), (pi, pj)));
+        }
+    }
+    distances.sort_by(|(dist1, _), (dist2, _)| dist1.total_cmp(dist2));
+
+    let mut uf = UnionFind::from(points);
+    let mut unions = 0;
+    let mut last_pair = None;
+    for (_, (p1, p2)) in distances {
+        if unions >= (uf.size() - 1) {
+            break;
+        }
+        last_pair = Some((p1, p2));
+
+        if uf.find(&p1)? == uf.find(&p2)? {
+            continue;
+        }
+
+        uf.union(&p1, &p2)?;
+        unions += 1;
+    }
+
+    Ok(match last_pair {
+        Some((p1, p2)) => p1.x * p2.x,
+        None => bail!("points was empty?"),
+    })
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -176,13 +218,13 @@ mod tests {
         assert_eq!(part1(INPUT, 1000).unwrap(), 127551);
     }
 
-    //#[test]
-    //fn part2_provided() {
-    //    assert_eq!(part2(PROVIDED).unwrap(), 40);
-    //}
+    #[test]
+    fn part2_provided() {
+        assert_eq!(part2(PROVIDED).unwrap(), 25272);
+    }
 
-    //#[test]
-    //fn part2_real() {
-    //    assert_eq!(part2(INPUT).unwrap(), 18818811755665);
-    //}
+    #[test]
+    fn part2_real() {
+        assert_eq!(part2(INPUT).unwrap(), 2347225200);
+    }
 }
