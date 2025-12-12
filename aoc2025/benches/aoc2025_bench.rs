@@ -8,6 +8,7 @@ use aoc2025::day05;
 use aoc2025::day06;
 use aoc2025::day07;
 use aoc2025::day08;
+use aoc2025::day09;
 
 fn aoc2025_all(c: &mut Criterion) {
     c.bench_function("day01", |b| b.iter(|| day01::run().unwrap()));
@@ -18,6 +19,7 @@ fn aoc2025_all(c: &mut Criterion) {
     c.bench_function("day06", |b| b.iter(|| day06::run().unwrap()));
     c.bench_function("day07", |b| b.iter(|| day07::run().unwrap()));
     c.bench_function("day08", |b| b.iter(|| day08::run().unwrap()));
+    c.bench_function("day09", |b| b.iter(|| day09::run().unwrap()));
 }
 
 criterion_group! {
